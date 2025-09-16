@@ -5,7 +5,7 @@ import topBg from '@/assets/imgs/top-bg.png'
 
 <template>
   <section class="relative h-[400px] bg-cover bg-center" :style="{ backgroundImage: `url(${topBg})` }">
-    <div class="relative flex items-center justify-center h-full">
+    <div class="relative top-40 flex items-center justify-center h-full">
       <FlightSearchBox />
     </div>
   </section>

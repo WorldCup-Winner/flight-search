@@ -18,10 +18,10 @@ const trips = [
 </script>
 
 <template>
-  <section class="relative px-8 py-12 flex items-center justify-center h-full">
-    <div class="w-full max-w-5xl mx-auto">
-      <h2 class="text-xl mb-6">推薦自由行</h2>
-      <div class="grid grid-cols-3 gap-6">
+  <section class="relative py-36 flex items-center justify-center h-full">
+    <div class="w-full max-w-6xl mx-auto">
+      <h1 class="text-h1a text-xl mb-6 md:text-h1a-d font-light">推薦自由行</h1>
+      <div class="grid grid-cols-3 gap-8">
         <TripCard v-for="trip in trips" :key="trip.title" v-bind="trip" />
       </div>
     </div>
