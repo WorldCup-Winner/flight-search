@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import FlightSearchBox from './FlightSearchBox.vue'
+import FlightSearchBox from '@/components/home/FlightSearchBox.vue'
 import topBg from '@/assets/imgs/top-bg.png'
 </script>
 
