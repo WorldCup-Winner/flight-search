@@ -51,7 +51,7 @@
   </nav>
 </template>
 
-<script setup lang="ts">
+<script setup lang="js">
 import { ref } from 'vue'
 import SignIn from "@/components/auth/SignIn.vue"
 import SignUp from "@/components/auth/SignUp.vue"
