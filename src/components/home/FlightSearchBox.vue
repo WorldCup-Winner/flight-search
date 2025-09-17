@@ -1,5 +1,5 @@
 <template>
-  <!-- Main Booking Card -->
+  <!-- Main Flight Search Box-->
   <div class="relative top-0 z-10 flex items-center justify-center">
     <div class="bg-white rounded-2xl shadow-2xl p-8 px-14 w-full mx-auto max-w-6xl">
       <div class="flex justify-between w-full">
@@ -28,10 +28,10 @@
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
           <div class="grid grid-cols-10 items-center col-span-2 gap-4 border-r-2 border-primary-gold">
             <!-- Departure -->
-            <div class="relative col-span-4" ref="depTriggerRef">
-              <label class="text-sm text-primary-gold mb-2 block">出發地</label>
-              <div class="cursor-pointer pr-4" @click="toggleDeparture">
-                <div class="font-medium text-others-gray1 mb-1">
+            <div class="relative col-span-3" ref="depTriggerRef">
+              <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">出發地</label>
+              <div class="cursor-pointer" @click="toggleDeparture">
+                <div class="text-others-gray1 mb-1">
                   {{ selectedDepartureCity || 'TPE 台北(任何)' }}
                 </div>
               </div>
@@ -74,13 +74,13 @@
             </div>
 
             <!-- Swap Arrow (kept visual only) -->
-            <div class="flex items-center justify-center col-span-1">
-              <img src="@/assets/imgs/arrow-both.png" alt="Swap Arrow" />
+            <div class="col-span-1">
+              <img src="@/assets/imgs/arrow-both.svg" alt="Swap Arrow" />
             </div>
 
             <!-- Destination -->
-            <div class="relative col-span-5" ref="destTriggerRef">
-              <label class="text-sm text-primary-gold mb-2 block">目的地</label>
+            <div class="relative col-span-6" ref="destTriggerRef">
+              <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">目的地</label>
               <div class="cursor-pointer pr-4" @click="toggleDestination">
                 <div class="font-medium text-others-gray1 mb-1">
                   {{ selectedDestinationCity || '輸入國家/城市/機場關鍵字' }}
@@ -130,17 +130,17 @@
             ref="dateTriggerRef">
             <!-- Outbound Date -->
             <div class="relative col-span-2 cursor-pointer" @click="toggleDatePicker">
-              <label class="text-sm text-primary-gold mb-2 block">去程</label>
+              <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">去程</label>
               <div class="font-medium text-others-gray1">{{ outboundDateText }}</div>
             </div>
 
             <div class="relative col-span-1 mx-auto">
-              <img src="@/assets/imgs/arrow-right.png" alt="Swap Arrow" />
+              <img src="@/assets/imgs/arrow-right.svg" alt="Swap Arrow" />
             </div>
 
             <!-- Return Date -->
             <div class="relative col-span-2 cursor-pointer" @click="toggleDatePicker">
-              <label class="text-sm text-primary-gold mb-2 block">回程</label>
+              <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">回程</label>
               <div class="font-medium text-others-gray1">{{ returnDateText }}</div>
             </div>
 
@@ -156,7 +156,7 @@
 
           <!-- Passengers -->
           <div class="relative py-6" ref="passTriggerRef">
-            <label class="text-sm text-primary-gold mb-2 block">人數</label>
+            <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">人數</label>
             <div class="cursor-pointer" @click="togglePassengers">
               <div class="font-medium text-others-gray1">{{ passengerDisplayText }}</div>
             </div>
@@ -200,16 +200,16 @@
                       <div class="font-medium text-others-gray1 text-lg">孩童 (2-11)</div>
                     </div>
                     <div class="flex items-center gap-3">
-                      <button @click="decrementChildren"
+                      <button @click="decrementChild"
                         class="w-10 h-10 rounded-xl bg-others-gray2 flex items-center justify-center text-primary-gold hover:bg-others-gray4 transition-colors"
-                        :disabled="childrenCount <= 0">
+                        :disabled="childCount <= 0">
                         <span class="text-3xl font-normal">−</span>
                       </button>
-                      <span class="text-xl font-medium text-others-gray1 min-w-[2rem] text-center">{{ childrenCount
+                      <span class="text-xl font-medium text-others-gray1 min-w-[2rem] text-center">{{ childCount
                       }}</span>
-                      <button @click="incrementChildren"
+                      <button @click="incrementChild"
                         class="w-10 h-10 rounded-xl bg-others-gray2 flex items-center justify-center text-primary-gold hover:bg-others-gray4 transition-colors"
-                        :disabled="childrenCount >= 8">
+                        :disabled="childCount >= 8">
                         <span class="text-3xl font-normal">+</span>
                       </button>
                     </div>
@@ -232,7 +232,7 @@
           <!-- Airline Search -->
           <div class="relative" ref="airlineTriggerRef">
             <button @click="toggleAirline"
-              class="flex items-center justify-between min-w-[200px] bg-[#F5F4F2] text-[#8B7355] px-4 py-3 rounded-xl text-sm font-medium hover:bg-[#F0EFE9] transition-colors duration-200">
+              class="flex items-center justify-between min-w-[200px] bg-divider-soft text-primary-gold px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200">
               <span>{{ selectedAirline }}</span>
               <svg class="w-4 h-4 ml-2 transition-transform duration-200" :class="{ 'rotate-180': isAirlineOpen }"
                 fill="currentColor" viewBox="0 0 12 12">
@@ -243,40 +243,40 @@
             <!-- Airline Popover -->
             <transition name="fade-scale">
               <div v-if="isAirlineOpen" ref="airlinePopoverRef"
-                class="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[680px] max-w-[85vw]"
+                class="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[550px] max-w-[85vw]"
                 @click.stop>
                 <!-- Header -->
-                <div class="bg-[#B3A093] text-white p-4 rounded-t-2xl">
+                <div class="bg-primary-gold text-white px-6 py-4 rounded-t-2xl">
                   <h3 class="text-base font-semibold pl-5">航空公司搜尋</h3>
                 </div>
 
                 <!-- Body -->
-                <div class="p-5">
+                <div class="p-6">
                   <!-- Search Input -->
                   <div class="mb-6">
                     <input v-model="airlineSearchTerm" type="text" placeholder="輸入航空公司名稱 / 代碼"
-                      class="w-full px-4 py-3 border-2 border-[#B3A093] rounded-xl text-[#787878] placeholder-[#B3A093] focus:outline-none focus:ring-2 focus:ring-[#F39800] focus:border-transparent" />
+                      class="w-full px-4 py-3 border-2 border-primary-gold rounded-xl text-others-gray1 placeholder-others-gray1 focus:outline-none focus:ring-2 focus:ring-others-original focus:border-transparent" />
                   </div>
 
                   <!-- Search Results -->
                   <div v-if="airlineSearchTerm.trim() && filteredAirlines.length > 0"
                     class="space-y-2 max-h-60 overflow-y-auto">
                     <button v-for="airline in filteredAirlines" :key="airline.code"
-                      class="w-full text-left px-4 py-3 rounded-lg hover:bg-[#F5F4F2] transition-colors"
+                      class="w-full text-left px-4 py-3 rounded-lg hover:bg-white transition-colors"
                       @click="selectAirline(airline.name)">
                       <div class="flex items-center">
-                        <span class="font-semibold text-[#787878] mr-2">{{ airline.code }}</span>
-                        <span class="text-[#787878]">{{ airline.name }}</span>
+                        <span class="font-semibold text-others-gray1 mr-2">{{ airline.code }}</span>
+                        <span class="text-others-gray1">{{ airline.name }}</span>
                       </div>
                     </button>
                   </div>
 
                   <!-- Popular Airlines (when no search) -->
                   <div v-else-if="!airlineSearchTerm.trim()">
-                    <h4 class="text-lg font-medium text-[#787878] mb-4">熱門航空公司</h4>
+                    <h4 class="text-lg text-primary-gold font-bold mb-4 pl-4">熱門航空公司</h4>
                     <div class="grid grid-cols-3 gap-4">
                       <button v-for="airline in popularAirlines" :key="airline"
-                        class="text-left p-3 rounded-lg hover:bg-[#F5F4F2] transition-colors text-[#787878] font-medium"
+                        class="text-left px-4 py-2 rounded-lg hover:text-others-original transition-colors text-others-gray1 font-medium"
                         @click="selectAirline(airline)">
                         {{ airline }}
                       </button>
@@ -285,7 +285,7 @@
 
                   <!-- No Results -->
                   <div v-else-if="airlineSearchTerm.trim() && filteredAirlines.length === 0"
-                    class="text-center py-8 text-[#B3A093]">
+                    class="text-center py-4 text-primary-gold">
                     找不到相關航空公司
                   </div>
                 </div>
@@ -296,7 +296,7 @@
           <!-- Cabin Class Selection -->
           <div class="relative" ref="cabinClassTriggerRef">
             <button @click="toggleCabinClass"
-              class="flex items-center justify-between min-w-[200px] bg-[#F5F4F2] text-[#8B7355] px-4 py-3 rounded-xl text-sm font-medium hover:bg-[#F0EFE9] transition-colors duration-200">
+              class="flex items-center justify-between min-w-[150px] bg-divider-soft text-primary-gold px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200">
               <span>{{ selectedCabinClass }}</span>
               <svg class="w-4 h-4 ml-2 transition-transform duration-200" :class="{ 'rotate-180': isCabinClassOpen }"
                 fill="currentColor" viewBox="0 0 12 12">
@@ -307,18 +307,18 @@
             <!-- Cabin Class Popover -->
             <transition name="fade-scale">
               <div v-if="isCabinClassOpen" ref="cabinClassPopoverRef"
-                class="absolute -left-20 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[290px] max-w-[85vw]"
+                class="absolute -left-45 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[200px] max-w-[85vw]"
                 @click.stop>
                 <!-- Header -->
-                <div class="bg-[#B3A093] text-white p-4 rounded-t-2xl">
+                <div class="bg-primary-gold text-white px-6 py-4 rounded-t-2xl">
                   <h3 class="text-base font-semibold pl-5">艙等設定</h3>
                 </div>
 
                 <!-- Body -->
-                <div class="p-5">
+                <div class="px-6 py-4">
                   <div class="space-y-3">
                     <button v-for="cabinClass in cabinClassOptions" :key="cabinClass"
-                      class="w-full text-left px-4 py-3 rounded-lg transition-colors text-lg font-medium" :class="selectedCabinClass === cabinClass
+                      class="w-full text-left px-4 py-2 rounded-lg transition-colors text-lg font-medium" :class="selectedCabinClass === cabinClass
                         ? 'text-[#F39800] bg-[#FEF7E6]'
                         : 'text-[#787878] hover:bg-[#F5F4F2]'" @click="selectCabinClass(cabinClass)">
                       {{ cabinClass }}
@@ -331,17 +331,12 @@
 
           <!-- Direct Flight -->
           <div class="relative">
-            <input id="directFlight" type="checkbox" v-model="isDirectFlight" class="sr-only" />
+            <input id="directFlight" type="checkbox" v-model="IsNonStopFlight" class="sr-only" />
             <label for="directFlight"
-              class="flex items-center justify-between min-w-[200px] bg-[#F5F4F2] text-[#8B7355] px-4 py-3 rounded-xl text-sm font-medium hover:bg-[#F0EFE9] transition-colors duration-200 cursor-pointer">
+              class="flex items-center justify-between min-w-[120px] bg-divider-soft text-primary-gold px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200 cursor-pointer">
               <span>直飛</span>
-              <div class="w-5 h-5 rounded-full border-2 transition-colors duration-200 flex items-center justify-center"
-                :class="isDirectFlight ? 'border-[#B3A093] bg-[#B3A093]' : 'border-[#B3A093] bg-transparent'">
-                <svg v-if="isDirectFlight" class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clip-rule="evenodd" />
-                </svg>
+              <div class="w-4 h-4 rounded-full border-2 transition-colors duration-200 flex items-center justify-center"
+                :class="IsNonStopFlight ? 'border-primary-gold bg-none' : 'border-none bg-others-original'">
               </div>
             </label>
           </div>
@@ -356,7 +351,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import CustomDropdown from '@/components/ui/CustomDropdown.vue'
 import RangeDatePicker from '@/components/ui/RangeDatePicker.vue'
@@ -378,7 +373,7 @@ const isPassengersOpen = ref(false)
 const passTriggerRef = ref(null)
 const passPopoverRef = ref(null)
 const adultCount = ref(1)
-const childrenCount = ref(0)
+const childCount = ref(0)
 
 /* ----------------- Date picker popover state ----------------- */
 const isDatePickerOpen = ref(false)
@@ -563,7 +558,7 @@ function selectDestinationCity(city) {
 }
 
 /* ----------------- Passengers functions ----------------- */
-const passengerDisplayText = computed(() => `${adultCount.value}成人 / ${childrenCount.value}孩童`)
+const passengerDisplayText = computed(() => `${adultCount.value}成人 / ${childCount.value}孩童`)
 
 function incrementAdults() {
   if (adultCount.value < 9) adultCount.value++
@@ -571,11 +566,11 @@ function incrementAdults() {
 function decrementAdults() {
   if (adultCount.value > 1) adultCount.value--
 }
-function incrementChildren() {
-  if (childrenCount.value < 8) childrenCount.value++
+function incrementChild() {
+  if (childCount.value < 8) childCount.value++
 }
-function decrementChildren() {
-  if (childrenCount.value > 0) childrenCount.value--
+function decrementChild() {
+  if (childCount.value > 0) childCount.value--
 }
 
 /* ----------------- Date picker functions ----------------- */
@@ -650,7 +645,7 @@ function selectCabinClass(cabinClass) {
 }
 
 /* ----------------- Other controls ----------------- */
-const isDirectFlight = ref(false)
+const IsNonStopFlight = ref(false)
 </script>
 
 <style scoped>

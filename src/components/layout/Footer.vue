@@ -1,13 +1,13 @@
 <template>
-    <footer class="bg-primary-gold text-white py-[80px] px-[150px]">
+    <footer class="bg-primary-gold text-white py-[80px] px-[120px]">
         <div class="mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
             <!-- Left Section -->
             <div>
                 <!-- Logos -->
-                <div class="flex items-center space-x-2 mb-10">
+                <div class="flex items-center space-x-5 mb-10">
                     <!-- Replace with your logo -->
                     <img src="@/assets/imgs/logo.png" alt="GalileeTours" class="h-8 w-auto" />
-                    <div class="flex flex-col leading-tight">
+                    <div class="flex flex-col">
                         <span class="text-white">GalileeTours</span>
                         <span class="text-white">加利利旅行社</span>
                     </div>
@@ -29,31 +29,34 @@
                         <p>代表人： 彭榮富</p>
                         <p>統一編號: 97125272</p>
                         <p>代表號: 02-2717-3188</p>
-                        <p>電子郵箱：<a href="mailto:fit@galilee.com.tw" class="underline">fit@galilee.com.tw</a></p>
+                        <p>電子郵箱：<a href="mailto:fit@galilee.com.tw"
+                                class="no-underline hover:underline">fit@galilee.com.tw</a></p>
                     </div>
                 </div>
             </div>
 
             <!-- Right Section -->
-            <div class="flex flex-col md:items-end">
-                <!-- Social Icons -->
-                <div class="flex space-x-4 mb-6">
-                    <a href="#" aria-label="Facebook">
-                        <font-awesome-icon icon="fa-brands fa-facebook" />
-                    </a>
-                    <a href="#" aria-label="Instagram">
-                        <font-awesome-icon icon="fa-brands fa-instagram" />
-                    </a>
-                    <a href="#" aria-label="Line">
-                        <font-awesome-icon icon="fa-brands fa-line" />
-                    </a>
-                </div>
-
-                <!-- Links -->
-                <div class="space-y-2 text-sm text-left flex flex-col">
-                    <a href="#" class="hover:underline">機票訂購常見問題Q&amp;A</a><br />
-                    <a href="#" class="hover:underline">Virtuoso奢華飯店預訂</a><br />
-                    <a href="#" class="hover:underline">旅遊顧問線上諮詢</a>
+            <div class="flex flex-row justify-end">
+                <div class="bg-white h-full w-[1px] mr-[60px] hidden md:block"></div>
+                <div class="flex flex-col">
+                    <!-- Social Icons -->
+                    <div class="flex space-x-[25px] mb-6">
+                        <a href="#" aria-label="Facebook">
+                            <img src="@/assets/imgs/icon-facebook.svg" />
+                        </a>
+                        <a href="#" aria-label="Instagram">
+                            <img src="@/assets/imgs/icon-instagram.svg" />
+                        </a>
+                        <a href="#" aria-label="Line">
+                            <img src="@/assets/imgs/icon-line.svg" />
+                        </a>
+                    </div>
+                    <!-- Links -->
+                    <div class="text-left flex flex-col">
+                        <a href="#" class="hover:underline">機票訂購常見問題Q&A</a><br />
+                        <a href="#" class="hover:underline">Virtuoso奢華飯店預訂</a><br />
+                        <a href="#" class="hover:underline">旅遊顧問線上諮詢</a>
+                    </div>
                 </div>
             </div>
         </div>

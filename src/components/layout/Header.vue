@@ -25,14 +25,56 @@
 
         <!-- Buttons -->
         <button
-          class="px-4 py-1 w-[93px] h-[40px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition">
+          class="px-4 py-1 w-[93px] h-[40px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition"
+          @click="openDialog('signin')">
           登入
         </button>
         <button
-          class="px-4 py-1 w-[93px] h-[40px] rounded-md bg-white text-others-original border border-none hover:bg-others-gray2 hover:text-others-gray1 transition">
+          class="px-4 py-1 w-[93px] h-[40px] rounded-md bg-white text-others-original border border-none hover:bg-others-gray2 hover:text-others-gray1 transition"
+          @click="openDialog('signup')">
           註冊
         </button>
       </div>
     </div>
+    <!-- Modal -->
+    <transition name="fade">
+      <div v-if="activeDialog" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50"
+        @click.self="closeDialog">
+        <div
+          class="bg-white rounded-tl-[60px] rounded-tr-[60px] rounded-bl-[60px] shadow-lg px-[90px] py-[60px] relative">
+          <!-- Show Login or Signup -->
+          <SignIn v-if="activeDialog === 'signin'" />
+          <SignUp v-else-if="activeDialog === 'signup'" />
+        </div>
+      </div>
+    </transition>
   </nav>
 </template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import SignIn from "@/components/auth/SignIn.vue"
+import SignUp from "@/components/auth/SignUp.vue"
+
+const activeDialog = ref(null) // "signin" | "signup" | null
+
+const openDialog = (type) => {
+  activeDialog.value = type
+}
+
+const closeDialog = () => {
+  activeDialog.value = null
+}
+</script>
+
+<style>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

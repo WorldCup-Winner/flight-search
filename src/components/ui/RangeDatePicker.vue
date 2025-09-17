@@ -2,35 +2,34 @@
 <template>
     <div class="bg-white rounded-2xl shadow-2xl w-[730px] max-w-[95vw]">
         <!-- Title bar -->
-        <div class="bg-[#B3A093] text-white px-6 py-3.5 rounded-t-2xl text-lg font-semibold">
+        <div class="bg-primary-gold text-white px-6 py-3 rounded-t-2xl text-[18px] font-semibold">
             日期選擇
         </div>
 
-        <div class="px-6 pt-5 pb-6">
+        <div class="px-6 py-5">
             <!-- Header: titles centered, arrows aligned -->
             <div class="relative mb-8">
                 <!-- 2-col titles, each centered above its month -->
                 <div class="grid grid-cols-2 items-center">
-                    <div class="text-center text-[26px] leading-8 font-semibold text-gray-500">
+                    <div class="text-center text-[18px] leading-8 font-semi text-gray-500">
                         {{ monthLabel(leftMonth) }}
                     </div>
-                    <div class="text-center text-[26px] leading-8 font-semibold text-gray-500">
+                    <div class="text-center text-[18px] leading-8 font-semi text-gray-500">
                         {{ monthLabel(rightMonth) }}
                     </div>
                 </div>
 
                 <!-- nav arrows pinned to edges, vertically centered to the header row -->
                 <button @click="shift(-1)"
-                    class="absolute cursor-pointer left-0 top-1/2 -translate-y-1/2 p-1 rounded-xl bg-[#EEE9E4] text-[#8B7355] hover:opacity-80 transition"
+                    class="w-[36px] h-[36px] absolute cursor-pointer left-0 top-1/2 -translate-y-1/2 p-1 rounded-xl bg-others-gray2 text-primary-gold hover:bg-others-gray4 transition transform scale-y-[-1]"
                     aria-label="previous month">
-                    <img src="@/assets/imgs/arrow-right.png" alt="Swap Arrow"
-                        class="rotate-z-180 rotate-x-180 transform" />
+                    <img src="@/assets/imgs/arrow-right.svg" alt="Swap Arrow" class="transform rotate-180" />
                 </button>
 
                 <button @click="shift(1)"
-                    class="absolute cursor-pointer right-0 top-1/2 -translate-y-1/2 p-1 rounded-xl bg-[#EEE9E4] text-[#8B7355] hover:opacity-80 transition"
+                    class="w-[36px] h-[36px] absolute cursor-pointer right-0 top-1/2 -translate-y-1/2 p-1 rounded-xl bg-others-gray2 text-primary-gold hover:bg-others-gray4 transition"
                     aria-label="next month">
-                    <img src="@/assets/imgs/arrow-right.png" alt="Swap Arrow" />
+                    <img src="@/assets/imgs/arrow-right.svg" alt="Swap Arrow" />
                 </button>
             </div>
 
@@ -39,12 +38,9 @@
             <div class="grid grid-cols-2 gap-12">
                 <!-- LEFT MONTH -->
                 <div class="w-full">
-
-
                     <!-- DOW header -->
                     <div class="grid grid-cols-7 text-center mb-4 text-[16px] leading-none">
-                        <div v-for="(d, i) in dow" :key="d"
-                            class="font-semibold tracking-wide h-8 flex items-center justify-center"
+                        <div v-for="(d, i) in dow" :key="d" class="tracking-wide h-8 flex items-center justify-center"
                             :class="i === 0 || i === 6 ? 'text-others-original' : 'text-others-gray1'">
                             {{ d }}
                         </div>
@@ -56,7 +52,7 @@
                             <div v-for="(cell, di) in week" :key="di" class="relative h-14">
                                 <!-- Range background -->
                                 <div v-if="cell.inMonth && isBetween(cell.date, start, end)"
-                                    class="absolute h-14 pt-1.5 top-0  inset-y-2 inset-x-0 bg-[#EFE7E0]" :class="[
+                                    class="absolute h-14 pt-1.5 top-0  inset-y-2 inset-x-0 bg-others-gray6" :class="[
                                         sameDay(cell.date, start) ? 'rounded-l-xl' : '',
                                         sameDay(cell.date, end) ? 'rounded-r-xl' : '',
                                         di === 0 ? 'rounded-l-xl' : '',
@@ -70,7 +66,7 @@
                                     :class="[
                                         'text-gray-600',
                                         sameDay(cell.date, start) || sameDay(cell.date, end)
-                                            ? 'bg-[#F39800] text-white'
+                                            ? 'bg-others-original text-white'
                                             : '',
                                         isDisabled(cell.date) ? 'opacity-50 cursor-not-allowed hover:bg-transparent' : 'cursor-pointer',
                                         isTwoConsecutiveDays() && sameDay(cell.date, start) ? 'rounded-r-none' : '',
@@ -89,9 +85,8 @@
 
                     <!-- DOW header -->
                     <div class="grid grid-cols-7 text-center mb-4 text-[16px] leading-none">
-                        <div v-for="(d, i) in dow" :key="d"
-                            class="font-semibold tracking-wide h-8 flex items-center justify-center"
-                            :class="i === 0 || i === 6 ? 'text-[#F39800]' : 'text-gray-400'">
+                        <div v-for="(d, i) in dow" :key="d" class="tracking-wide h-8 flex items-center justify-center"
+                            :class="i === 0 || i === 6 ? 'text-others-original' : 'text-others-gray1'">
                             {{ d }}
                         </div>
                     </div>
@@ -102,7 +97,7 @@
                             <div v-for="(cell, di) in week" :key="di" class="relative h-14">
                                 <!-- Range background -->
                                 <div v-if="cell.inMonth && isBetween(cell.date, start, end)"
-                                    class="absolute h-14 pt-1.5 top-0  inset-y-2 inset-x-0 bg-[#EFE7E0]" :class="[
+                                    class="absolute h-14 pt-1.5 top-0  inset-y-2 inset-x-0 bg-others-gray6" :class="[
                                         sameDay(cell.date, start) ? 'rounded-l-xl' : '',
                                         sameDay(cell.date, end) ? 'rounded-r-xl' : '',
                                         di === 0 ? 'rounded-l-xl' : '',
@@ -115,9 +110,9 @@
                                 <button v-if="cell.inMonth"
                                     class="relative z-[1] mx-auto flex h-14 w-full items-start pt-1.5 justify-center rounded-xl transition-colors"
                                     :class="[
-                                        'text-gray-600',
+                                        'text-others-gray1',
                                         sameDay(cell.date, start) || sameDay(cell.date, end)
-                                            ? 'bg-[#F39800] text-white'
+                                            ? 'bg-others-original text-white'
                                             : '',
                                         isDisabled(cell.date) ? 'opacity-50 cursor-not-allowed hover:bg-transparent' : 'cursor-pointer',
                                         isTwoConsecutiveDays() && sameDay(cell.date, start) ? 'rounded-r-none' : '',
@@ -232,7 +227,7 @@ function getGrid(month: Date) {
     startDate.setDate(first.getDate() - startOffset)
 
     const days: { date: Date; inMonth: boolean }[] = []
-    for (let i = 0; i < 42; i++) {
+    for (let i = 0; i < 31; i++) {
         const d = new Date(startDate)
         d.setDate(startDate.getDate() + i)
         const inMonth = d.getMonth() === first.getMonth()
