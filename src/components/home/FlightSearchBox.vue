@@ -351,7 +351,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="js">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import CustomDropdown from '@/components/ui/CustomDropdown.vue'
 import RangeDatePicker from '@/components/ui/RangeDatePicker.vue'
