@@ -1,4 +1,3 @@
-<!-- components/RangeDatePicker.vue -->
 <template>
     <div class="bg-white rounded-2xl shadow-2xl w-[730px] max-w-[95vw]">
         <!-- Title bar -->

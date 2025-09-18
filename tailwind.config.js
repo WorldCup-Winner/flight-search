@@ -36,7 +36,8 @@ export default {
           gray2: '#E8E8E8',
           gray3: '#D6D6D6',
           gray4: '#C6C6C6',
-          gray5: '#A3A3A3'
+          gray5: '#A3A3A3',
+          gray6: '#F2ECE7'
         }
       },
       screens: {

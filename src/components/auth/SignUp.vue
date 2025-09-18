@@ -38,11 +38,11 @@
                                 @click="togglePassword">
                                 <div v-if="showPassword">
                                     <!-- Login dialog -->
-                                    <img src="@/assets/imgs/icon-eye1.png" />
+                                    <img src="@/assets/imgs/icon-eye1.svg" />
                                 </div>
                                 <div v-else>
                                     <!-- Signup dialog -->
-                                    <img src="@/assets/imgs/icon-eye2.png" />
+                                    <img src="@/assets/imgs/icon-eye2.svg" />
                                 </div>
                             </button>
                         </div>
