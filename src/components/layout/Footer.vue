@@ -5,14 +5,7 @@
             <div>
                 <!-- Logos -->
                 <div class="flex items-center space-x-5 mb-10">
-                    <!-- Replace with your logo -->
-                    <img src="@/assets/imgs/logo.png" alt="GalileeTours" class="h-8 w-auto" />
-                    <div class="flex flex-col">
-                        <span class="text-white">GalileeTours</span>
-                        <span class="text-white">加利利旅行社</span>
-                    </div>
-                    <div class="h-12 w-px bg-white"></div>
-                    <img src="@/assets/imgs/logo1.png" alt="GalileeTours" class="h-15 w-auto" />
+                    <img src="@/assets/imgs/footer-logo.svg" alt="GalileeTours" class="h-15 w-auto" />
                 </div>
 
                 <p class="text-sm mb-10">

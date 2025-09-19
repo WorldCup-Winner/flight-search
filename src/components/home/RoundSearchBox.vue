@@ -1,11 +1,11 @@
 <template>
     <div>
         <!-- Search Form -->
-        <div class="border-2 border-primary-gold rounded-xl rounded-tr-none px-5">
+        <div class="border-2 border-primary-gold rounded-xl rounded-tr-none p-0 lg:px-5">
             <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                <div class="grid grid-cols-10 items-center col-span-2 gap-4 border-r-2 border-primary-gold">
+                <div class="grid grid-cols-10 col-span-2 gap-4 border-primary-gold lg:border-r-2">
                     <!-- Departure -->
-                    <div class="relative py-6 col-span-3" ref="depTriggerRef">
+                    <div class=" relative py-6 col-span-3" ref="depTriggerRef">
                         <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">出發地</label>
                         <div class="cursor-pointer" @click="toggleDeparture">
                             <div class="text-others-gray1 mb-1">
@@ -18,7 +18,7 @@
                             <div v-if="isDepartureOpen" ref="depPopoverRef"
                                 class="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[680px] max-w-[85vw]"
                                 @click.stop>
-                                <div class="bg-[#B3A093] text-white p-4 rounded-t-2xl">
+                                <div class="bg-primary-gold text-white p-4 rounded-t-2xl">
                                     <h3 class="text-base font-semibold pl-5">出發地</h3>
                                 </div>
 
@@ -28,8 +28,8 @@
                                             class="rounded-xl py-2 px-0 text-[18px] leading-none transition-colors"
                                             :class="[
                                                 selectedDepartureRegion === region
-                                                    ? 'border-2 border-[#F39800] text-[#F39800]'
-                                                    : 'text-[#787878] hover:text-[#F39800]'
+                                                    ? 'border-2 border-others-original text-others-original'
+                                                    : 'text-others-gray1 hover:text-others-original'
                                             ]" @click="selectedDepartureRegion = region">
                                             {{ region }}
                                         </button>
@@ -37,7 +37,7 @@
 
                                     <div class="grid grid-cols-8 gap-0 gap-y-5 pb-4">
                                         <button v-for="city in currentDepartureCities" :key="`dep-city-${city}`"
-                                            class="text-[17px] font-medium text-[#787878] hover:text-[#F39800] transition-colors"
+                                            class="text-[17px] font-medium text-others-gray1 hover:text-others-original transition-colors"
                                             @click="selectDepartureCity(city)">
                                             {{ city }}
                                         </button>
@@ -56,8 +56,10 @@
                     <!-- Destination -->
                     <div class="relative py-6 col-span-6" ref="destTriggerRef">
                         <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">目的地</label>
-                        <div class="cursor-pointer pr-4" @click="toggleDestination">
-                            <div class="font-medium text-[#787878] mb-1">
+                        <div class="cursor-pointer pr-4" :class="errors.destination ? 'text-text-error' : ''"
+                            @click="toggleDestination">
+                            <div class="font-medium text-others-gray1 mb-1"
+                                :class="errors.destination ? 'text-text-error' : ''">
                                 {{ selectedDestinationCity || '輸入國家/城市/機場關鍵字' }}
                             </div>
                         </div>
@@ -67,7 +69,7 @@
                             <div v-if="isDestinationOpen" ref="destPopoverRef"
                                 class="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[680px] max-w-[85vw]"
                                 @click.stop>
-                                <div class="bg-[#B3A093] text-white p-4 rounded-t-2xl">
+                                <div class="bg-primary-gold text-white p-4 rounded-t-2xl">
                                     <h3 class="text-base font-semibold pl-5">目的地</h3>
                                 </div>
 
@@ -77,8 +79,8 @@
                                             class="rounded-xl py-2 px-0 text-[18px] leading-none transition-colors"
                                             :class="[
                                                 selectedDestinationRegion === region
-                                                    ? 'border-2 border-[#F39800] text-[#F39800]'
-                                                    : 'text-[#787878] hover:text-[#F39800]'
+                                                    ? 'border-2 border-others-original text-others-original'
+                                                    : 'text-others-gray1 hover:text-others-original'
                                             ]" @click="selectedDestinationRegion = region">
                                             {{ region }}
                                         </button>
@@ -86,7 +88,7 @@
 
                                     <div class="grid grid-cols-8 gap-0 gap-y-5 pb-4">
                                         <button v-for="city in currentDestinationCities" :key="`dest-city-${city}`"
-                                            class="text-[17px] font-medium text-[#787878] hover:text-[#F39800] transition-colors"
+                                            class="text-[17px] font-medium text-others-gray1 hover:text-others-original transition-colors"
                                             @click="selectDestinationCity(city)">
                                             {{ city }}
                                         </button>
@@ -97,22 +99,24 @@
                     </div>
                 </div>
 
-                <div class="col-span-2 items-center relative gap-4 border-r-2 border-[#B3A093] grid grid-cols-5"
+                <div class="col-span-2 relative gap-4 border-r-2 border-primary-gold grid grid-cols-5"
                     ref="dateTriggerRef">
                     <!-- Outbound Date -->
                     <div class="relative py-6 col-span-2 cursor-pointer" @click="toggleDatePicker">
                         <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">去程</label>
-                        <div class="font-medium text-others-gray1">{{ outboundDateText }}</div>
+                        <div class="font-medium text-others-gray1" :class="errors.startDate ? 'text-text-error' : ''">
+                            {{ outboundDateText || "請選擇日期" }}</div>
                     </div>
 
-                    <div class="relative col-span-1 mx-auto">
+                    <button class="flex col-span-1 py-6 items-center justify-center hover:opacity-80 transition">
                         <img src="@/assets/imgs/arrow-right.svg" alt="Swap Arrow" />
-                    </div>
+                    </button>
 
                     <!-- Return Date -->
-                    <div class="relative col-span-2 cursor-pointer" @click="toggleDatePicker">
+                    <div class="relative col-span-2 cursor-pointer py-6" @click="toggleDatePicker">
                         <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">回程</label>
-                        <div class="font-medium text-others-gray1">{{ returnDateText }}</div>
+                        <div class="font-medium text-others-gray1" :class="errors.endDate ? 'text-text-error' : ''">
+                            {{ returnDateText || "請選擇日期" }}</div>
                     </div>
 
                     <!-- Date Picker Popover -->
@@ -130,27 +134,27 @@
                 <div class="relative py-6" ref="passTriggerRef">
                     <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">人數</label>
                     <div class="cursor-pointer" @click="togglePassengers">
-                        <div class="font-medium text-[#787878]">{{ passengerDisplayText }}</div>
+                        <div class="font-medium text-others-gray1">{{ passengerDisplayText }}</div>
                     </div>
 
                     <transition name="fade-scale">
                         <div v-if="isPassengersOpen" ref="passPopoverRef"
                             class="absolute -left-28 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[328px] max-w-[85vw]"
                             @click.stop>
-                            <div class="bg-[#B3A093] text-white p-4 rounded-t-2xl">
+                            <div class="bg-primary-gold text-white p-4 rounded-t-2xl">
                                 <h3 class="text-base font-semibold">人數</h3>
                             </div>
 
                             <div class="p-6">
                                 <!-- Adults -->
                                 <div class="flex items-center justify-between mb-6">
-                                    <div class="font-medium text-[#787878] text-lg">成人 (12+)</div>
+                                    <div class="font-medium text-others-gray1 text-lg">成人 (12+)</div>
                                     <div class="flex items-center gap-3">
                                         <button @click="decrementAdults"
                                             class="w-10 h-10 rounded-lg bg-others-gray2 flex items-center justify-center text-primary-gold hover:bg-others-gray3 disabled:opacity-50">
                                             <span class="text-3xl font-normal">−</span>
                                         </button>
-                                        <span class="text-xl font-medium text-[#787878] min-w-[2rem] text-center">{{
+                                        <span class="text-xl font-medium text-others-gray1 min-w-[2rem] text-center">{{
                                             adultCount }}</span>
                                         <button @click="incrementAdults"
                                             class="w-10 h-10 rounded-lg bg-others-gray2 flex items-center justify-center text-primary-gold hover:bg-others-gray3 disabled:opacity-50"
@@ -162,14 +166,14 @@
 
                                 <!-- Children -->
                                 <div class="flex items-center justify-between mb-4">
-                                    <div class="font-medium text-[#787878] text-lg">孩童 (2-11)</div>
+                                    <div class="font-medium text-others-gray1 text-lg">孩童 (2-11)</div>
                                     <div class="flex items-center gap-3">
                                         <button @click="decrementChildren"
                                             class="w-10 h-10 rounded-lg bg-others-gray2 flex items-center justify-center text-primary-gold hover:bg-others-gray3 disabled:opacity-50"
                                             :disabled="childrenCount <= 0" type="button">
                                             <span class="text-3xl font-normal">−</span>
                                         </button>
-                                        <span class="text-xl font-medium text-[#787878] min-w-[2rem] text-center">{{
+                                        <span class="text-xl font-medium text-others-gray1 min-w-[2rem] text-center">{{
                                             childrenCount }}</span>
                                         <button @click="incrementChildren"
                                             class="w-10 h-10 rounded-lg bg-others-gray2 flex items-center justify-center text-primary-gold hover:bg-others-gray3 disabled:opacity-50"
@@ -179,7 +183,7 @@
                                     </div>
                                 </div>
 
-                                <div class="text-sm text-[#B3A093] mt-4 text-center">
+                                <div class="text-sm text-primary-gold mt-4 text-center">
                                     如有嬰兒(&lt;2歲)同行，請洽票務人工訂位
                                 </div>
                             </div>
@@ -284,8 +288,8 @@
                                     <button v-for="cabinClass in cabinClassOptions" :key="cabinClass"
                                         class="w-full text-left px-4 py-2 rounded-lg transition-colors text-lg font-medium"
                                         :class="selectedCabinClass === cabinClass
-                                            ? 'text-[#F39800] bg-[#FEF7E6]'
-                                            : 'text-[#787878] hover:bg-[#F5F4F2]'"
+                                            ? 'text-othres-original bg-white'
+                                            : 'text-others-gray1 hover:bg-others-gray6'"
                                         @click="selectCabinClass(cabinClass)">
                                         {{ cabinClass }}
                                     </button>
@@ -302,14 +306,15 @@
                         class="flex items-center justify-between min-w-[120px] bg-divider-soft text-primary-gold px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200 cursor-pointer">
                         <span>直飛</span>
                         <div class="w-4 h-4 rounded-full border-2 transition-colors duration-200 flex items-center justify-center"
-                            :class="isNonStopFlight ? 'border-primary-gold bg-none' : 'border-none bg-others-original'">
+                            :class="isNonStopFlight ? 'border-none bg-others-original' : 'border-primary-gold bg-none'">
                         </div>
                     </label>
                 </div>
             </div>
 
             <button
-                class="px-4 py-1 w-[150px] h-[50px] rounded-[15px] border-none bg-others-original text-white hover:bg-others-hover transition">
+                class="px-4 py-1 w-[150px] h-[50px] rounded-[15px] border-none bg-others-original text-white hover:bg-others-hover transition"
+                @click="onSearch">
                 搜尋
             </button>
         </div>
@@ -346,8 +351,8 @@ const selectedDestinationRegion = ref('日韓')
 const selectedDepartureCity = ref('')
 const selectedDestinationCity = ref('')
 
-const startDate = ref(new Date(2025, 9, 12)) // October 12, 2025
-const endDate = ref(new Date(2025, 9, 24)) // October 24, 2025
+const startDate = ref('') // October 12, 2025
+const endDate = ref('') // October 24, 2025
 
 const adultCount = ref(1)
 const childrenCount = ref(0)
@@ -464,19 +469,56 @@ function selectCabinClass(v) {
     isCabinClassOpen.value = false
 }
 
-/** Emit “search” with all values */
+const errors = ref({
+    destination: false,
+    startDate: false,
+    endDate: false,
+})
+
+
+/** ------------------ SEARCH PAYLOAD ------------------ **/
 const emit = defineEmits(['search'])
+// Map cabin class label → booking code
+const cabinClassMap = {
+    '艙等不限': 'ALL',
+    '經濟艙': 'M',
+    '豪華經濟艙': 'W',
+    '商務艙': 'C',
+    '頭等艙': 'F'
+}
 function onSearch() {
-    emit('search', {
-        tripType: 'oneway',
-        from: selectedDepartureCity.value || 'TPE 台北(任何)',
-        to: selectedDestinationCity.value || '',
-        date: startDate.value ? startDate.value.toISOString() : null,
-        passengers: { adults: adultCount.value, children: childrenCount.value },
-        airline: selectedAirline.value,
-        cabinClass: selectedCabinClass.value,
-        direct: isDirectFlight.value,
-    })
+    // Reset errors
+    errors.value = {
+        destination: !selectedDestinationCity.value,
+        startDate: !startDate.value,
+        endDate: !endDate.value,
+    }
+
+    // If any error → stop search
+    if (Object.values(errors.value).some(v => v)) {
+        console.warn("Validation failed", errors.value)
+        return
+    }
+
+    const payload = {
+        flightSegments: [
+            {
+                order: 1,
+                departureLocation: selectedDepartureCity.value || 'TPE',
+                arrivalLocation: selectedDestinationCity.value || '',
+                departureDate: startDate.value ? startDate.value.toISOString().slice(0, 10) : null,
+                returnDate: endDate.value ? endDate.value.toISOString().slice(0, 10) : null,
+            }
+        ],
+        adultCount: adultCount.value,
+        childCount: childrenCount.value,
+        carrierId: selectedAirline.value, // 航空公司代碼
+        cabinId: cabinClassMap[selectedCabinClass.value] || 'ALL',
+        isNonStopFlight: isNonStopFlight.value,
+        selectedRefNumbers: []
+    }
+    console.log(payload)
+    emit('search', payload)
 }
 
 /** ------------------ CLOSE ON OUTSIDE / ESC ------------------ **/

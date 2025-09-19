@@ -1,7 +1,7 @@
 <template>
   <div class="relative" ref="dropdownRef">
     <button @click="isOpen = !isOpen"
-      class="flex items-center justify-between min-w-[200px] bg-[#F5F4F2] text-[#8B7355] px-4 py-3 rounded-xl text-sm font-medium hover:bg-[#F0EFE9] transition-colors duration-200">
+      class="flex items-center justify-between min-w-[200px] bg-others-gray6 text-primary-gold px-4 py-3 rounded-xl text-sm font-medium hover:bg-primary-gold transition-colors duration-200">
       <span>{{ selectedValue }}</span>
       <svg class="w-4 h-4 ml-2 transition-transform duration-200" :class="{ 'rotate-180': isOpen }" fill="currentColor"
         viewBox="0 0 12 12">
@@ -13,8 +13,8 @@
     <div v-if="isOpen"
       class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
       <div v-for="(item, index) in options" :key="index" @click="selectItem(item)"
-        class="px-4 py-3 text-sm text-[#8B7355] hover:bg-[#F5F4F2] cursor-pointer transition-colors duration-150"
-        :class="{ 'bg-[#F5F4F2]': item === selectedValue }">
+        class="px-4 py-3 text-sm text-primary-gold hover:bg-othres-gray6 cursor-pointer transition-colors duration-150"
+        :class="{ 'bg-others-gray6': item === selectedValue }">
         {{ item }}
       </div>
     </div>

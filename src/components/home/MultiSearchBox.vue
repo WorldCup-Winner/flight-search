@@ -12,7 +12,7 @@
           </div>
         </div>
 
-        <div class="flex col-span-6 grid-cols-1 md:grid-cols-5 items-center gap-4 border-l-2 border-primary-gold px-4">
+        <div class="flex col-span-6 grid-cols-1 md:grid-cols-5 gap-4 md:border-l-2 border-primary-gold px-4">
           <!-- Departure -->
           <div class="relative col-span-2 py-6" :ref="setDepTriggerRef(idx)">
             <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">出發地</label>
@@ -64,8 +64,8 @@
           <!-- Destination -->
           <div class="relative col-span-2 py-6" :ref="setDestTriggerRef(idx)">
             <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">目的地</label>
-            <div class="cursor-pointer pr-4" @click="toggleDestination(idx)">
-              <div class="font-medium text-others-gray1">
+            <div class="cursor-pointer pr-4" :class="errors[idx].destination ? 'text-text-error' : ''" @click="toggleDestination(idx)">
+              <div class="font-medium text-others-gray1" :class="errors[idx].destination ? 'text-text-error' : ''">
                 {{ seg.toCity || '輸入國家/城市/機場關鍵字' }}
               </div>
             </div>
@@ -105,10 +105,10 @@
         </div>
 
         <!-- Date column -->
-        <div class="border-t-2 col-span-4 lg:border-t-0 lg:border-l-2 border-primary-gold px-6 py-6 relative"
+        <div class="border-t-2 col-span-4 md:border-t-0 md:border-l-2 border-primary-gold px-6 py-6 relative"
           :ref="setDateTriggerRef(idx)">
-          <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">日期</label>
-          <div class="font-medium text-others-gray1 cursor-pointer" @click="toggleDate(idx)">
+          <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">日期</label>
+          <div class="font-medium text-others-gray1 cursor-pointer" :class="errors[idx].startDate ? 'text-text-error' : ''" @click="toggleDate(idx)">
             {{ formatDate(seg.departureDate) || '請選擇日期' }}
           </div>
 
@@ -123,7 +123,7 @@
         </div>
 
         <!-- Delete button on segments 3..5 -->
-        <div class="hidden lg:flex items-start justify-end mt-4 px-4">
+        <div class="items-start md:justify-end mt-4 px-4">
           <button v-if="segments.length > 2 && idx >= 2" @click="removeSegment(idx)" type="button"
             class="w-8 h-8 text-xl rounded-lg bg-others-original text-white grid place-items-center hover:bg-others-original/90"
             aria-label="remove segment" title="移除此航段">
@@ -293,8 +293,8 @@
                 <div class="space-y-3">
                   <button v-for="cabinClass in cabinClassOptions" :key="cabinClass"
                     class="w-full text-left px-4 py-2 rounded-lg transition-colors text-lg font-medium" :class="selectedCabinClass === cabinClass
-                      ? 'text-others-original bg-[#FEF7E6]'
-                      : 'text-others-gray1 hover:bg-[#F5F4F2]'" @click="selectCabinClass(cabinClass)">
+                      ? 'text-others-original bg-white'
+                      : 'text-others-gray1 hover:bg-others-gray6'" @click="selectCabinClass(cabinClass)">
                     {{ cabinClass }}
                   </button>
                 </div>
@@ -310,14 +310,15 @@
             class="flex items-center justify-between min-w-[120px] bg-divider-soft text-primary-gold px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200 cursor-pointer">
             <span>直飛</span>
             <div class="w-4 h-4 rounded-full border-2 transition-colors duration-200 flex items-center justify-center"
-              :class="isNonStopFlight ? 'border-primary-gold bg-none' : 'border-none bg-others-original'">
+              :class="isNonStopFlight ? 'border-none bg-others-original' : 'border-primary-gold bg-none'">
             </div>
           </label>
         </div>
       </div>
 
       <button
-        class="px-4 py-1 w-[150px] h-[50px] rounded-[15px] border-none bg-others-original text-white hover:bg-others-hover transition">
+        class="px-4 py-1 w-[150px] h-[50px] rounded-[15px] border-none bg-others-original text-white hover:bg-others-hover transition"
+        @click="onSearch">
         搜尋
       </button>
     </div>
@@ -327,6 +328,20 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import DatePicker from '@/components/ui/DatePicker.vue'
+
+
+const errors = ref([
+  {
+    destination: false,
+    startDate: false,
+    endDate: false,
+  },
+  {
+    destination: false,
+    startDate: false,
+    endDate: false,
+  }
+])
 
 /* -------------------- segment model -------------------- */
 let nextId = 1
@@ -344,10 +359,16 @@ const canAdd = computed(() => segments.value.length < 5)
 function addSegment() {
   if (!canAdd.value) return
   segments.value.push(makeSeg())
+  errors.value.push({
+    destination: false,
+    startDate: false,
+    endDate: false
+  })
 }
 function removeSegment(idx) {
   if (segments.value.length <= 2) return
   segments.value.splice(idx, 1)
+  errors.value.splice(idx, 1)
 }
 
 /* -------------------- regions & cities -------------------- */
@@ -541,21 +562,56 @@ function formatDate(date) {
   return `${y} / ${m} / ${d} (${wd})`
 }
 
-/* -------------------- search emit -------------------- */
+/** ------------------ SEARCH PAYLOAD ------------------ **/
 const emit = defineEmits(['search'])
+
+// Map cabin class label → booking code
+const cabinClassMap = {
+  '艙等不限': 'ALL',
+  '經濟艙': 'M',
+  '豪華經濟艙': 'W',
+  '商務艙': 'C',
+  '頭等艙': 'F'
+}
+
+// Find airline code from name
+function getAirlineCode(nameOrCode) {
+  const match = allAirlines.value.find(a => a.name === nameOrCode || a.code === nameOrCode)
+  return match ? match.code : nameOrCode
+}
+
 function onSearch() {
-  emit('search', {
-    tripType: 'multi',
-    segments: segments.value.map(s => ({
-      from: s.fromCity || 'TPE 台北(任何)',
-      to: s.toCity || '',
-      date: s.departureDate ? s.departureDate.toISOString() : null,
-    })),
-    passengers: { adults: adultCount.value, children: childrenCount.value },
-    airline: selectedAirline.value,
-    cabinClass: selectedCabinClass.value,
-    direct: isNonStopFlight.value,
+
+  errors.value = segments.value.map((segment) => ({
+    destination: !segment.toCity,
+    startDate: !segment.departureDate
+  }))
+  
+  // If any error → stop search
+  errors.value.forEach((error) => {
+    if (Object.values(error).some(v => v)) {
+      console.warn("Validation failed", errors.value)
+      return
+    }
   })
+
+  const payload = {
+    flightSegments: segments.value.map((s, idx) => ({
+      order: idx + 1,
+      departureLocation: s.fromCity || 'TPE',
+      arrivalLocation: s.toCity || '',
+      departureDate: s.departureDate ? s.departureDate.toISOString().slice(0, 10) : null,
+      returnDate: null
+    })),
+    adultCount: adultCount.value,
+    childCount: childrenCount.value,
+    carrierId: getAirlineCode(selectedAirline.value),   // always airline code
+    cabinId: cabinClassMap[selectedCabinClass.value] || 'ALL',
+    isNonStopFlight: isNonStopFlight.value,
+    selectedRefNumbers: []
+  }
+  console.log(payload)
+  emit('search', payload)
 }
 
 /* -------------------- lifecycle -------------------- */

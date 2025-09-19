@@ -4,11 +4,7 @@
       <!-- Logo -->
       <div class="flex items-center space-x-2">
         <!-- Replace with your logo -->
-        <img src="/logo.png" alt="GalileeTours" class="h-8 w-auto" />
-        <div class="flex flex-col leading-tight">
-          <h3 class="text-h3a text-white md:text-h3a-d font-light">GalileeTours</h3>
-          <h4 class="text-h4a text-white md:text-h4a-d font-light">加利利旅行社</h4>
-        </div>
+        <img src="@/assets/imgs/header-logo.svg" alt="GalileeTours" class="h-8 w-auto" />
       </div>
 
       <!-- Menu -->

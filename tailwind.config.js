@@ -6,7 +6,8 @@ export default {
       colors: {
         primary: {
           gold: '#B3A093',
-          gold1: '#D6D6D6'
+          gold1: '#D6D6D6',
+          gold2: "#CEC4BD"
         },
         secondary: {
           brown: '#BD5F3B',
@@ -15,7 +16,8 @@ export default {
         text: {
           title: '#000000', // Black Title
           gray: '#6D6D6D', // Secondary text, MORE
-          muted: '#626161' // Input text, searchbar icon
+          muted: '#626161', // Input text, searchbar icon,
+          error: '#EA0061' // Validate error
         },
         alert: {
           success: '#75AF7A',
@@ -37,7 +39,8 @@ export default {
           gray3: '#D6D6D6',
           gray4: '#C6C6C6',
           gray5: '#A3A3A3',
-          gray6: '#F2ECE7'
+          gray6: '#F2ECE7',
+          gray7: '#323232'
         }
       },
       screens: {
@@ -68,6 +71,10 @@ export default {
         'h4-d': ['20px', { lineHeight: '1.4' }],  // use font-bold
         'h5-d': ['18px', { lineHeight: '1.6' }],
         'h6-d': ['16px', { lineHeight: '1.6' }],
+      },
+      animation: {
+        'spin-slow': 'spin 3s linear infinite',
+        'spin-fast': 'spin 0.5s linear infinite',
       }
     }
   },
