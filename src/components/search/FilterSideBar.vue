@@ -86,8 +86,8 @@
 
     <div class="mt-4 rounded-[10px] overflow-hidden border border-[#E6DDD6] divide-y divide-[#E6DDD6]">
       <button v-for="card in alliances" :key="card.id" type="button" @click="toggleAlliance(card.id)"
-        class="flex items-center gap-4 w-full bg-white px-4 py-3 text-left hover:bg-[#F9F7F5]"
-        :class="state.alliances.has(card.id) ? 'ring-2 ring-others-original/70' : ''">
+        class="flex items-center gap-4 w-full bg-white px-4 py-3 text-left"
+        :class="state.alliances.has(card.id) ? 'bg-[#FFF6DD]' : ''">
         <img :src="card.logo" :alt="card.name" class="w-14 h-14 object-contain" />
         <div class="flex-1">
           <div class="text-[#7A7A7A]">{{ card.name }}</div>

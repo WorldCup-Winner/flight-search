@@ -35,13 +35,40 @@
                     <!-- Social Icons -->
                     <div class="flex space-x-[25px] mb-6">
                         <a href="#" aria-label="Facebook">
-                            <img src="@/assets/imgs/icon-facebook.svg" />
+                            <div
+                                class="w-8 h-8 bg-white
+                                    [mask-image:url('@/assets/imgs/icon-facebook.svg')] 
+                                    [mask-repeat:no-repeat] 
+                                    [mask-position:center] 
+                                    [mask-size:contain] 
+                                    [-webkit-mask-image:url('@/assets/imgs/icon-facebook.svg')]
+                                    hover:bg-[#FFF6DD]
+                                    ">
+                            </div>
                         </a>
                         <a href="#" aria-label="Instagram">
-                            <img src="@/assets/imgs/icon-instagram.svg" />
+                            <div
+                                class="w-8 h-8 bg-white
+                                    [mask-image:url('@/assets/imgs/icon-instagram.svg')] 
+                                    [mask-repeat:no-repeat] 
+                                    [mask-position:center] 
+                                    [mask-size:contain] 
+                                    [-webkit-mask-image:url('@/assets/imgs/icon-instagram.svg')]
+                                    hover:bg-[#FFF6DD]
+                                    ">
+                            </div>
                         </a>
                         <a href="#" aria-label="Line">
-                            <img src="@/assets/imgs/icon-line.svg" />
+                            <div
+                                class="w-8 h-8 bg-white
+                                    [mask-image:url('@/assets/imgs/icon-line.svg')] 
+                                    [mask-repeat:no-repeat] 
+                                    [mask-position:center] 
+                                    [mask-size:contain] 
+                                    [-webkit-mask-image:url('@/assets/imgs/icon-line.svg')]
+                                    hover:bg-[#FFF6DD]
+                                    ">
+                            </div>
                         </a>
                     </div>
                     <!-- Links -->
@@ -55,3 +82,6 @@
         </div>
     </footer>
 </template>
+<script lang="js">
+import IconFacebook from "@/assets/imgs/icon-facebook.svg"
+</script>

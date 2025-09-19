@@ -14,13 +14,13 @@
           <div class="relative bg-primary-gold2 rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] mb-4">
             <!-- Left orange tab -->
             <div class="absolute inset-y-0 left-0 w-40 bg-[#F39800] text-white grid place-items-center rounded-l-xl">
-              <span class="text-[28px]">去程</span>
+              <span class="text-[22px]">去程</span>
             </div>
 
             <div class="pl-48 pr-6 py-5 text-white/95">
               <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
-                <div class="text-[26px]">{{ dateText }}</div>
-                <div class="text-[26px]">
+                <div class="text-[22px]">{{ dateText }}</div>
+                <div class="text-[20px]">
                   {{ origin.name }}({{ origin.code }}) &nbsp;—&nbsp; {{ destination.name }}({{ destination.code }})
                 </div>
               </div>
@@ -102,19 +102,22 @@
             </div>
           </div>
         </div>
-
+        
         <!-- RESULTS LIST -->
-        <div class="space-y-4">
+        <div v-if="shownFlights.length >= 1" class="space-y-4">
           <FlightResultCard v-for="it in shownFlights" :key="it.id" v-bind="it" :price-from="displayPrice(it.priceFrom)"
             :round-trip-included="true" currency="TWD" @purchase="onPurchase" />
         </div>
 
         <!-- LOAD MORE -->
-        <div v-if="canLoadMore" class="py-8 text-center">
+        <div v-if="canLoadMore && shownFlights.length >= 1" class="py-8 text-center">
           <div class="inline-flex items-center gap-3 text-[#F39800] font-bold">
             <span>更多航班訊息載入中</span>
             <img src="@/assets/imgs/icon-loading.svg" class="animate-spin-slow w-8 h-8" alt="Loading" />
           </div>
+        </div>
+        <div v-if="shownFlights.length <= 0">
+          <SorryNoData />
         </div>
       </section>
     </div>
@@ -125,6 +128,7 @@
 import { computed, onMounted, onBeforeUnmount, reactive, ref } from 'vue'
 import FlightResultCard from '@/components/search/FlightResultCard.vue'
 import FilterSideBar from '@/components/search/FilterSideBar.vue'
+import SorryNoData from '@/components/ui/SorryNoData.vue'
 
 import Airline_One from '@/assets/imgs/airline-one.svg'
 import Airline_Sky from '@/assets/imgs/airline-sky.svg'

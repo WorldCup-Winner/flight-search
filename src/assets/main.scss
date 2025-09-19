@@ -3,16 +3,17 @@
 @tailwind utilities;
 
 @layer base {
-
   *,
   *::before,
   *::after {
-    @apply box-border m-0 font-sans
+    @apply box-border m-0 font-sans;
   }
 
   body {
     text-rendering: optimizeLegibility;
   }
 
-  #app {}
+  #app {
+    background-color: #f7f7f7;
+  }
 }
