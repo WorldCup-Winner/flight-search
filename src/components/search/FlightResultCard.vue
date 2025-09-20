@@ -230,8 +230,16 @@ function formatPrice(n: number) {
   return n.toLocaleString('en-US')
 }
 
+// ✅ Import all the icons eagerly; keys will be absolute paths starting with /src
+const iconMap = import.meta.glob('/src/assets/imgs/rules/icon-*.svg', {
+  eager: true,
+  import: 'default'
+}) as Record<string, string>
+
 function noteIcon(type: FareNoteType, icon: FareIconType) {
-  return `src/assets/imgs/rules/icon-${icon}-${type}.svg`
+  const key = `/src/assets/imgs/rules/icon-${icon}-${type}.svg`
+  // optional: provide a safe fallback if a file is missing
+  return iconMap[key] ?? iconMap['/src/assets/imgs/rules/icon-info-allowed.svg']
 }
 
 function noteTextClass(type: FareNoteType) {
