@@ -1,23 +1,23 @@
 <template>
-  <div class="mx-auto max-w-[1200px] px-4 py-6">
+  <div class="mx-auto max-w-6xl pb-6">
     <div class="grid grid-cols-12 gap-3">
       <!-- SIDEBAR -->
       <aside class="col-span-12 md:col-span-3">
-        <FilterSideBar :stopsPricing="{ direct: 5545, oneStop: 8545 }" :alliances="alliances" :airlines="airlines"
-          :depAirports="depAirports" :arrAirports="arrAirports" @update:filters="onFiltersChange" />
+          <FilterSideBar :stopsPricing="{ direct: 5545, oneStop: 8545 }" :alliances="alliances" :airlines="airlines"
+            :depAirports="depAirports" :arrAirports="arrAirports" @update:filters="onFiltersChange" />
       </aside>
 
       <!-- MAIN -->
       <section class="col-span-12 md:col-span-9">
         <!-- HEADER STRIP -->
-        <div class="mb-4 bg-white">
+        <div class="mb-4 bg-none">
           <div class="relative bg-primary-gold2 rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] mb-4">
             <!-- Left orange tab -->
-            <div class="absolute inset-y-0 left-0 w-40 bg-[#F39800] text-white grid place-items-center rounded-l-xl">
+            <div class="absolute inset-y-0 left-0 w-40 bg-others-original text-white grid place-items-center rounded-l-[10px]">
               <span class="text-[22px]">去程</span>
             </div>
 
-            <div class="pl-48 pr-6 py-5 text-white/95">
+            <div class="pl-48 pr-6 py-5 text-white">
               <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
                 <div class="text-[22px]">{{ dateText }}</div>
                 <div class="text-[20px]">
@@ -33,13 +33,13 @@
           <!-- SORT BAR -->
           <div class="bg-white px-4 py-3 drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] rounded-[10px]">
             <div class="flex flex-wrap items-center gap-4">
-              <button class="px-4 py-2 rounded-xl"
+              <button class="px-4 py-2 rounded-[10px]"
                 :class="sort.key === 'direct' ? 'text-others-original' : 'text-others-gray7'"
                 @click="setSort('direct', 'asc')">
                 直飛優先
               </button>
 
-              <button class="px-3 py-2 rounded-xl flex items-center gap-1"
+              <button class="px-3 py-2 rounded-[10px] flex items-center gap-1"
                 :class="sort.key === 'price' ? 'text-others-original' : 'text-others-gray7'"
                 @click="toggleSort('price')">
                 <span>價格</span>
@@ -51,7 +51,7 @@
                   <path d="M6 8l4 4 4-4" fill="currentColor" />
                 </svg></div>
               </button>
-              <button class="px-3 py-2 rounded-xl flex items-center gap-1"
+              <button class="px-3 py-2 rounded-[10px] flex items-center gap-1"
                 :class="sort.key === 'depTime' ? 'text-others-original' : 'text-others-gray7'"
                 @click="toggleSort('depTime')">
                 <span>出發時間</span>
@@ -63,7 +63,7 @@
                   <path d="M6 8l4 4 4-4" fill="currentColor" />
                 </svg></div>
               </button>
-              <button class="px-3 py-2 rounded-xl flex items-center gap-1"
+              <button class="px-3 py-2 rounded-[10px] flex items-center gap-1"
                 :class="sort.key === 'arrTime' ? 'text-others-original' : 'text-others-gray7'"
                 @click="toggleSort('arrTime')">
                 <span>抵達時間</span>
@@ -75,7 +75,7 @@
                   <path d="M6 8l4 4 4-4" fill="currentColor" />
                 </svg></div>
               </button>
-              <button class="px-3 py-2 rounded-xl flex items-center gap-1"
+              <button class="px-3 py-2 rounded-[10px] flex items-center gap-1"
                 :class="sort.key === 'duration' ? 'text-others-original' : 'text-others-gray7'"
                 @click="toggleSort('duration')">
                 <span>飛行總時間</span>
@@ -90,11 +90,11 @@
 
               <div class="ml-auto">
                 <!-- Tax segmented control -->
-                <div class="rounded-xl p-1 inline-flex gap-2 border-[1.5px] border-primary-gold">
-                  <button class="px-6 py-1 rounded-lg text-sm font-bold"
+                <div class="rounded-[10px] p-1 inline-flex gap-2 border-[1.5px] border-primary-gold">
+                  <button class="px-6 py-1 rounded-md text-sm font-bold"
                     :class="taxMode === 'in' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-white'"
                     @click="taxMode = 'in'">含稅</button>
-                  <button class="px-6 py-1 rounded-lg text-sm font-bold"
+                  <button class="px-6 py-1 rounded-md text-sm font-bold"
                     :class="taxMode === 'ex' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-white'"
                     @click="taxMode = 'ex'">未稅</button>
                 </div>
@@ -105,13 +105,23 @@
         
         <!-- RESULTS LIST -->
         <div v-if="shownFlights.length >= 1" class="space-y-4">
-          <FlightResultCard v-for="it in shownFlights" :key="it.id" v-bind="it" :price-from="displayPrice(it.priceFrom)"
-            :round-trip-included="true" currency="TWD" @purchase="onPurchase" />
+          <TransitionGroup appear >
+            <FlightResultCard
+              v-for="(it, i) in shownFlights" :key="it.id" v-bind="it"
+              :style="{
+                transitionDelay: i * 100 + 'ms',
+                // transitionDelayLeave: ((shownFlights.length - i - 1) * 100) + 'ms'
+              }"
+              :price-from="displayPrice(it.priceFrom)"
+              :round-trip-included="true"
+              currency="TWD"
+              @purchase="onPurchase" />
+          </TransitionGroup>
         </div>
 
         <!-- LOAD MORE -->
         <div v-if="canLoadMore && shownFlights.length >= 1" class="py-8 text-center">
-          <div class="inline-flex items-center gap-3 text-[#F39800] font-bold">
+          <div class="inline-flex items-center gap-3 text-others-original font-bold">
             <span>更多航班訊息載入中</span>
             <img src="@/assets/imgs/icon-loading.svg" class="animate-spin-slow w-8 h-8" alt="Loading" />
           </div>
@@ -220,7 +230,7 @@ function make1Stop(code1: string, name1: string, logo1: string,
   const code2 = 'CI'
   return {
     id: cryptoId(),
-    airlines: [{ name: name1, logo: logo1, code: code1 }, { name: '中華航空', logo: '/logos/CI.svg', code: code2 }],
+    airlines: [{ name: name1, logo: logo1, code: code1 }, { name: '中華航空', logo: Airline_2, code: code2 }],
     head: { dep: { time: t1, code: 'TPE', terminal: 'T1' }, arr: { time: t4, code: 'KKL', terminal: 'T1' } },
     segments: [
       {
@@ -231,7 +241,7 @@ function make1Stop(code1: string, name1: string, logo1: string,
       {
         dep: { date: '8月27日', time: t3, code: t3Code, terminal: 'T2', airportName: `${t3Code}羽田機場T2東京` },
         arr: { date: '8月27日', time: t4, code: 'KKL', terminal: 'T1', airportName: 'KKL 首爾國際機場T1 首爾' },
-        carrier: { name: '中華航空', logo: '/logos/CI.svg', code: code2 }, flightNo: `${code2}214`, equipment: 'A320', durationMinutes: 135
+        carrier: { name: '中華航空', logo: Airline_2, code: code2 }, flightNo: `${code2}214`, equipment: 'A320', durationMinutes: 135
       }
     ],
     transferNotes: [{ location: '東京', durationMinutes: layMins, differentAirport: true, baggageThrough: true }],
@@ -245,26 +255,32 @@ function demoFares(base: number) {
   return [
     {
       id: 'F1', cabin: '商務艙', price: base + 9880, notes: [
-        { type: 'good', text: '行李每成人1*23KG' },
-        { type: 'good', text: '退票費 TWD 5,136起' },
-        { type: 'good', text: '日期更改 TWD 2,568起' },
-        { type: 'good', text: '付款後48小時內出票' },
-        { type: 'good', text: '由2至多張機票組成' },
-        { type: 'good', text: '由海外供應商提供' },
+        { type: 'allowed', icon: 'suitcase', text: '行李每成人1*23KG' },
+        { type: 'allowed', icon: 'ticket', text: '退票費 TWD 5,136起' },
+        { type: 'allowed', icon: 'calendar', text: '日期更改 TWD 2,568起' },
+        { type: 'allowed', icon: 'clock', text: '付款後48小時內出票' },
+        { type: 'allowed', icon: 'info', text: '由2至多張機票組成' },
+        { type: 'allowed', icon: 'info', text: '由海外供應商提供' },
       ]
     },
     {
       id: 'F2', cabin: '商務艙', price: base + 1900, notes: [
-        { type: 'bad', text: '無免費托運行李' },
-        { type: 'bad', text: '不可退票 / 不可更改日期' },
-        { type: 'warn', text: '出票時間' },
-        { type: 'neutral', text: '由2至多張機票組成' },
+        { type: 'notallowed', icon: 'suitcase', text: '無免費托運行李' },
+        { type: 'notallowed', icon: 'ticket', text: '不可退票' },
+        { type: 'notallowed', icon: 'calendar', text: '不可更改日期' },
+        { type: 'notallowed', icon: 'clock', text: '出票時間' },
+        { type: 'allowed', icon: 'info', text: '由2至多張機票組成' },
+        { type: 'allowed', icon: 'info', text: '由海外供應商提供' },
       ]
     },
     {
       id: 'F3', cabin: '商務艙', price: base - 200, notes: [
-        { type: 'bad', text: '無免費托運行李' },
-        { type: 'bad', text: '不可更改日期 / 不可退票' },
+        { type: 'notallowed', icon: 'suitcase', text: '無免費托運行李' },
+        { type: 'notallowed', icon: 'ticket', text: '不可退票' },
+        { type: 'notallowed', icon: 'calendar', text: '不可更改日期' },
+        { type: 'notallowed', icon: 'clock', text: '出票時間' },
+        { type: 'allowed', icon: 'info', text: '由2至多張機票組成' },
+        { type: 'allowed', icon: 'info', text: '由海外供應商提供' },
       ]
     },
   ]
@@ -385,4 +401,23 @@ function onPurchase({ fare }: any) {
   // console.log('purchase', fare)
 }
 </script>
-<style scoped></style>
+
+<style>
+.v-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+.v-enter-to {
+  opacity: 1;
+  transform: translateY(0px);
+}
+.v-enter-active,
+.v-leave-active,
+.v-move {
+  transition: all 0.4s ease;
+  display: block;
+}
+.v-leave-active { position: absolute; }
+.v-leave-from { opacity: 1; }
+.v-leave-to { opacity: 0; }
+</style>

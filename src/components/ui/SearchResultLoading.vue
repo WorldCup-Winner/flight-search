@@ -1,15 +1,15 @@
 <template>
     <div
-      class="min-h-screen w-full bg-[#F5F4F2] py-6"
+      class="min-h-screen w-full pb-6"
       aria-busy="true"
       aria-live="polite"
     >
-      <div class="mx-auto max-w-[1200px] px-4">
+      <div class="mx-auto max-w-6xl">
         <div class="grid grid-cols-12 gap-6">
           <!-- Sidebar -->
           <aside class="col-span-12 md:col-span-3">
-            <div class="rounded-2xl bg-white shadow-2xl p-4">
-              <div class="skel h-6 w-40 rounded-md mb-4"></div>
+            <div class="rounded-[10px] bg-white shadow-2xl p-4">
+              <div class="skel h-6 w-40 rounded mb-4"></div>
               <div class="skel h-4 w-56 rounded mb-3"></div>
               <div class="skel h-4 w-48 rounded mb-6"></div>
   
@@ -28,7 +28,7 @@
           <!-- Main list -->
           <section class="col-span-12 md:col-span-9 space-y-4">
             <!-- Header blocks -->
-            <div class="rounded-2xl bg-white shadow-2xl p-4">
+            <div class="rounded-[10px] bg-white shadow-2xl p-4">
               <div class="skel h-6 w-2/3 rounded-md mb-3"></div>
               <div class="skel h-10 w-full rounded-xl"></div>
             </div>
@@ -37,7 +37,7 @@
             <div
               v-for="n in rows"
               :key="n"
-              class="rounded-2xl bg-white shadow-2xl p-4"
+              class="rounded-[10px] bg-white shadow-2xl p-4"
             >
               <div class="flex items-center gap-4">
                 <div class="skel h-10 w-10 rounded-lg shrink-0"></div>
@@ -80,7 +80,7 @@
   .skel {
     position: relative;
     overflow: hidden;
-    background: #EEE9E4;
+    background: #F5F5F5;
   }
   .skel::after {
     content: "";

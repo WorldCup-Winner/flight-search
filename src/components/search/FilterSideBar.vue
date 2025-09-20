@@ -29,7 +29,7 @@
       </div>
     </div>
 
-    <hr class="my-6 border-[#E6DDD6]" />
+    <hr class="my-6 border-others-gray2" />
 
     <!-- 直飛 / 轉機 -->
     <h4 class="tracking-wide text-primary-gold font-bold">直飛/轉機</h4>
@@ -52,7 +52,7 @@
         <label class="cursor-pointer text-others-gray1">
           直飛
         </label>
-        <label v-if="stopsPricing?.direct" class="ml-auto text-[#8A8A8A]">{{
+        <label v-if="stopsPricing?.direct" class="ml-auto text-others-gray1">{{
           formatCurrency(stopsPricing.direct) }}</label>
       </div>
 
@@ -74,24 +74,24 @@
         <label class="cursor-pointer text-others-gray1">
           轉機 / 中停1次
         </label>
-        <label v-if="stopsPricing?.oneStop" class="ml-auto text-[#8A8A8A]">{{
+        <label v-if="stopsPricing?.oneStop" class="ml-auto text-others-gray1">{{
           formatCurrency(stopsPricing.oneStop) }}</label>
       </div>
     </div>
 
-    <hr class="my-6 border-[#E6DDD6]" />
+    <hr class="my-6 border-others-gray2" />
 
     <!-- 航空公司（聯盟卡片） -->
     <h4 class="tracking-wide text-primary-gold font-bold">航空公司</h4>
 
-    <div class="mt-4 rounded-[10px] overflow-hidden border border-[#E6DDD6] divide-y divide-[#E6DDD6]">
+    <div class="mt-4 rounded-[10px] overflow-hidden border border-others-gray2 divide-y divide-others-gray2">
       <button v-for="card in alliances" :key="card.id" type="button" @click="toggleAlliance(card.id)"
-        class="flex items-center gap-4 w-full bg-white px-4 py-3 text-left"
+        class="flex items-center gap-4 w-full bg-white px-4 py-3 text-left hover:bg-others-gray9"
         :class="state.alliances.has(card.id) ? 'bg-[#FFF6DD]' : ''">
         <img :src="card.logo" :alt="card.name" class="w-14 h-14 object-contain" />
         <div class="flex-1">
-          <div class="text-[#7A7A7A]">{{ card.name }}</div>
-          <div class="font-semibold text-[#8E8E8E]">{{ formatCurrency(card.price) }}</div>
+          <div class="text-others-gray1">{{ card.name }}</div>
+          <div class="font-semibold text-others-gray1">{{ formatCurrency(card.price) }}</div>
         </div>
       </button>
     </div>
@@ -116,7 +116,7 @@
         <label class="cursor-pointer text-others-gray1">
           {{ air.name }}
         </label>
-        <label v-if="air.price" class="ml-auto text-[#8A8A8A]">{{
+        <label v-if="air.price" class="ml-auto text-others-gray1">{{
           formatCurrency(air.price) }}</label>
       </div>
       <button v-if="airlines.length > airlineLimit"
@@ -127,7 +127,7 @@
       </button>
     </div>
 
-    <hr class="my-6 border-[#E6DDD6]" />
+    <hr class="my-6 border-others-gray2" />
 
     <!-- 起飛機場 -->
     <h4 class="tracking-wide text-primary-gold font-bold">起飛機場</h4>
@@ -150,7 +150,7 @@
         <label class="cursor-pointer text-others-gray1">
           {{ a.name }}
         </label>
-        <label v-if="a.price" class="ml-auto text-[#8A8A8A]">
+        <label v-if="a.price" class="ml-auto text-others-gray1">
           {{ formatCurrency(a.price) }}
         </label>
       </div>
@@ -162,7 +162,7 @@
       </button>
     </div>
 
-    <hr class="my-6 border-[#E6DDD6]" />
+    <hr class="my-6 border-others-gray2" />
 
     <!-- 到達機場 -->
     <h4 class="tracking-wide text-primary-gold font-bold">到達機場</h4>
@@ -186,21 +186,21 @@
         <label class="cursor-pointer text-others-gray1">
           {{ a.name }}
         </label>
-        <label v-if="a.price" class="ml-auto text-[#8A8A8A]">{{
+        <label v-if="a.price" class="ml-auto text-others-gray1">{{
           formatCurrency(a.price) }}</label>
       </div>
 
     </div>
 
-    <hr class="my-6 border-[#E6DDD6]" />
+    <hr class="my-6 border-others-gray2" />
 
     <!-- 起飛時間 -->
     <h4 class="tracking-wide text-primary-gold font-bold">起飛時間</h4>
-    <div class="mt-2 text-[#6B7280] font-medium">
+    <div class="mt-2 text-others-gray1 font-medium">
       {{ minutesToText(state.departTime[0]) }} - {{ minutesToText(state.departTime[1]) }}
     </div>
     <div class="relative h-8 mt-1" :style="getDualRangeStyle(state.departTime[0], state.departTime[1])">
-      <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-[#F5D39E]"></div>
+      <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-others-original"></div>
       <div class="absolute top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-others-original"
         :style="{ left: 'var(--start)', right: 'calc(100% - var(--end))' }"></div>
       <input type="range" :min="0" :max="1439" :step="5" :value="state.departTime[0]" @input="updateDepartStart"
@@ -211,11 +211,11 @@
 
     <!-- 到達時間 -->
     <h4 class="mt-6 tracking-wide text-primary-gold font-bold">到達時間</h4>
-    <div class="mt-2 text-[#6B7280] font-medium">
+    <div class="mt-2 text-others-gray1 font-medium">
       {{ minutesToText(state.arriveTime[0]) }} - {{ minutesToText(state.arriveTime[1]) }}
     </div>
     <div class="relative h-8 mt-1" :style="getDualRangeStyle(state.arriveTime[0], state.arriveTime[1])">
-      <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-[#F5D39E]"></div>
+      <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-others-original"></div>
       <div class="absolute top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-others-original"
         :style="{ left: 'var(--start)', right: 'calc(100% - var(--end))' }"></div>
       <input type="range" :min="0" :max="1439" :step="5" :value="state.arriveTime[0]" @input="updateArriveStart"

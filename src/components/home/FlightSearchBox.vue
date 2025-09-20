@@ -33,28 +33,56 @@
       </div>
     </div>
   </div>
+  <div class="pt-64">
+    <div v-if="state === 'default'">
+      <BannerImg />
+      <RecommendedTrips />
+    </div>
+    <SearchResultLoading v-else-if="state === 'loading'" v-model="loading" :rows="11" :speed="1300" />
+    <ResultsMain v-else-if="state === 'result'" />
+  </div>
 </template>
 
 <script setup lang="js">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref } from 'vue'
 
 import MultiSearchBox from '@/components/home/MultiSearchBox.vue'
 import SingleSearchBox from '@/components/home/SingleSearchBox.vue'
 import RoundSearchBox from "@/components/home/RoundSearchBox.vue"
+import RecommendedTrips from '@/components/home/RecommendedTrips.vue'
+import BannerImg from '@/components/home/BannerImg.vue'
+import SearchResultLoading from '@/components/ui/SearchResultLoading.vue'
+import ResultsMain from '@/components/search/ResultsMain.vue';
 
 const activeTab = ref('roundtrip')
 
+const state = ref('default') // "default" | "loading" | "result"
+
 function handleRoundSearch(payload) {
   console.log('handleRoundSearch:', payload)  
-  const emit = defineEmits(['search'])
-  emit('search', payload)
+  state.value = 'loading'
+
+  setTimeout(() => {
+    state.value = 'result'
+  }, 1500)
 }
+
 function handleSingleSearch(payload) {
   console.log('handleSingleSearch:', payload)
+  state.value = 'loading'
+
+  setTimeout(() => {
+    state.value = 'result'
+  }, 1500)
 }
 
 function handleMultiSearch(payload) {
   console.log('handleMultiSearch:', payload)
+  state.value = 'loading'
+
+  setTimeout(() => {
+    state.value = 'result'
+  }, 1500)
 }
 </script>
 

@@ -1,5 +1,5 @@
 <template>
-  <article class="rounded-[10px] bg-white drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] overflow-hidden">
+  <article class="rounded-[10px] bg-white drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] overflow-hidden">
     <!-- HEADER (always visible) -->
     <div class="flex items-center gap-5 px-6 py-4">
       <!-- Airlines block -->
@@ -8,10 +8,10 @@
           class="w-10 h-10 object-contain" />
         <div class="leading-tight">
           <!-- single or stacked names -->
-          <div v-if="airlines.length <= 1" class="text-[18px] text-others-gray7 font-bold">
+          <div v-if="airlines.length <= 1" class="text-[16px] text-others-gray7 font-bold">
             {{ airlines[0]?.name }}
           </div>
-          <div v-else class="text-[16px] text-[#8B7355]">
+          <div v-else class="text-[16px] text-others-gray7 font-bold">
             <div v-for="a in airlines" :key="a.name">{{ a.name }}</div>
           </div>
         </div>
@@ -34,10 +34,10 @@
         </div>
 
         <div class="ml-4 text-right">
-          <div class="text-[15px] text-[#7C7C7C]">{{ totalDurationText }}</div>
+          <div class="text-[15px] text-others-gray1">{{ totalDurationText }}</div>
 
           <!-- toggle -->
-          <button class="text-[16px] font-bold text-[#B3A093] hover:opacity-80 inline-flex items-center gap-1"
+          <button class="text-[16px] font-bold text-primary-gold hover:opacity-80 inline-flex items-center gap-1"
             @click="expanded = !expanded" :aria-expanded="expanded" type="button">
             航班資訊
             <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -59,7 +59,7 @@
           </div>
 
           <button
-            class="flex items-center gap-2 min-w-[98px] px-6 py-3 rounded-2xl text-white font-bold hover:bg-primary-gold1"
+            class="flex items-center gap-2 min-w-[98px] px-6 py-3 rounded-[15px] text-white font-bold hover:bg-primary-gold1"
             :class="expanded ? 'bg-primary-gold' : 'bg-primary-gold'" @click="expanded = !expanded" type="button">
             <p>{{ expanded ? '收起' : '選擇' }}</p>
             <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -72,84 +72,88 @@
 
     <!-- BODY (expanded) -->
     <transition name="fade">
-      <div v-if="expanded" class="bg-[#F5F5F5] px-6 pb-5 pt-4">
+      <div v-if="expanded" class="bg-[#E5E5E5]">
         <!-- Timeline for each segment -->
-        <div v-for="(seg, i) in segments" :key="i" class="grid grid-cols-12 gap-4 py-4">
-          <!-- left dates/times -->
-          <div class="col-span-12 md:col-span-3 flex md:block items-center gap-6">
-            <div class="text-[#8E8E8E]">
-              <div class="text-sm">{{ seg.dep.date }}</div>
-              <div class="text-[22px] text-[#2F2F2F]">{{ seg.dep.time }}</div>
+        <div v-for="(seg, i) in segments" :key="i">
+          <div class="grid grid-cols-12 gap-4 py-8">
+            <!-- left dates/times -->
+            <div class="flex items-center flex-col justify-between col-span-12 md:col-span-3">
+              <div class="flex flex-row items-center justify-between gap-6">
+                <div class="text-others-gray1">{{ seg.dep.date }}</div>
+                <div class="font-bold text-others-gray7">{{ seg.dep.time }}</div>
+              </div>
+              <div class="text-others-gray1">
+                {{ toDuration(seg.durationMinutes) }}
+              </div>
+              <div class="flex items-center justify-between gap-6">
+                <div class="text-others-gray1">{{ seg.arr.date }}</div>
+                <div class="font-bold text-others-gray7">{{ seg.arr.time }}</div>
+              </div>
             </div>
-
             <!-- vertical line w/ dots (hidden on mobile) -->
-            <div class="relative hidden md:block mx-6">
-              <div class="w-[2px] h-20 bg-[#DADADA] mx-auto"></div>
-              <span class="absolute -left-[6px] top-0 w-3 h-3 rounded-full bg-white border border-[#DADADA]"></span>
-              <span class="absolute -left-[6px] bottom-0 w-3 h-3 rounded-full bg-white border border-[#DADADA]"></span>
+            <div class="hidden relative md:block mx-6">
+              <span class="absolute -left-[6px] top-0 w-[14px] h-[14px] rounded-full bg-white"></span>
+              <div class="w-[3px] h-full bg-white"></div>
+              <span class="absolute -left-[6px] bottom-0 w-[14px] h-[14px] rounded-full bg-white"></span>
             </div>
 
-            <div class="text-[#8E8E8E] md:mt-10">
-              <div class="text-sm">{{ seg.arr.date }}</div>
-              <div class="text-[22px] text-[#2F2F2F]">{{ seg.arr.time }}</div>
-            </div>
-          </div>
-
-          <!-- right info -->
-          <div class="col-span-12 md:col-span-9 space-y-2">
-            <div class="text-[18px] text-[#333]">
-              {{ seg.dep.airportName }}{{ seg.dep.terminal ? ' ' + seg.dep.terminal : '' }}
-            </div>
-            <div class="flex items-center gap-2 text-[#6F6F6F]">
-              <img v-if="seg.carrier?.logo" :src="seg.carrier.logo" :alt="seg.carrier?.name"
-                class="w-5 h-5 object-contain" />
-              <span class="font-semibold">
-                {{ seg.flightNo ? seg.flightNo : seg.carrier?.code }}
-              </span>
-              <span class="text-[#a0a0a0]"> {{ seg.carrier?.name }} </span>
-              <span class="text-[#a0a0a0]"> {{ seg.equipment ? ' ' + seg.equipment : '' }}</span>
-            </div>
-            <div class="text-[18px] text-[#333]">
-              {{ seg.arr.airportName }}{{ seg.arr.terminal ? ' ' + seg.arr.terminal : '' }}
-            </div>
-
-            <!-- transfer chips (between legs) -->
-            <div v-if="i < segments.length - 1 && transferNotes?.[i]" class="mt-4">
-              <div class="inline-flex items-center gap-2 bg-white rounded-xl px-4 py-2 shadow">
-                <span class="text-[#8E8E8E]">於{{ transferNotes[i].location }}轉機</span>
-                <span class="text-[#F39800] font-bold">{{ toDuration(transferNotes[i].durationMinutes) }}</span>
-                <span v-if="transferNotes[i].differentAirport" class="text-[#F39800] font-bold">不同航廈</span>
-                <span v-if="transferNotes[i].baggageThrough" class="text-[#8E8E8E]">行李直掛</span>
+            <!-- right info -->
+            <div class="col-span-12 md:col-span-8 space-y-2">
+              <div class="font-bold text-others-gray7">
+                {{ seg.dep.airportName }}{{ seg.dep.terminal ? ' ' + seg.dep.terminal : '' }}
+              </div>
+              <div class="flex items-center gap-2 text-others-gray1">
+                <img v-if="seg.carrier?.logo" :src="seg.carrier.logo" :alt="seg.carrier?.name"
+                  class="w-5 h-5 object-contain" />
+                <span class="font-semibold">
+                  {{ seg.flightNo ? seg.flightNo : seg.carrier?.code }}
+                </span>
+                <span class="text-others-gray1"> {{ seg.carrier?.name }} </span>
+                <span class="text-others-gray1"> {{ seg.equipment ? ' ' + seg.equipment : '' }}</span>
+              </div>
+              <div class="font-bold text-others-gray7">
+                {{ seg.arr.airportName }}{{ seg.arr.terminal ? ' ' + seg.arr.terminal : '' }}
               </div>
             </div>
           </div>
+            <!-- transfer chips (between legs) -->
+            <div v-if="i < segments.length - 1 && transferNotes?.[i]" class="mx-6 my-4 text-others-gray1">
+              <div class="inline-flex items-center gap-2 bg-white rounded-[10px] px-6 py-2">
+                <span>於{{ transferNotes[i].location }}轉機</span> | 
+                <span class="text-others-original">{{ toDuration(transferNotes[i].durationMinutes) }}</span> | 
+                <span v-if="transferNotes[i].differentAirport" class="text-others-original">不同航廈</span> | 
+                <span v-if="transferNotes[i].baggageThrough">行李直掛</span>
+              </div>
+            </div>
         </div>
 
         <!-- Fare options (optional) -->
-        <div v-if="fareOptions?.length" class="mt-4 rounded-2xl bg-white overflow-hidden">
+        <div v-if="fareOptions?.length" class="mt-4 bg-white overflow-hidden">
           <div v-for="(fare, idx) in visibleFares" :key="idx"
-            class="grid grid-cols-12 gap-4 p-5 border-b last:border-b-0 border-[#EFEFEF]">
-            <div class="col-span-12 md:col-span-2 text-[#6B7280] font-bold flex items-center">
+            class="grid grid-cols-12 gap-4 p-5 border-b last:border-b-0 border-others-gray3">
+            <div class="col-span-12 md:col-span-2 text-others-gray1 font-bold flex items-center justify-center">
               {{ fare.cabin }}
             </div>
-            <ul class="col-span-12 md:col-span-7 space-y-2">
+            <ul class="col-span-12 md:col-span-6 space-y-2">
               <li v-for="(n, i) in fare.notes" :key="i" class="flex items-center gap-2">
-                <span :class="noteDotClass(n.type)" class="inline-block w-2.5 h-2.5 rounded-full"></span>
+                <img :src="noteIcon(n.type, n.icon)" />
                 <span :class="noteTextClass(n.type)" class="text-[14px]">
                   {{ n.text }}
                 </span>
               </li>
-              <li class="text-[#F39800] text-[14px] font-bold">行李資訊及票價規定</li>
+              <li class="text-others-original text-[14px] font-bold">行李資訊及票價規定</li>
             </ul>
-            <div class="col-span-12 md:col-span-3 flex items-center justify-between md:justify-end gap-4">
+            <div class="col-span-12 md:col-span-4 flex items-center justify-between md:justify-end gap-4">
               <div class="text-right">
-                <div class="text-xs text-[#B08968] font-bold leading-tight">{{ currency }}</div>
-                <div class="text-[26px] text-[#F39800] leading-none">
-                  {{ formatPrice(fare.price) }}
+                <div class="flex items-end font-bold">
+                  <div class="text-[12px] text-others-original">{{ currency }}</div>
+                  <div class="text-[28px] text-others-original leading-none">
+                    {{ formatPrice(fare.price) }}
+                  </div>
                 </div>
-                <div class="text-xs text-[#9CA3AF]">{{ roundTripIncluded ? '來回含稅價' : '含稅價' }}</div>
+                <div class="text-[12px] text-others-gray1">{{ roundTripIncluded ? '來回含稅價' : '含稅價' }}</div>
               </div>
-              <button class="bg-[#F39800] hover:bg-[#f08d00] text-white font-bold rounded-xl px-5 h-10"
+              <button class="bg-others-original hover:bg-others-hover min-w-[98px] text-white font-bold rounded-[10px] px-6 py-3"
                 @click="$emit('purchase', { fare })" type="button">
                 訂購
               </button>
@@ -157,7 +161,7 @@
           </div>
 
           <div v-if="fareOptions.length > fareShow" class="p-4 text-right">
-            <button class="text-[#F39800] font-bold hover:opacity-80" @click="fareShow = fareOptions.length">
+            <button class="text-others-original font-bold hover:opacity-80" @click="fareShow = fareOptions.length">
               顯示更多 ▾
             </button>
           </div>
@@ -180,8 +184,9 @@ type Segment = {
   carrier?: Airline; flightNo?: string; equipment?: string; durationMinutes?: number
 }
 type TransferNote = { location?: string; durationMinutes?: number; differentAirport?: boolean; baggageThrough?: boolean }
-type FareNoteType = 'good' | 'bad' | 'warn' | 'neutral'
-type FareOption = { id: string; cabin: string; price: number; notes: { type: FareNoteType; text: string }[] }
+type FareNoteType = 'allowed' | 'permitted' | 'notallowed'
+type FareIconType = 'suitcase' | 'ticket' | 'calendar' | 'clock' | 'info'
+type FareOption = { id: string; cabin: string; price: number; notes: { type: FareNoteType; icon: FareIconType, text: string }[] }
 
 const props = defineProps<{
   airlines: Airline[]
@@ -220,22 +225,20 @@ function toDuration(min?: number) {
   const m = min % 60
   return `${h}小時${m}分鐘`
 }
+
 function formatPrice(n: number) {
   return n.toLocaleString('en-US')
 }
-function noteDotClass(type: FareNoteType) {
-  switch (type) {
-    case 'good': return 'bg-[#16a34a]'
-    case 'bad': return 'bg-[#ef4444]'
-    case 'warn': return 'bg-[#f59e0b]'
-    default: return 'bg-[#a3a3a3]'
-  }
+
+function noteIcon(type: FareNoteType, icon: FareIconType) {
+  return `src/assets/imgs/rules/icon-${icon}-${type}.svg`
 }
+
 function noteTextClass(type: FareNoteType) {
   switch (type) {
-    case 'good': return 'text-[#166534]'     // green-800
-    case 'bad': return 'text-[#991b1b]'     // red-800
-    case 'warn': return 'text-[#92400e]'     // amber-800
+    case 'allowed': return 'text-[#166534]'     // green-800
+    case 'permitted': return 'text-[#991b1b]'     // red-800
+    case 'notallowed': return 'text-[#92400e]'     // amber-800
     default: return 'text-[#6b7280]'     // gray-500
   }
 }
@@ -248,6 +251,7 @@ function noteTextClass(type: FareNoteType) {
 }
 
 .fade-enter-from,
+
 .fade-leave-to {
   opacity: 0;
   transform: translateY(-4px);

@@ -1,5 +1,5 @@
 <template>
-    <footer class="bg-primary-gold text-white py-[80px] px-[120px]">
+    <footer class="relative bg-primary-gold text-white py-[80px] px-[120px]">
         <div class="mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
             <!-- Left Section -->
             <div>
@@ -80,8 +80,9 @@
                 </div>
             </div>
         </div>
+        <Awesome />
     </footer>
 </template>
-<script lang="js">
-import IconFacebook from "@/assets/imgs/icon-facebook.svg"
+<script setup>
+import Awesome from "@/components/ui/Awesome.vue"
 </script>

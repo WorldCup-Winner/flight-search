@@ -40,7 +40,9 @@ export default {
           gray4: '#C6C6C6',
           gray5: '#A3A3A3',
           gray6: '#F2ECE7',
-          gray7: '#323232'
+          gray7: '#323232',
+          gray8: '#E5E5E5',
+          gray9: '#FFF6DD'
         }
       },
       screens: {
@@ -75,7 +77,7 @@ export default {
       animation: {
         'spin-slow': 'spin 3s linear infinite',
         'spin-fast': 'spin 0.5s linear infinite',
-      }
+      },
     }
   },
   plugins: []

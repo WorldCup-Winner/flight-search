@@ -16,7 +16,14 @@ const router = createRouter({
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue')
-    }
+    },
+    {
+      path: '/404-page',
+      name: '404',
+      component: () => import('../components/ui/NotFound.vue')
+    },
+    // MUST be last: catch-all for undefined routes
+    { path: '/:pathMatch(.*)*', redirect: '/404-page' }
   ]
 })
 
