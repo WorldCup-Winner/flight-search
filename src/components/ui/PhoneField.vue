@@ -1,7 +1,7 @@
 <template>
   <div
     class="inline-flex w-full rounded-[10px] border bg-white
-           border-primary-gold overflow-hidden"
+           border-primary-gold overflow-hidden "
   >
     <!-- Country code -->
     <div class="relative flex items-center">

@@ -14,6 +14,11 @@ const router = createRouter({
       component: () => import('../views/BookingView.vue')
     },
     {
+      path: '/booking-search-result',
+      name: 'booking-search-result',
+      component: () => import('../views/BookingSearchResult.vue')
+    },
+    {
       path: '/404-page',
       name: '404',
       component: () => import('../components/ui/NotFound.vue')

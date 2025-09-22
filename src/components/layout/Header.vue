@@ -16,7 +16,7 @@
       <!-- Menu -->
       <div class="flex items-center space-x-6">
         <!-- Normal links -->
-        <a href="#" :class="[linkCls, 'flex items-center']">
+        <div :class="[linkCls, 'flex items-center cursor-pointer']" @click="isOpenBookingSearch = true">
           <span class="material-icons text-sm mr-1">
             <div
                 class="w-8 h-8
@@ -30,8 +30,8 @@
             </div>
           </span>
           訂單查詢
-        </a>
-        <a href="#" :class="[linkCls, 'flex items-center']">
+        </div>
+        <div :class="[linkCls, 'flex items-center cursor-pointer']">
           <span class="material-icons text-sm mr-1">
             <div
                 class="w-8 h-8
@@ -45,7 +45,7 @@
             </div>
           </span>
           客服中心
-        </a>
+        </div>
 
         <!-- Buttons -->
         <button
@@ -65,7 +65,7 @@
     </div>
 
     <!-- Modal -->
-    <transition name="fade">
+    <Transition name="fade">
       <div v-if="activeDialog" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50"
            @click.self="closeDialog">
         <div class="bg-white rounded-tl-[60px] rounded-tr-[60px] rounded-bl-[60px] shadow-lg px-[90px] py-[60px] relative">
@@ -73,30 +73,37 @@
           <SignUp v-else-if="activeDialog === 'signup'" />
         </div>
       </div>
-    </transition>
+    </Transition>
   </nav>
+  <Transition name="fade">
+    <BookingSearch :open="isOpenBookingSearch" @close="isOpenBookingSearch = false" />
+  </Transition>
 </template>
 
-<script setup lang="js">
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import SignIn from "@/components/auth/SignIn.vue"
 import SignUp from "@/components/auth/SignUp.vue"
+import BookingSearch from '@/components/ui/BookingSearch.vue'
+
 
 import Header from "@/assets/imgs/header-logo.svg"
 import Header1 from "@/assets/imgs/header-logo-1.svg"
 
 const activeDialog = ref(null)
+const isOpenBookingSearch = ref(false)
 
-const openDialog = (type) => { activeDialog.value = type }
+const openDialog = (type: any) => { activeDialog.value = type }
 const closeDialog = () => { activeDialog.value = null }
 
 // --- Route-aware styling ---
 const route = useRoute()
+
 // Match "/order" and any sub-paths like "/order/123"
 const isOrderPage = computed(() => {
   const p = route.path.toLowerCase()
-  return p === '/booking' || p.startsWith('/booking/') || p === '/404-page'
+  return p === '/booking' || p.startsWith('/booking/') || p.startsWith('/booking-search-result') || p === '/404-page'
 })
 
 // Text color for links based on background

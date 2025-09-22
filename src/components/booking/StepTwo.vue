@@ -495,7 +495,7 @@ const props = defineProps({
     },
 })
 
-const step = defineModel<number>('step')
+const step = defineModel('step')
 
 const activeDialog = ref(null)
 const isReceipt = ref(false)
