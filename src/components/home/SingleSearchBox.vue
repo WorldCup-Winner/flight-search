@@ -6,7 +6,7 @@
         <div class="grid grid-cols-10 col-span-2 gap-4 border-r-2 border-primary-gold">
           <!-- Departure -->
           <div class="relative py-6 col-span-3" ref="depTriggerRef">
-            <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">出發地</label>
+            <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">出發地</label>
             <div class="cursor-pointer" @click="toggleDeparture">
               <div class="text-others-gray1 mb-1">
                 {{ selectedDepartureCity || 'TPE 台北(任何)' }}

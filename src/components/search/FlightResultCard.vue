@@ -1,10 +1,15 @@
 <template>
-  <article class="rounded-[10px] bg-white drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] overflow-hidden">
+  <article 
+    class="z-0 hover:z-[20]
+          rounded-[10px] bg-white drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)]
+          overflow-visible">
     <!-- HEADER (always visible) -->
     <div class="flex items-center gap-5 px-6 py-4">
       <!-- Airlines block -->
-      <div class="flex items-center gap-3 min-w-[160px]">
-        <img v-if="airlines?.[0]?.logo" :src="airlines[0].logo" :alt="airlines[0].name"
+      <div class="relative group flex items-center gap-3 min-w-[160px]">
+        <img v-if="airlines.length <= 1" :src="airlines[0].logo" :alt="airlines[0].name"
+          class="w-10 h-10 object-contain" />
+        <img v-else :src="AirlineTwo" :alt="airlines[0].name"
           class="w-10 h-10 object-contain" />
         <div class="leading-tight">
           <!-- single or stacked names -->
@@ -15,6 +20,38 @@
             <div v-for="a in airlines" :key="a.name">{{ a.name }}</div>
           </div>
         </div>
+        <!-- HOVER CARD -->
+        <div
+          v-if="airlines?.length"
+          class="absolute left-0 top-full mt-2 w-[200px] rounded-[10px] bg-white
+                drop-shadow-[0px_2px_10px_rgba(0,0,0,0.15)] p-3 z-[100]
+                opacity-0 pointer-events-none translate-y-1 scale-95
+                transition duration-150 ease-out
+                group-hover:opacity-100 group-hover:pointer-events-auto
+                group-hover:translate-y-0 group-hover:scale-100
+                group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
+          role="tooltip"
+          aria-label="Airlines list"
+        >
+          <ul class="divide-y divide-others-gray3">
+            <li
+              v-for="a in airlines"
+              :key="a.name + (a.code || '')"
+              class="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
+            >
+              <div class="flex items-center gap-2">
+                <img
+                  v-if="a.logo"
+                  :src="a.logo"
+                  :alt="a.name"
+                  class="w-6 h-6 object-contain rounded-sm"
+                />
+                <span class="text-others-gray7">{{ a.name }}</span>
+              </div>
+              <span class="text-others-gray7 font-semibold">{{ a.code }}</span>
+            </li>
+          </ul>
+        </div>
       </div>
 
       <!-- Times -->
@@ -24,8 +61,9 @@
           <div class="text-sm text-others-gray1">{{ head.dep.code }} {{ head.dep.terminal }}</div>
         </div>
 
-        <div class="">
+        <div class="relative flex flex-col items-center">
           <img src="@/assets/imgs/arrow-right.svg" />
+          <p :class="[airlines.length >= 2 ? 'block' : 'hidden']" class="absolute w-max bottom-[-15px] text-others-original">轉機{{airlines.length - 1}}次</p>
         </div>
 
         <div class="text-center">
@@ -59,11 +97,19 @@
           </div>
 
           <button
+            v-if="props.leg === 'departure'"
+            class="min-w-[98px] px-6 py-3 rounded-[15px] text-white bg-primary-gold font-bold hover:bg-primary-gold1"
+            @click="goArrival"
+            type="button">
+            <p>{{ '選擇' }}</p>
+          </button>
+          <button
+            v-if="props.leg === 'arrival'"
             class="flex items-center gap-2 min-w-[98px] px-6 py-3 rounded-[15px] text-white font-bold hover:bg-primary-gold1"
-            :class="expanded ? 'bg-primary-gold' : 'bg-primary-gold'" @click="expanded = !expanded" type="button">
-            <p>{{ expanded ? '收起' : '選擇' }}</p>
+            :class="expanded1 ? 'bg-primary-gold' : 'bg-primary-gold'" @click="expanded1 = !expanded1" type="button">
+            <p>{{ expanded1 ? '收起' : '選擇' }}</p>
             <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-              <path :d="expanded ? 'M5 12l5-5 5 5' : 'M5 8l5 5 5-5'" fill="currentColor" />
+              <path :d="expanded1 ? 'M5 12l5-5 5 5' : 'M5 8l5 5 5-5'" fill="currentColor" />
             </svg>
           </button>
         </div>
@@ -71,7 +117,7 @@
     </div>
 
     <!-- BODY (expanded) -->
-    <transition name="fade">
+    <Transition name="fade">
       <div v-if="expanded" class="bg-[#E5E5E5]">
         <!-- Timeline for each segment -->
         <div v-for="(seg, i) in segments" :key="i">
@@ -126,7 +172,12 @@
               </div>
             </div>
         </div>
+      </div>
+    </Transition>
 
+    <!-- BODY (expanded1) -->
+    <Transition name="fade">
+      <div v-if="expanded1" class="bg-[#E5E5E5]">
         <!-- Fare options (optional) -->
         <div v-if="fareOptions?.length" class="mt-4 bg-white overflow-hidden">
           <div v-for="(fare, idx) in visibleFares" :key="idx"
@@ -141,7 +192,7 @@
                   {{ n.text }}
                 </span>
               </li>
-              <li class="text-others-original text-[14px] font-bold">行李資訊及票價規定</li>
+              <li class="text-others-original text-[14px] font-bold cursor-pointer" @click="openBaggageInfoAndFeeRule">行李資訊及票價規定</li>
             </ul>
             <div class="col-span-12 md:col-span-4 flex items-center justify-between md:justify-end gap-4">
               <div class="text-right">
@@ -154,7 +205,7 @@
                 <div class="text-[12px] text-others-gray1">{{ roundTripIncluded ? '來回含稅價' : '含稅價' }}</div>
               </div>
               <button class="bg-others-original hover:bg-others-hover min-w-[98px] text-white font-bold rounded-[10px] px-6 py-3"
-                @click="$emit('purchase', { fare })" type="button">
+                @click="goBooking(fare)" type="button">
                 訂購
               </button>
             </div>
@@ -167,26 +218,30 @@
           </div>
         </div>
       </div>
-    </transition>
+    </Transition>
   </article>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { inject, computed, ref } from 'vue'
 
-/** -------------------- Types (loose) -------------------- */
-type Airline = { name: string; logo?: string; code?: string }
-type EndPoint = {
-  date?: string; time: string; code?: string; terminal?: string; airportName?: string
+import { formatPrice, noteIcon, noteTextClass, toDuration } from '@/utils'
+import type { Airline, Segment, EndPoint, TransferNote, FareOption } from '@/utils/types'
+
+import AirlineTwo from '@/assets/imgs/airlines/airline-two.svg'
+import AirlineDefault from '@/assets/imgs/airlines/airline-default.svg'
+
+// Same type as grandparent
+interface SharedData {
+  isOpenBaggageInfoAndFeeRule: boolean
 }
-type Segment = {
-  dep: EndPoint; arr: EndPoint;
-  carrier?: Airline; flightNo?: string; equipment?: string; durationMinutes?: number
+
+// Inject function and type it properly
+const updateValue = inject<(val: SharedData) => void>('updateValue')
+
+function openBaggageInfoAndFeeRule() {
+  updateValue?.({ isOpenBaggageInfoAndFeeRule: true})
 }
-type TransferNote = { location?: string; durationMinutes?: number; differentAirport?: boolean; baggageThrough?: boolean }
-type FareNoteType = 'allowed' | 'permitted' | 'notallowed'
-type FareIconType = 'suitcase' | 'ticket' | 'calendar' | 'clock' | 'info'
-type FareOption = { id: string; cabin: string; price: number; notes: { type: FareNoteType; icon: FareIconType, text: string }[] }
 
 const props = defineProps<{
   airlines: Airline[]
@@ -200,15 +255,59 @@ const props = defineProps<{
   transferNotes?: TransferNote[]
   fareOptions?: FareOption[]
   defaultOpen?: boolean
+  defaultOpen1?: boolean
+  leg: 'departure' | 'arrival'
 }>()
 
 const emit = defineEmits<{
-  (e: 'select'): void
+  (e: 'select', payload: {
+    segments: Segment[]
+    head: { dep: EndPoint, arr: EndPoint }
+    durationMinutes: number
+    stopsCount?: number
+    priceFrom: number
+    currency?: string
+    roundTripIncluded?: boolean
+    transferNotes?: TransferNote[]
+    fareOptions?: FareOption[]
+  }): void
   (e: 'purchase', payload: { fare: FareOption }): void
+  (e: 'update:leg', v: 'departure' | 'arrival'): void
 }>()
+
+function goArrival() {
+  emit('select', {
+    segments: props.segments,
+    head: props.head,
+    durationMinutes: props.durationMinutes,
+    stopsCount: props.stopsCount,
+    priceFrom: props.priceFrom,
+    currency: props.currency,
+    roundTripIncluded: props.roundTripIncluded,
+    transferNotes: props.transferNotes,
+  })
+  emit('update:leg', 'arrival')
+}
+
+function goBooking(fare: any) {
+  emit('select', {
+    segments: props.segments,
+    head: props.head,
+    durationMinutes: props.durationMinutes,
+    stopsCount: props.stopsCount,
+    priceFrom: props.priceFrom,
+    currency: props.currency,
+    roundTripIncluded: props.roundTripIncluded,
+    transferNotes: props.transferNotes,
+  })
+  emit('purchase', {
+    fare: fare
+  })
+}
 
 /** -------------------- State -------------------- */
 const expanded = ref(!!props.defaultOpen)
+const expanded1 = ref(!!props.defaultOpen1)
 const fareShow = ref(2)
 
 /** -------------------- Computed -------------------- */
@@ -217,39 +316,6 @@ const totalDurationText = computed(() => toDuration(props.durationMinutes))
 const visibleFares = computed(() =>
   props.fareOptions ? props.fareOptions.slice(0, fareShow.value) : []
 )
-
-/** -------------------- Helpers -------------------- */
-function toDuration(min?: number) {
-  if (min == null) return ''
-  const h = Math.floor(min / 60)
-  const m = min % 60
-  return `${h}小時${m}分鐘`
-}
-
-function formatPrice(n: number) {
-  return n.toLocaleString('en-US')
-}
-
-// ✅ Import all the icons eagerly; keys will be absolute paths starting with /src
-const iconMap = import.meta.glob('/src/assets/imgs/rules/icon-*.svg', {
-  eager: true,
-  import: 'default'
-}) as Record<string, string>
-
-function noteIcon(type: FareNoteType, icon: FareIconType) {
-  const key = `/src/assets/imgs/rules/icon-${icon}-${type}.svg`
-  // optional: provide a safe fallback if a file is missing
-  return iconMap[key] ?? iconMap['/src/assets/imgs/rules/icon-info-allowed.svg']
-}
-
-function noteTextClass(type: FareNoteType) {
-  switch (type) {
-    case 'allowed': return 'text-[#166534]'     // green-800
-    case 'permitted': return 'text-[#991b1b]'     // red-800
-    case 'notallowed': return 'text-[#92400e]'     // amber-800
-    default: return 'text-[#6b7280]'     // gray-500
-  }
-}
 </script>
 
 <style scoped>

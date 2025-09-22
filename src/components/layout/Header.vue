@@ -96,7 +96,7 @@ const route = useRoute()
 // Match "/order" and any sub-paths like "/order/123"
 const isOrderPage = computed(() => {
   const p = route.path.toLowerCase()
-  return p === '/order' || p.startsWith('/order/') || p === '/404-page'
+  return p === '/booking' || p.startsWith('/booking/') || p === '/404-page'
 })
 
 // Text color for links based on background

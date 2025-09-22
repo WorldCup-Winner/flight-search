@@ -38,13 +38,17 @@
       <BannerImg />
       <RecommendedTrips />
     </div>
-    <SearchResultLoading v-else-if="state === 'loading'" v-model="loading" :rows="11" :speed="1300" />
-    <ResultsMain v-else-if="state === 'result'" />
+    <SearchResultLoading v-else-if="state === 'loading'" v-model="state" :rows="11" :speed="1300" />
+    <ResultsMain v-else-if="state === 'result'"  />
   </div>
+  
+  <Transition name="fade">
+      <BaggageInfoAndFeeRule :open="sharedValue.isOpenBaggageInfoAndFeeRule" @close="sharedValue.isOpenBaggageInfoAndFeeRule = false" />
+  </Transition>
 </template>
 
-<script setup lang="js">
-import { ref } from 'vue'
+<script setup lang="ts">
+import { provide, ref } from 'vue'
 
 import MultiSearchBox from '@/components/home/MultiSearchBox.vue'
 import SingleSearchBox from '@/components/home/SingleSearchBox.vue'
@@ -53,12 +57,28 @@ import RecommendedTrips from '@/components/home/RecommendedTrips.vue'
 import BannerImg from '@/components/home/BannerImg.vue'
 import SearchResultLoading from '@/components/ui/SearchResultLoading.vue'
 import ResultsMain from '@/components/search/ResultsMain.vue';
+import BaggageInfoAndFeeRule from '@/components/ui/BaggageInfoAndFeeRule.vue'
 
 const activeTab = ref('roundtrip')
 
 const state = ref('default') // "default" | "loading" | "result"
 
-function handleRoundSearch(payload) {
+interface SharedData {
+  isOpenBaggageInfoAndFeeRule: boolean
+}
+
+const sharedValue = ref<SharedData>({
+  isOpenBaggageInfoAndFeeRule: false
+})
+
+function updateValue(val: SharedData) {
+  sharedValue.value = val
+}
+
+// Provide the updater function
+provide<(val: SharedData) => void>('updateValue', updateValue)
+
+function handleRoundSearch(payload: any) {
   console.log('handleRoundSearch:', payload)  
   state.value = 'loading'
 
@@ -67,7 +87,7 @@ function handleRoundSearch(payload) {
   }, 1500)
 }
 
-function handleSingleSearch(payload) {
+function handleSingleSearch(payload: any) {
   console.log('handleSingleSearch:', payload)
   state.value = 'loading'
 
@@ -76,7 +96,7 @@ function handleSingleSearch(payload) {
   }, 1500)
 }
 
-function handleMultiSearch(payload) {
+function handleMultiSearch(payload: any) {
   console.log('handleMultiSearch:', payload)
   state.value = 'loading'
 

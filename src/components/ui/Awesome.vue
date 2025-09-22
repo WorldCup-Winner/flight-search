@@ -1,9 +1,7 @@
 <script setup lang="ts">
-
-const openPrivacy = () => {
-  window.open('https://www.galilee.com.tw/Privacy', '_blank', 'noopener,noreferrer')
+import { goPrivacy } from '@/utils';
+const saveCookie = () => {
 }
-
 </script>
 
 <template>
@@ -13,12 +11,12 @@ const openPrivacy = () => {
             <h3 class="text-others-gray1 text-h3 md:text-h3-d">隱私權聲明</h3>
             <p class="text-others-gray1">
                 為提供您最佳的網站使用體驗，本網站使用Cookie以改善我們的網頁，作為技術、分析、行銷之用，繼續使用本網站表示您同意我們使用Cookie。進一步的資訊可閱讀我們 
-                <span class="text-others-original">隱私權政策</span>
+                <span class="text-others-original cursor-pointer" @click="goPrivacy">隱私權政策</span>
                 說明。
             </p>
             <button
                 class="w-[98px] h-[40px] rounded-[10px] bg-others-original text-white font-bold hover:bg-others-hover"
-                @click="openPrivacy">
+                @click="saveCookie">
                 接受
             </button>
         </div>

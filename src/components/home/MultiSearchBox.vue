@@ -63,7 +63,7 @@
 
           <!-- Destination -->
           <div class="relative col-span-2 py-6" :ref="setDestTriggerRef(idx)">
-            <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">目的地</label>
+            <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">目的地</label>
             <div class="cursor-pointer pr-4" :class="errors[idx].destination ? 'text-text-error' : ''" @click="toggleDestination(idx)">
               <div class="font-medium text-others-gray1" :class="errors[idx].destination ? 'text-text-error' : ''">
                 {{ seg.toCity || '輸入國家/城市/機場關鍵字' }}
@@ -581,20 +581,21 @@ function getAirlineCode(nameOrCode) {
 }
 
 function onSearch() {
-
   errors.value = segments.value.map((segment) => ({
     destination: !segment.toCity,
     startDate: !segment.departureDate
   }))
-  
-  // If any error → stop search
-  errors.value.forEach((error) => {
-    if (Object.values(error).some(v => v)) {
-      console.warn("Validation failed", errors.value)
-      return
-    }
-  })
 
+  // If any error → stop search
+  const hasError = errors.value.some(error =>
+    Object.values(error).some(v => v)
+  )
+
+  if (hasError) {
+    console.warn("Validation failed", errors.value)
+    return
+  }
+  
   const payload = {
     flightSegments: segments.value.map((s, idx) => ({
       order: idx + 1,

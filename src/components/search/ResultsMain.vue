@@ -11,16 +11,16 @@
       <section class="col-span-12 md:col-span-9">
         <!-- HEADER STRIP -->
         <div class="mb-4 bg-none">
-          <div class="relative bg-primary-gold2 rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] mb-4">
+          <div class="relative rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] mb-4" :class="[ departureOrArrival === 'departure' ? 'bg-primary-gold' : 'bg-others-gray4' ]">
             <!-- Left orange tab -->
-            <div class="absolute inset-y-0 left-0 w-40 bg-others-original text-white grid place-items-center rounded-l-[10px]">
-              <span class="text-[22px]">去程</span>
+            <div class="absolute inset-y-0 left-0 w-28 bg-others-original text-white grid place-items-center rounded-l-[10px]">
+              <span class="text-[22px]">{{ departureOrArrival === 'departure' ? '去程' : '回程' }}</span>
             </div>
 
             <div class="pl-48 pr-6 py-5 text-white">
-              <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
-                <div class="text-[22px]">{{ dateText }}</div>
-                <div class="text-[20px]">
+              <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+                <div class="text-[18px]">{{ dateText }}</div>
+                <div class="text-[18px]">
                   {{ origin.name }}({{ origin.code }}) &nbsp;—&nbsp; {{ destination.name }}({{ destination.code }})
                 </div>
               </div>
@@ -104,17 +104,39 @@
         </div>
         
         <!-- RESULTS LIST -->
-        <div v-if="shownFlights.length >= 1" class="space-y-4">
-          <TransitionGroup appear >
+        <div v-if="shownFlights.length >= 1" class="space-y-4 relative isolate">
+          <TransitionGroup 
+              v-if="departureOrArrival === 'departure'"
+              appear>
             <FlightResultCard
               v-for="(it, i) in shownFlights" :key="it.id" v-bind="it"
               :style="{
                 transitionDelay: i * 100 + 'ms',
                 // transitionDelayLeave: ((shownFlights.length - i - 1) * 100) + 'ms'
               }"
+              :leg="departureOrArrival"
               :price-from="displayPrice(it.priceFrom)"
               :round-trip-included="true"
               currency="TWD"
+              @update:leg="departureOrArrival = $event"
+              @select="handleSelect"
+              @purchase="onPurchase" />
+          </TransitionGroup>
+          <TransitionGroup
+              v-else
+              appear>
+            <FlightResultCard
+              v-for="(it, i) in shownFlights" :key="it.id" v-bind="it"
+              :style="{
+                transitionDelay: i * 100 + 'ms',
+                // transitionDelayLeave: ((shownFlights.length - i - 1) * 100) + 'ms'
+              }"
+              :leg="departureOrArrival"
+              :price-from="displayPrice(it.priceFrom)"
+              :round-trip-included="true"
+              currency="TWD"
+              @update:leg="departureOrArrival = $event"
+              @select="handleSelect"
               @purchase="onPurchase" />
           </TransitionGroup>
         </div>
@@ -136,6 +158,11 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+import { timeToMin, inWindow, demoFares, cryptoId, makeDirect } from '@/utils'
+import type { CardRow } from '@/utils/types'
+
 import FlightResultCard from '@/components/search/FlightResultCard.vue'
 import FilterSideBar from '@/components/search/FilterSideBar.vue'
 import SorryNoData from '@/components/ui/SorryNoData.vue'
@@ -154,25 +181,38 @@ import Airline_5 from '@/assets/imgs/airlines/airline-5.png'
 const dateText = '2025年08月26日'
 const origin = { code: 'TPE', name: '台北' }
 const destination = { code: 'KIX', name: '關西機場' }
+const departureOrArrival = ref<'departure' | 'arrival'>('departure')
 
 /* -------------------- Data sources (replace with API) -------------------- */
-type Airline = { name: string; logo?: string; code?: string }
-type EndPoint = { time: string; code: string; terminal?: string; date?: string; airportName?: string }
-type Segment = {
-  dep: EndPoint; arr: EndPoint; carrier?: Airline; flightNo?: string; equipment?: string; durationMinutes?: number
+
+function make1Stop(code1: string, name1: string, logo1: string,
+  t1: string, t2: string, xferAt: string, layMins: number,
+  t3Code: string, t3: string, t4: string, dur: number, price: number, opt: any = {}): CardRow {
+  const code2 = 'CI'
+  return {
+    id: cryptoId(),
+    airlines: [{ name: name1, logo: logo1, code: code1 }, { name: '中華航空', logo: Airline_2, code: code2 }],
+    head: { dep: { time: t1, code: 'TPE', terminal: 'T1' }, arr: { time: t4, code: 'KKL', terminal: 'T1' } },
+    segments: [
+      {
+        dep: { date: '8月27日', time: t1, code: 'TPE', terminal: 'T1', airportName: 'TPE桃園國際機場T1台北' },
+        arr: { date: '8月27日', time: t2, code: 'NRT', terminal: 'T3', airportName: 'NRT成田機場T3東京' },
+        carrier: { name: name1, logo: logo1, code: code1 }, flightNo: `${code1}014`, equipment: 'A320', durationMinutes: 195
+      },
+      {
+        dep: { date: '8月27日', time: t3, code: t3Code, terminal: 'T2', airportName: `${t3Code}羽田機場T2東京` },
+        arr: { date: '8月27日', time: t4, code: 'KKL', terminal: 'T1', airportName: 'KKL 首爾國際機場T1 首爾' },
+        carrier: { name: '中華航空', logo: Airline_2, code: code2 }, flightNo: `${code2}214`, equipment: 'A320', durationMinutes: 135
+      }
+    ],
+    transferNotes: [{ location: '東京', durationMinutes: layMins, differentAirport: true, baggageThrough: true }],
+    durationMinutes: dur,
+    stopsCount: 1,
+    priceFrom: price,
+    fareOptions: opt.fare ? demoFares(price) : undefined
+  }
 }
 
-type CardRow = {
-  id: string
-  airlines: Airline[]
-  head: { dep: EndPoint; arr: EndPoint }
-  segments: Segment[]
-  transferNotes?: { location?: string; durationMinutes?: number; differentAirport?: boolean; baggageThrough?: boolean }[]
-  durationMinutes: number
-  stopsCount: number
-  priceFrom: number
-  fareOptions?: any[]
-}
 
 /* alliances / airlines / airports for sidebar demo */
 const alliances = [
@@ -198,96 +238,25 @@ const arrAirports = [
 
 /* sample flights */
 const allFlights = ref<CardRow[]>([
-  makeDirect('JAL', '加加航空', Airline_1, '06:45', '11:00', 195, 5799),
+  makeDirect('JAL', '加加航空', Airline_1, '06:45', '11:00', 195, 5799, { fare: true }),
   makeDirect('BR', '長榮航空', Airline_1, '06:45', '11:00', 195, 5799, { fare: true }),
-  makeDirect('CI', '中華航空', Airline_2, '07:30', '11:45', 195, 5899),
-  makeDirect('MM', '樂桃航空', Airline_3, '08:00', '12:15', 195, 6199),
-  make1Stop('BR', '長榮航空', Airline_5, '06:45', '11:00', 'NRT', 170, 'HND', '14:45', '17:00', 195 + 135, 6099),
-  makeDirect('BR', '長榮航空', Airline_3, '22:45', '02:00', 195, 5799, { nextDay: '+1' }),
-  makeDirect('BR', '長榮航空', Airline_4, '23:45', '02:30', 195, 5799, { nextDay: '+1' }),
+  makeDirect('CI', '中華航空', Airline_2, '07:30', '11:45', 195, 5899, { fare: true }),
+  makeDirect('MM', '樂桃航空', Airline_3, '08:00', '12:15', 195, 6199, { fare: true }),
+  make1Stop('BR', '長榮航空', Airline_5, '06:45', '11:00', 'NRT', 170, 'HND', '14:45', '17:00', 195 + 135, 6099, { fare: true }),
+  makeDirect('BR', '長榮航空', Airline_3, '22:45', '02:00', 195, 5799, { nextDay: '+1', fare: true }),
+  makeDirect('BR', '長榮航空', Airline_4, '23:45', '02:30', 195, 5799, { nextDay: '+1', fare: true }),
 ])
 
-function makeDirect(code: string, name: string, logo: string, t1: string, t2: string, dur: number, price: number, opt: any = {}): CardRow {
-  return {
-    id: cryptoId(),
-    airlines: [{ name, logo, code }],
-    head: { dep: { time: t1, code: 'TPE', terminal: 'T1' }, arr: { time: t2, code: 'NRT', terminal: 'T1N' } },
-    segments: [{
-      dep: { date: '8月27日', time: t1, code: 'TPE', terminal: 'T1', airportName: 'TPE桃園國際機場T1台北' },
-      arr: { date: '8月27日', time: t2, code: 'NRT', terminal: 'T1N', airportName: 'NRT成田機場T1N東京' },
-      carrier: { name, logo, code }, flightNo: `${code}014`, equipment: '空中巴士 A320', durationMinutes: dur
-    }],
-    durationMinutes: dur,
-    stopsCount: 0,
-    priceFrom: price,
-    fareOptions: opt.fare ? demoFares(price) : undefined
-  }
+const router = useRouter()
+
+function onPurchase({ fare }: any) {
+  // hook up your checkout flow here
+  console.log('purchase', fare)
+  router.push('/booking')
 }
 
-function make1Stop(code1: string, name1: string, logo1: string,
-  t1: string, t2: string, xferAt: string, layMins: number,
-  t3Code: string, t3: string, t4: string, dur: number, price: number): CardRow {
-  const code2 = 'CI'
-  return {
-    id: cryptoId(),
-    airlines: [{ name: name1, logo: logo1, code: code1 }, { name: '中華航空', logo: Airline_2, code: code2 }],
-    head: { dep: { time: t1, code: 'TPE', terminal: 'T1' }, arr: { time: t4, code: 'KKL', terminal: 'T1' } },
-    segments: [
-      {
-        dep: { date: '8月27日', time: t1, code: 'TPE', terminal: 'T1', airportName: 'TPE桃園國際機場T1台北' },
-        arr: { date: '8月27日', time: t2, code: 'NRT', terminal: 'T3', airportName: 'NRT成田機場T3東京' },
-        carrier: { name: name1, logo: logo1, code: code1 }, flightNo: `${code1}014`, equipment: 'A320', durationMinutes: 195
-      },
-      {
-        dep: { date: '8月27日', time: t3, code: t3Code, terminal: 'T2', airportName: `${t3Code}羽田機場T2東京` },
-        arr: { date: '8月27日', time: t4, code: 'KKL', terminal: 'T1', airportName: 'KKL 首爾國際機場T1 首爾' },
-        carrier: { name: '中華航空', logo: Airline_2, code: code2 }, flightNo: `${code2}214`, equipment: 'A320', durationMinutes: 135
-      }
-    ],
-    transferNotes: [{ location: '東京', durationMinutes: layMins, differentAirport: true, baggageThrough: true }],
-    durationMinutes: dur,
-    stopsCount: 1,
-    priceFrom: price
-  }
-}
-
-function demoFares(base: number) {
-  return [
-    {
-      id: 'F1', cabin: '商務艙', price: base + 9880, notes: [
-        { type: 'allowed', icon: 'suitcase', text: '行李每成人1*23KG' },
-        { type: 'allowed', icon: 'ticket', text: '退票費 TWD 5,136起' },
-        { type: 'allowed', icon: 'calendar', text: '日期更改 TWD 2,568起' },
-        { type: 'allowed', icon: 'clock', text: '付款後48小時內出票' },
-        { type: 'allowed', icon: 'info', text: '由2至多張機票組成' },
-        { type: 'allowed', icon: 'info', text: '由海外供應商提供' },
-      ]
-    },
-    {
-      id: 'F2', cabin: '商務艙', price: base + 1900, notes: [
-        { type: 'notallowed', icon: 'suitcase', text: '無免費托運行李' },
-        { type: 'notallowed', icon: 'ticket', text: '不可退票' },
-        { type: 'notallowed', icon: 'calendar', text: '不可更改日期' },
-        { type: 'notallowed', icon: 'clock', text: '出票時間' },
-        { type: 'allowed', icon: 'info', text: '由2至多張機票組成' },
-        { type: 'allowed', icon: 'info', text: '由海外供應商提供' },
-      ]
-    },
-    {
-      id: 'F3', cabin: '商務艙', price: base - 200, notes: [
-        { type: 'notallowed', icon: 'suitcase', text: '無免費托運行李' },
-        { type: 'notallowed', icon: 'ticket', text: '不可退票' },
-        { type: 'notallowed', icon: 'calendar', text: '不可更改日期' },
-        { type: 'notallowed', icon: 'clock', text: '出票時間' },
-        { type: 'allowed', icon: 'info', text: '由2至多張機票組成' },
-        { type: 'allowed', icon: 'info', text: '由海外供應商提供' },
-      ]
-    },
-  ]
-}
-
-function cryptoId() {
-  return Math.random().toString(36).slice(2, 10)
+const handleSelect = (payload: any) => {
+  console.log("HandleSelect:", payload)
 }
 
 /* -------------------- Filters (from sidebar) -------------------- */
@@ -383,23 +352,6 @@ const onScroll = () => {
 onMounted(() => window.addEventListener('scroll', onScroll))
 onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
-/* -------------------- Utils -------------------- */
-function timeToMin(t: string): number {
-  const [hs = '0', ms = '0'] = t?.split?.(':') ?? ['0', '0'];
-  const h = Number(hs);
-  const m = Number(ms);
-  return (Number.isFinite(h) ? h : 0) * 60 + (Number.isFinite(m) ? m : 0);
-}
-
-
-function inWindow(v: number, [s, e]: [number, number]) {
-  return v >= s && v <= e
-}
-
-function onPurchase({ fare }: any) {
-  // hook up your checkout flow here
-  // console.log('purchase', fare)
-}
 </script>
 
 <style>

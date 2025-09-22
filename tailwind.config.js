@@ -30,6 +30,10 @@ export default {
           soft: '#F2F2F2', // Softer divider
           bg: '#F3F3F3' // Background
         },
+        tb: {
+          header: '#EDE1D9',
+          body: '#F1F1F1'
+        },
         others: {
           original: '#F39800',
           hover: '#BF7905',
@@ -42,7 +46,8 @@ export default {
           gray6: '#F2ECE7',
           gray7: '#323232',
           gray8: '#E5E5E5',
-          gray9: '#FFF6DD'
+          gray9: '#FFF6DD',
+          gray10: '#FFE6BD',
         }
       },
       screens: {

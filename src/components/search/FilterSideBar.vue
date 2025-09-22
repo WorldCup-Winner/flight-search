@@ -200,7 +200,7 @@
       {{ minutesToText(state.departTime[0]) }} - {{ minutesToText(state.departTime[1]) }}
     </div>
     <div class="relative h-8 mt-1" :style="getDualRangeStyle(state.departTime[0], state.departTime[1])">
-      <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-others-original"></div>
+      <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-others-gray3"></div>
       <div class="absolute top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-others-original"
         :style="{ left: 'var(--start)', right: 'calc(100% - var(--end))' }"></div>
       <input type="range" :min="0" :max="1439" :step="5" :value="state.departTime[0]" @input="updateDepartStart"
@@ -215,7 +215,7 @@
       {{ minutesToText(state.arriveTime[0]) }} - {{ minutesToText(state.arriveTime[1]) }}
     </div>
     <div class="relative h-8 mt-1" :style="getDualRangeStyle(state.arriveTime[0], state.arriveTime[1])">
-      <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-others-original"></div>
+      <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-others-gray3"></div>
       <div class="absolute top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-others-original"
         :style="{ left: 'var(--start)', right: 'calc(100% - var(--end))' }"></div>
       <input type="range" :min="0" :max="1439" :step="5" :value="state.arriveTime[0]" @input="updateArriveStart"
@@ -228,6 +228,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
+import { minutesToText, formatCurrency, getDualRangeStyle } from '@/utils';
 
 /** ---------- Props ---------- */
 type Card = { id: string; name: string; logo: string; price?: number }
@@ -339,25 +340,6 @@ function push() {
     departTime: [...state.departTime],
     arriveTime: [...state.arriveTime],
   })
-}
-
-/** ---------- Utils ---------- */
-function minutesToText(min: number) {
-  const h = Math.floor(min / 60).toString().padStart(2, '0')
-  const m = (min % 60).toString().padStart(2, '0')
-  return `${h}:${m}`
-}
-function formatCurrency(n?: number) {
-  if (n == null) return ''
-  return `TWD ${n.toLocaleString('en-US')}`
-}
-
-/** ---------- Dual Range Helper Functions ---------- */
-function getDualRangeStyle(start: number, end: number) {
-  const min = 0, max = 1439
-  const left = ((start - min) / (max - min)) * 100
-  const right = ((end - min) / (max - min)) * 100
-  return { '--start': `${left}%`, '--end': `${right}%` }
 }
 
 function updateDepartStart(ev: any) {
