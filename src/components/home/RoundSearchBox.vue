@@ -3,16 +3,15 @@
         <!-- Search Form -->
         <div class="border-2 border-primary-gold rounded-xl rounded-tr-none p-0 lg:px-5">
             <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                <div class="grid grid-cols-10 col-span-2 gap-4 border-primary-gold lg:border-r-2">
+                <div class="grid grid-cols-12 col-span-2 gap-4 border-primary-gold lg:border-r-2">
                     <!-- Departure -->
-                    <div class=" relative py-6 col-span-3" ref="depTriggerRef">
-                        <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">出發地</label>
+                    <div class="relative py-6 col-span-4" ref="depTriggerRef">
+                        <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">出發地</label>
                         <div class="cursor-pointer" @click="toggleDeparture">
                             <div class="text-others-gray1 mb-1">
                                 {{ selectedDepartureCity || 'TPE 台北(任何)' }}
                             </div>
                         </div>
-
                         <!-- Departure Popover -->
                         <transition name="fade-scale">
                             <div v-if="isDepartureOpen" ref="depPopoverRef"
@@ -54,8 +53,8 @@
                     </button>
 
                     <!-- Destination -->
-                    <div class="relative py-6 col-span-6" ref="destTriggerRef">
-                        <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">目的地</label>
+                    <div class="relative py-6 col-span-7" ref="destTriggerRef">
+                        <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">目的地</label>
                         <div class="cursor-pointer pr-4" :class="errors.destination ? 'text-text-error' : ''"
                             @click="toggleDestination">
                             <div class="font-medium text-others-gray1 mb-1"
@@ -103,7 +102,7 @@
                     ref="dateTriggerRef">
                     <!-- Outbound Date -->
                     <div class="relative py-6 col-span-2 cursor-pointer" @click="toggleDatePicker">
-                        <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">去程</label>
+                        <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">去程</label>
                         <div class="font-medium text-others-gray1" :class="errors.startDate ? 'text-text-error' : ''">
                             {{ outboundDateText || "請選擇日期" }}</div>
                     </div>
@@ -114,7 +113,7 @@
 
                     <!-- Return Date -->
                     <div class="relative col-span-2 cursor-pointer py-6" @click="toggleDatePicker">
-                        <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">回程</label>
+                        <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">回程</label>
                         <div class="font-medium text-others-gray1" :class="errors.endDate ? 'text-text-error' : ''">
                             {{ returnDateText || "請選擇日期" }}</div>
                     </div>
@@ -132,7 +131,7 @@
 
                 <!-- Passengers -->
                 <div class="relative py-6" ref="passTriggerRef">
-                    <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">人數</label>
+                    <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">人數</label>
                     <div class="cursor-pointer" @click="togglePassengers">
                         <div class="font-medium text-others-gray1">{{ passengerDisplayText }}</div>
                     </div>
@@ -313,7 +312,7 @@
             </div>
 
             <button
-                class="px-4 py-1 w-[150px] h-[50px] rounded-[15px] border-none bg-others-original text-white hover:bg-others-hover transition"
+                class="px-4 py-1 w-[150px] h-[50px] rounded-[15px] border-none font-bold bg-others-original text-white hover:bg-others-hover transition"
                 @click="onSearch">
                 搜尋
             </button>
@@ -322,7 +321,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import RangeDatePicker from '@/components/ui/RangeDatePicker.vue'
 
 /** ------------------ STATE ------------------ **/
@@ -475,9 +474,24 @@ const errors = ref({
     endDate: false,
 })
 
+// 👀 Watch destination
+watch(selectedDestinationCity, (newVal) => {
+  errors.value.destination = !newVal
+})
+
+// 👀 Watch start date
+watch(startDate, (newVal) => {
+  errors.value.startDate = !newVal
+})
+
+// 👀 Watch end date
+watch(endDate, (newVal) => {
+  errors.value.endDate = !newVal
+})
 
 /** ------------------ SEARCH PAYLOAD ------------------ **/
 const emit = defineEmits(['search'])
+
 // Map cabin class label → booking code
 const cabinClassMap = {
     '艙等不限': 'ALL',
@@ -486,6 +500,7 @@ const cabinClassMap = {
     '商務艙': 'C',
     '頭等艙': 'F'
 }
+
 function onSearch() {
     // Reset errors
     errors.value = {

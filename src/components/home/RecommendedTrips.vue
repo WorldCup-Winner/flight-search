@@ -20,7 +20,7 @@ const trips = [
 <template>
   <section class="relative py-24 flex items-center justify-center h-full">
     <div class="w-full max-w-6xl mx-auto">
-      <h1 class="text-h1a text-xl mb-6 md:text-h1a-d font-light">推薦自由行</h1>
+      <h1 class="text-h1a mb-6 md:text-h1a-d font-light">推薦自由行</h1>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
         <TripCard v-for="trip in trips" :key="trip.title" v-bind="trip" />
       </div>

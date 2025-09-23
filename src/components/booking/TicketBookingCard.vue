@@ -7,7 +7,7 @@
     </div>
 
     <!-- Flight table -->
-    <section class="border rounded-xl text-center overflow-hidden">
+    <section class="rounded-xl text-center overflow-hidden border-none">
       <table class="w-full text-sm">
         <thead class="bg-primary-gold text-white">
           <tr>
@@ -18,7 +18,7 @@
           </tr>
         </thead>
         <tbody class="divide-y">
-          <tr v-for="(f, i) in flights" :key="i" class="bg-white">
+          <tr v-for="(f, i) in flights" :key="i" class="bg-white border-2 border-t-none">
             <td class="px-4 py-3 align-top">
               <div class="font-medium text-others-gray1">{{ f.departTime }}</div>
               <div class="text-others-gray1">{{ f.departAirport }}</div>
@@ -37,13 +37,13 @@
           </tr>
         </tbody>
       </table>
-      <div class="p-4 text-xs text-others-original border-t">
+      <div class="p-4 text-xs text-others-original border-2 rounded-[10px] rounded-t-none">
         以上班機起飛和抵達時間皆為當地時間，以24小時制呈現，例如：03:00為凌晨3點
       </div>
     </section>
 
     <!-- Items table -->
-    <section class="mt-6 border rounded-xl text-center overflow-hidden">
+    <section class="mt-6 border-none rounded-xl text-center overflow-hidden">
       <table class="w-full text-sm">
         <thead class="bg-primary-gold text-white">
           <tr>
@@ -56,8 +56,8 @@
           </tr>
         </thead>
         <tbody class="divide-y">
-          <tr v-for="(it, i) in items" :key="i" class="bg-white">
-            <td class="px-4 py-3">
+          <tr v-for="(it, i) in items" :key="i" class="bg-white border-2">
+            <td class="px-4 py-3 border-t-2 border-b-2">
               <label class="inline-flex items-center gap-2 select-none">
                 <label class="flex gap-2 items-start text-sm text-slate-600 select-none">                        
                     <label class="flex items-center cursor-pointer relative">
@@ -78,28 +78,28 @@
                 <span class="font-medium text-others-gray1">{{ it.name }}</span>
               </label>
             </td>
-            <td class="px-4 py-3 text-others-gray1">
+            <td class="px-4 py-3 text-others-gray1 border-t-2 border-b-2">
               {{ it.productName }}
             </td>
-            <td class="px-4 py-3 text-right text-others-gray1">
+            <td class="px-4 py-3 text-right text-others-gray1 border-t-2 border-b-2">
               <div>含稅金</div>
               <div class="tabular-nums font-bold">{{ formatPrice(it.fare) }}</div>
               <div class="tabular-nums">{{ formatPrice(it.tax) }}</div>
             </td>
-            <td class="px-4 py-3 text-right tabular-nums text-others-gray1">
+            <td class="px-4 py-3 text-right tabular-nums text-others-gray1 border-t-2 border-b-2">
               {{ formatPrice(it.paid) }}
             </td>
-            <td class="px-4 py-3 text-right tabular-nums text-others-gray1 font-bold">
+            <td class="px-4 py-3 text-right tabular-nums text-others-gray1 font-bold border-t-2 border-b-2">
               {{ formatPrice(Math.max(it.fare + it.tax - it.paid, 0)) }}
             </td>
-            <td class="px-4 py-3 text-right text-others-original whitespace-nowrap">
+            <td class="px-4 py-3 text-right text-others-original whitespace-nowrap border-t-2 border-b-2">
               {{ it.deadline }}
             </td>
           </tr>
         </tbody>
       </table>
 
-      <div class="p-4 border-t flex items-baseline justify-end gap-2">
+      <div class="p-4 flex items-baseline justify-end gap-2 border-2 border-t-0 rounded-[10px] rounded-t-none">
         <span class="text-primary-gold font-bold">應付總額</span>
         <span class="text-others-original font-bold text-[12px]">TWD</span>
         <span class="text-[22px] tabular-nums text-others-original font-bold">

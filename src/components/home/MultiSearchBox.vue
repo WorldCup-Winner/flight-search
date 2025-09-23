@@ -15,7 +15,7 @@
         <div class="flex col-span-6 grid-cols-1 md:grid-cols-5 gap-4 md:border-l-2 border-primary-gold px-4">
           <!-- Departure -->
           <div class="relative col-span-2 py-6" :ref="setDepTriggerRef(idx)">
-            <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">出發地</label>
+            <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">出發地</label>
             <div class="cursor-pointer" @click="toggleDeparture(idx)">
               <div class="text-others-gray1 mb-1">
                 {{ seg.fromCity || 'TPE 台北(任何)' }}
@@ -145,7 +145,7 @@
         <div class="lg:col-span-2 border-t-2 lg:border-t-0 lg:border-l-2 border-primary-gold lg:pl-6 py-6">
           <!-- Passengers -->
           <div class="relative" ref="passTriggerRef">
-            <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">人數</label>
+            <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">人數</label>
             <div class="cursor-pointer font-medium text-others-gray1" @click="togglePassengers">
               {{ passengerDisplayText }}
             </div>
@@ -317,31 +317,17 @@
       </div>
 
       <button
-        class="px-4 py-1 w-[150px] h-[50px] rounded-[15px] border-none bg-others-original text-white hover:bg-others-hover transition"
-        @click="onSearch">
-        搜尋
+          class="px-4 py-1 w-[150px] h-[50px] rounded-[15px] border-none font-bold bg-others-original text-white hover:bg-others-hover transition"
+          @click="onSearch">
+          搜尋
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import DatePicker from '@/components/ui/DatePicker.vue'
-
-
-const errors = ref([
-  {
-    destination: false,
-    startDate: false,
-    endDate: false,
-  },
-  {
-    destination: false,
-    startDate: false,
-    endDate: false,
-  }
-])
 
 /* -------------------- segment model -------------------- */
 let nextId = 1
@@ -356,6 +342,7 @@ const makeSeg = () => ({
 const segments = ref([makeSeg(), makeSeg()])
 
 const canAdd = computed(() => segments.value.length < 5)
+
 function addSegment() {
   if (!canAdd.value) return
   segments.value.push(makeSeg())
@@ -365,6 +352,7 @@ function addSegment() {
     endDate: false
   })
 }
+
 function removeSegment(idx) {
   if (segments.value.length <= 2) return
   segments.value.splice(idx, 1)
@@ -373,6 +361,7 @@ function removeSegment(idx) {
 
 /* -------------------- regions & cities -------------------- */
 const regions = ['台灣', '日韓', '東南亞', '港澳大陸', '美洲', '歐洲', '紐澳', '其他']
+
 const citiesByRegion = {
   '台灣': ['台北', '台中', '台南', '高雄', '桃園', '新竹'],
   '日韓': ['東京', '大阪', '沖繩', '首爾', '釜山', '福岡', '名古屋', '札幌', '神戶', '熊本', '仙台', '高松', '函館', '濟州島', '大邱'],
@@ -562,6 +551,28 @@ function formatDate(date) {
   return `${y} / ${m} / ${d} (${wd})`
 }
 
+const hasSearched = ref(false)
+
+const errors = ref([
+  {
+    destination: false,
+    startDate: false,
+    endDate: false,
+  },
+  {
+    destination: false,
+    startDate: false,
+    endDate: false,
+  }
+])
+
+watch(segments, (newSegments) => {
+  errors.value = newSegments.map(seg => ({
+    destination: hasSearched.value && !seg.toCity,
+    startDate: hasSearched.value && !seg.departureDate
+  }))
+}, { deep: true })
+
 /** ------------------ SEARCH PAYLOAD ------------------ **/
 const emit = defineEmits(['search'])
 
@@ -581,6 +592,7 @@ function getAirlineCode(nameOrCode) {
 }
 
 function onSearch() {
+  hasSearched.value = true 
   errors.value = segments.value.map((segment) => ({
     destination: !segment.toCity,
     startDate: !segment.departureDate

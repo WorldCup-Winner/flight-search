@@ -7,7 +7,8 @@ export default {
         primary: {
           gold: '#B3A093',
           gold1: '#D6D6D6',
-          gold2: "#CEC4BD"
+          gold2: '#CEC4BD',
+          gold3: '#7A695D'
         },
         secondary: {
           brown: '#BD5F3B',

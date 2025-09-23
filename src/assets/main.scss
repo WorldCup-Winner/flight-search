@@ -9,11 +9,23 @@
     @apply box-border m-0 font-sans;
   }
 
+  .russo {
+    font-family: 'Russo One', sans-serif;
+  }
+
+  .noto {
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+
   body {
     text-rendering: optimizeLegibility;
   }
 
   #app {
     background-color: #f7f7f7;
+  }
+
+  * {
+    font-family: 'Noto Sans TC', sans-serif;
   }
 }

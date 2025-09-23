@@ -44,48 +44,52 @@
                 @click="toggleSort('price')">
                 <span>價格</span>
                 <div class="space-y-[-5px]">
-                <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70">
-                  <path d="M6 12l4-4 4 4" fill="currentColor" />
-                </svg>
-                <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70">
-                  <path d="M6 8l4 4 4-4" fill="currentColor" />
-                </svg></div>
+                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'price' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray7'">
+                    <path d="M6 12l4-4 4 4" fill="currentColor" />
+                  </svg>
+                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'price' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray7'">
+                    <path d="M6 8l4 4 4-4" fill="currentColor" />
+                  </svg>
+                </div>
               </button>
               <button class="px-3 py-2 rounded-[10px] flex items-center gap-1"
                 :class="sort.key === 'depTime' ? 'text-others-original' : 'text-others-gray7'"
                 @click="toggleSort('depTime')">
                 <span>出發時間</span>
                 <div class="space-y-[-5px]">
-                <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70">
-                  <path d="M6 12l4-4 4 4" fill="currentColor" />
-                </svg>
-                <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70">
-                  <path d="M6 8l4 4 4-4" fill="currentColor" />
-                </svg></div>
+                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'depTime' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray7'">
+                    <path d="M6 12l4-4 4 4" fill="currentColor" />
+                  </svg>
+                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'depTime' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray7'">
+                    <path d="M6 8l4 4 4-4" fill="currentColor" />
+                  </svg>
+                </div>
               </button>
               <button class="px-3 py-2 rounded-[10px] flex items-center gap-1"
                 :class="sort.key === 'arrTime' ? 'text-others-original' : 'text-others-gray7'"
                 @click="toggleSort('arrTime')">
                 <span>抵達時間</span>
                 <div class="space-y-[-5px]">
-                <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70">
-                  <path d="M6 12l4-4 4 4" fill="currentColor" />
-                </svg>
-                <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70">
-                  <path d="M6 8l4 4 4-4" fill="currentColor" />
-                </svg></div>
+                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'arrTime' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray7'">
+                    <path d="M6 12l4-4 4 4" fill="currentColor" />
+                  </svg>
+                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'arrTime' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray7'">
+                    <path d="M6 8l4 4 4-4" fill="currentColor" />
+                  </svg>
+                </div>
               </button>
               <button class="px-3 py-2 rounded-[10px] flex items-center gap-1"
                 :class="sort.key === 'duration' ? 'text-others-original' : 'text-others-gray7'"
                 @click="toggleSort('duration')">
                 <span>飛行總時間</span>
                 <div class="space-y-[-5px]">
-                <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70">
-                  <path d="M6 12l4-4 4 4" fill="currentColor" />
-                </svg>
-                <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70">
-                  <path d="M6 8l4 4 4-4" fill="currentColor" />
-                </svg></div>
+                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'duration' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray7'">
+                    <path d="M6 12l4-4 4 4" fill="currentColor" />
+                  </svg>
+                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'duration' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray7'">
+                    <path d="M6 8l4 4 4-4" fill="currentColor" />
+                  </svg>
+                </div>
               </button>
 
               <div class="ml-auto">

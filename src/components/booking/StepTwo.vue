@@ -345,7 +345,7 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="!isSpecialNeed">
+                    <div v-if="isSpecialNeed">
                         <textarea  
                             placeholder="需求內容"
                             class="w-full h-[80px] mt-4 px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />

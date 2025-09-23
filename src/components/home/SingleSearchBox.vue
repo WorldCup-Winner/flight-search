@@ -3,9 +3,9 @@
     <!-- Search Form -->
     <div class="border-2 border-primary-gold rounded-xl rounded-tr-none px-5">
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div class="grid grid-cols-10 col-span-2 gap-4 border-r-2 border-primary-gold">
+        <div class="grid grid-cols-12 col-span-2 gap-4 border-r-2 border-primary-gold">
           <!-- Departure -->
-          <div class="relative py-6 col-span-3" ref="depTriggerRef">
+          <div class="relative py-6 col-span-4" ref="depTriggerRef">
             <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">出發地</label>
             <div class="cursor-pointer" @click="toggleDeparture">
               <div class="text-others-gray1 mb-1">
@@ -53,8 +53,8 @@
           </button>
 
           <!-- Destination -->
-          <div class="relative py-6 col-span-6" ref="destTriggerRef">
-            <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">目的地</label>
+          <div class="relative py-6 col-span-7" ref="destTriggerRef">
+            <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">目的地</label>
             <div class="cursor-pointer pr-4" :class="errors.destination ? 'text-text-error' : ''" @click="toggleDestination">
                 <div class="font-medium text-others-gray1 mb-1"
                     :class="errors.destination ? 'text-text-error' : ''">
@@ -99,7 +99,7 @@
         <!-- Date (One-way only has a single date) -->
         <div class="flex relative col-span-2 justify-between gap-4 border-r-2 border-primary-gold" ref="dateTriggerRef">
           <div class="relative py-6 cursor-pointer" @click="toggleDatePicker">
-            <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">日期</label>
+            <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">日期</label>
             <div class="pr-4">
               <div class="font-medium text-others-gray1" :class="errors.startDate ? 'text-text-error' : ''">
                 {{ outboundDateText || "請選擇日期" }}</div>
@@ -127,7 +127,7 @@
 
         <!-- Passengers -->
         <div class="relative py-6" ref="passTriggerRef">
-          <label class="text-h5 text-primary-gold font-bold mb-2 block hover: text-h5-d">人數</label>
+          <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">人數</label>
           <div class="cursor-pointer" @click="togglePassengers">
             <div class="font-medium text-others-gray1">{{ passengerDisplayText }}</div>
           </div>
@@ -306,16 +306,16 @@
       </div>
 
       <button
-        class="px-4 py-1 w-[150px] h-[50px] rounded-[15px] border-none bg-others-original text-white hover:bg-others-hover transition"
-        @click="onSearch">
-        搜尋
+          class="px-4 py-1 w-[150px] h-[50px] rounded-[15px] border-none font-bold bg-others-original text-white hover:bg-others-hover transition"
+          @click="onSearch">
+          搜尋
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import DatePicker from '@/components/ui/DatePicker.vue'
 
 /** ------------------ STATE ------------------ **/
@@ -464,6 +464,17 @@ const errors = ref({
     destination: false,
     startDate: false,
 })
+
+// 👀 Watch destination
+watch(selectedDestinationCity, (newVal) => {
+  errors.value.destination = !newVal
+})
+
+// 👀 Watch start date
+watch(startDate, (newVal) => {
+  errors.value.startDate = !newVal
+})
+
 
 /** ------------------ SEARCH PAYLOAD ------------------ **/
 const emit = defineEmits(['search'])

@@ -1,6 +1,6 @@
 <template>
   <article 
-    class="z-0 hover:z-[20]
+    class="relative z-0 hover:z-[999]
           rounded-[10px] bg-white drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)]
           overflow-visible">
     <!-- HEADER (always visible) -->
@@ -105,8 +105,8 @@
           </button>
           <button
             v-if="props.leg === 'arrival'"
-            class="flex items-center gap-2 min-w-[98px] px-6 py-3 rounded-[15px] text-white font-bold hover:bg-primary-gold1"
-            :class="expanded1 ? 'bg-primary-gold' : 'bg-primary-gold'" @click="expanded1 = !expanded1" type="button">
+            class="flex items-center gap-2 min-w-[98px] px-6 py-3 rounded-[15px] text-white font-bold"
+            :class="expanded1 ? 'bg-others-gray3 hover:bg-others-gray5' : 'bg-primary-gold hover:bg-primary-gold3'" @click="expanded1 = !expanded1" type="button">
             <p>{{ expanded1 ? '收起' : '選擇' }}</p>
             <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
               <path :d="expanded1 ? 'M5 12l5-5 5 5' : 'M5 8l5 5 5-5'" fill="currentColor" />
@@ -188,7 +188,7 @@
             <ul class="col-span-12 md:col-span-6 space-y-2">
               <li v-for="(n, i) in fare.notes" :key="i" class="flex items-center gap-2">
                 <img :src="noteIcon(n.type, n.icon)" />
-                <span :class="noteTextClass(n.type)" class="text-[14px]">
+                <span class="text-[14px] text-others-gray1">
                   {{ n.text }}
                 </span>
               </li>
