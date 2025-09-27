@@ -320,7 +320,7 @@ const items = reactive<Item[]>([
     deadline: "2025/8/31 14:20",
   },
   {
-    checked: false,
+    checked: true,
     name: "LEE WEIEN - -, MR.",
     productName: "SL/台北/東京/台北/泰國獅子航空 - TPE/NRT NRT/TPE",
     fare: 5278,
@@ -329,7 +329,7 @@ const items = reactive<Item[]>([
     deadline: "2025/8/31 14:20",
   },
   {
-    checked: false,
+    checked: true,
     name: "LEE WEIEN - -, MR.",
     productName: "SL/台北/東京/台北/泰國獅子航空 - TPE/NRT NRT/TPE",
     fare: 5278,
