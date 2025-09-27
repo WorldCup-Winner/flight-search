@@ -7,10 +7,10 @@
             @click="close"></div>
             
         <div class="max-w-[800px] rounded-[60px] p-[60px] rounded-br-none bg-white drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)]">
-            <div class="bg-white rounded-t-2xl border-b-0 px-[30px] py-[20px] w-[500px] border border-primary-gold">
+            <div class="bg-white rounded-t-2xl border-b-0 px-[30px] py-[20px] w-[500px] border-2 border-primary-gold">
               <p class="text-others-gray1 text-h3">訂單查詢</p>
             </div>
-            <div class="bg-white rounded-b-2xl px-[40px] py-[30px] w-[500px] border border-primary-gold">
+            <div class="bg-white rounded-b-2xl px-[40px] py-[30px] w-[500px] border-2 border-primary-gold">
                 <form @submit.prevent="handleSearch" class="flex flex-col items-center">
                     <!-- 身分證號 -->
                     <div class="mb-4 w-full">
@@ -31,13 +31,13 @@
                     <!-- Submit -->
                     <button
                         type="submit"
-                        class="w-[150px] mx-auto bg-others-original text-white py-2 rounded-md hover:bg-others-hover transition"
+                        class="w-[150px] mx-auto mt-4 bg-others-original text-white py-2 rounded-md hover:bg-others-hover transition"
                         @click="handleSearch"
                         >
                         查詢
                     </button>
                     <!-- Footer text -->
-                    <p class="mt-4 text-xs text-others-gray1 leading-relaxed">
+                    <p class="mt-8 text-xs text-others-gray1 leading-relaxed">
                         以訂單編號及主要聯絡人手機號碼登入，可維護訂單所有資料。
                     </p>
                 </form>

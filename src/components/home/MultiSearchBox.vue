@@ -2,39 +2,41 @@
   <div>
     <div class="space-y-4">
       <div v-for="(seg, idx) in segments" :key="idx"
-        class="border-2 border-primary-gold rounded-xl grid grid-cols-1 md:grid-cols-12"
+        class="border-2 border-primary-gold rounded-xl flex flex-row"
         :class="{ 'rounded-tr-none': idx === 0 }">
         <!-- Left index badge column -->
-        <div class="col-span-1">
+        <div class="w-[5%]">
           <div
-            class="h-full bg-primary-gold text-white russo-one text-5xl flex items-center justify-center font-semibold">
+            class="h-full rounded-l-[10px] bg-primary-gold2 russo text-white text-5xl flex items-center justify-center">
             {{ idx + 1 }}
           </div>
         </div>
 
-        <div class="flex col-span-6 grid-cols-1 md:grid-cols-5 gap-4 md:border-l-2 border-primary-gold px-4">
+        <div class="relative flex flex-row w-[60%] border-l-2 border-primary-gold px-10">
           <!-- Departure -->
-          <div class="relative col-span-2 py-6" :ref="setDepTriggerRef(idx)">
+          <div class="relative py-6 w-[35%]" :ref="setDepTriggerRef(idx)">
             <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">出發地</label>
-            <div class="cursor-pointer" @click="toggleDeparture(idx)">
-              <div class="text-others-gray1 mb-1">
+            <div class="cursor-pointer" :class="errors[idx].source ? 'text-text-error' : ''" @click="toggleDeparture(idx)">
+              <div v-if="idx === 0" class="text-others-gray1 mb-1">
                 {{ seg.fromCity || 'TPE 台北(任何)' }}
               </div>
+              <div v-else class="text-others-gray1 mb-1" :class="errors[idx].source ? 'text-text-error' : ''">
+                {{ seg.fromCity || '輸入國家/城市/機場關鍵字' }}
+              </div>
             </div>
-
             <!-- Departure Popover -->
             <transition name="fade-scale">
               <div v-if="openDepIndex === idx" :ref="setDepPopoverRef(idx)"
-                class="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[680px] max-w-[85vw]"
+                class="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[750px] max-w-[85vw]"
                 @click.stop>
                 <div class="bg-primary-gold text-white p-4 rounded-t-2xl">
-                  <h3 class="text-base font-semibold pl-5">出發地</h3>
+                  <h3 class="text-base font-semibold pl-4">出發地</h3>
                 </div>
 
-                <div class="p-5">
-                  <div class="grid grid-cols-8 gap-1 mb-8">
+                <div class="p-4">
+                  <div class="flex flex-row gap-1 mb-8">
                     <button v-for="region in regions" :key="`dep-${idx}-${region}`"
-                      class="rounded-xl py-2 px-0 text-[18px] leading-none transition-colors" :class="[
+                      class="rounded-xl font-medium py-2 px-3 text-[18px] leading-none transition-colors" :class="[
                         seg.departureLocation === region
                           ? 'border-2 border-others-original text-others-original'
                           : 'text-others-gray1 hover:text-primary-gold'
@@ -43,9 +45,9 @@
                     </button>
                   </div>
 
-                  <div class="grid grid-cols-8 gap-0 gap-y-5 pb-4">
+                  <div class="grid grid-cols-7 gap-0 gap-y-5 pb-4">
                     <button v-for="city in citiesByRegion[seg.departureLocation] || []" :key="`dep-city-${idx}-${city}`"
-                      class="text-[17px] font-medium text-others-gray1 hover:text-others-original transition-colors"
+                      class="text-[17px] text-others-gray1 hover:text-others-original transition-colors"
                       @click="selectDepartureCity(idx, city)">
                       {{ city }}
                     </button>
@@ -56,16 +58,16 @@
           </div>
 
           <!-- Swap -->
-          <button class="flex col-span-1 py-6 items-center justify-center hover:opacity-80 transition"
+          <button class="flex py-6 w-[20%] items-center justify-center hover:opacity-80 transition"
             aria-label="swap cities" type="button">
             <img src="@/assets/imgs/arrow-right.svg" alt="Swap Arrow" />
           </button>
 
           <!-- Destination -->
-          <div class="relative col-span-2 py-6" :ref="setDestTriggerRef(idx)">
+          <div class="relative py-6 w-[45%]" :ref="setDestTriggerRef(idx)">
             <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">目的地</label>
             <div class="cursor-pointer pr-4" :class="errors[idx].destination ? 'text-text-error' : ''" @click="toggleDestination(idx)">
-              <div class="font-medium text-others-gray1" :class="errors[idx].destination ? 'text-text-error' : ''">
+              <div class="text-others-gray1" :class="errors[idx].destination ? 'text-text-error' : ''">
                 {{ seg.toCity || '輸入國家/城市/機場關鍵字' }}
               </div>
             </div>
@@ -73,16 +75,16 @@
             <!-- Destination Popover -->
             <transition name="fade-scale">
               <div v-if="openDestIndex === idx" :ref="setDestPopoverRef(idx)"
-                class="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[680px] max-w-[85vw]"
+                class="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[750px] max-w-[85vw]"
                 @click.stop>
                 <div class="bg-primary-gold text-white p-4 rounded-t-2xl">
-                  <h3 class="text-base font-semibold pl-5">目的地</h3>
+                  <h3 class="text-base font-semibold pl-4">目的地</h3>
                 </div>
 
-                <div class="p-5">
-                  <div class="grid grid-cols-8 gap-1 mb-8">
+                <div class="p-4">
+                  <div class="flex flex-row gap-1 mb-8">
                     <button v-for="region in regions" :key="`dest-${idx}-${region}`"
-                      class="rounded-xl py-2 px-0 text-[18px] leading-none transition-colors" :class="[
+                      class="rounded-xl font-medium py-2 px-3 text-[18px] leading-none transition-colors" :class="[
                         seg.arrivalLocation === region
                           ? 'border-2 border-others-original text-others-original'
                           : 'text-others-gray1 hover:text-others-original'
@@ -91,9 +93,9 @@
                     </button>
                   </div>
 
-                  <div class="grid grid-cols-8 gap-0 gap-y-5 pb-4">
+                  <div class="grid grid-cols-7 gap-0 gap-y-5 pb-4">
                     <button v-for="city in citiesByRegion[seg.arrivalLocation] || []" :key="`dest-city-${idx}-${city}`"
-                      class="text-[17px] font-medium text-others-gray1 hover:text-others-original transition-colors"
+                      class="text-[17px] text-others-gray1 hover:text-others-original transition-colors"
                       @click="selectDestinationCity(idx, city)">
                       {{ city }}
                     </button>
@@ -105,36 +107,38 @@
         </div>
 
         <!-- Date column -->
-        <div class="border-t-2 col-span-4 md:border-t-0 md:border-l-2 border-primary-gold px-6 py-6 relative"
-          :ref="setDateTriggerRef(idx)">
-          <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">日期</label>
-          <div class="font-medium text-others-gray1 cursor-pointer" :class="errors[idx].startDate ? 'text-text-error' : ''" @click="toggleDate(idx)">
-            {{ formatDate(seg.departureDate) || '請選擇日期' }}
+        <div class="relative w-[35%] flex flex-row justify-between">
+          <div class="border-t-0 border-l-2 border-primary-gold px-6 py-6"
+            :ref="setDateTriggerRef(idx)">
+            <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">日期</label>
+            <div class="text-others-gray1 cursor-pointer" :class="errors[idx].startDate ? 'text-text-error' : ''" @click="toggleDate(idx)">
+              {{ formatDate(seg.departureDate) || '請選擇日期' }}
+            </div>
+
+            <!-- Date picker -->
+            <transition name="fade-scale">
+              <div v-if="openDateIndex === idx" :ref="setDatePopoverRef(idx)"
+                class="absolute lg:left-auto lg:right-6 left-0 top-full mt-2 z-50" @click.stop>
+                <DatePicker :modelValue="seg.departureDate" :min="new Date()"
+                  @update:modelValue="d => (segments[idx].departureDate = d)" @apply="d => onDateApply(idx, d)" />
+              </div>
+            </transition>
           </div>
 
-          <!-- Date picker -->
-          <transition name="fade-scale">
-            <div v-if="openDateIndex === idx" :ref="setDatePopoverRef(idx)"
-              class="absolute lg:left-auto lg:right-6 left-0 top-full mt-2 z-50" @click.stop>
-              <DatePicker :modelValue="seg.departureDate" :min="new Date()"
-                @update:modelValue="d => (segments[idx].departureDate = d)" @apply="d => onDateApply(idx, d)" />
-            </div>
-          </transition>
-        </div>
-
-        <!-- Delete button on segments 3..5 -->
-        <div class="items-start md:justify-end mt-4 px-4">
-          <button v-if="segments.length > 2 && idx >= 2" @click="removeSegment(idx)" type="button"
-            class="w-8 h-8 text-xl rounded-lg bg-others-original text-white grid place-items-center hover:bg-others-original/90"
-            aria-label="remove segment" title="移除此航段">
-            ✕
-          </button>
+          <!-- Delete button on segments 3..5 -->
+          <div class="justify-end mt-4 px-4">
+            <button v-if="segments.length > 2 && idx >= 2" @click="removeSegment(idx)" type="button"
+              class="w-8 h-8 text-xl rounded-lg bg-others-original text-white grid place-items-center hover:bg-others-original/90"
+              aria-label="remove segment" title="移除此航段">
+              ✕
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- Add segment -->
-      <div class="border-2 border-primary-gold rounded-xl px-24 grid grid-cols-1 lg:grid-cols-5">
-        <div class="lg:col-span-3 py-6">
+      <div class="flex flex-row w-full border-2 border-primary-gold rounded-xl">
+        <div class="w-[65%] py-6 px-8">
           <button @click="addSegment" type="button"
             class="flex items-center gap-3 px-6 py-3 rounded-xl font-semibold text-white"
             :class="canAdd ? 'bg-others-original hover:bg-others-original/85' : 'bg-gray-300 cursor-not-allowed'"
@@ -142,11 +146,11 @@
             <span class="text-2xl leading-none">＋</span> 增加航班
           </button>
         </div>
-        <div class="lg:col-span-2 border-t-2 lg:border-t-0 lg:border-l-2 border-primary-gold lg:pl-6 py-6">
+        <div class="w-[35%] border-t-0 border-l-2 border-primary-gold pl-6 py-6">
           <!-- Passengers -->
           <div class="relative" ref="passTriggerRef">
             <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">人數</label>
-            <div class="cursor-pointer font-medium text-others-gray1" @click="togglePassengers">
+            <div class="cursor-pointer text-others-gray1" @click="togglePassengers">
               {{ passengerDisplayText }}
             </div>
 
@@ -156,19 +160,19 @@
                 class="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[328px] max-w-[85vw]"
                 @click.stop>
                 <div class="bg-primary-gold text-white p-4 rounded-t-2xl">
-                  <h3 class="text-base font-semibold">人數</h3>
+                    <h3 class="text-base font-semibold pl-4">人數</h3>
                 </div>
 
-                <div class="p-6">
+                <div class="px-8 py-3">
                   <!-- Adults -->
-                  <div class="flex items-center justify-between mb-6">
-                    <div class="font-medium text-others-gray1 text-lg">成人 (12+)</div>
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="text-others-gray1 text-lg">成人 (12+)</div>
                     <div class="flex items-center gap-3">
                       <button @click="decrementAdults" :disabled="adultCount <= 1" type="button"
                         class="w-10 h-10 rounded-lg bg-others-gray2 flex items-center justify-center text-primary-gold hover:bg-others-gray3 disabled:opacity-50">
                         <span class="text-3xl font-normal">−</span>
                       </button>
-                      <span class="text-xl font-medium text-others-gray1 min-w-[2rem] text-center">{{ adultCount
+                      <span class="text-xl text-others-gray1 min-w-[2rem] text-center">{{ adultCount
                       }}</span>
                       <button @click="incrementAdults" :disabled="adultCount >= 9" type="button"
                         class="w-10 h-10 rounded-lg bg-others-gray2 flex items-center justify-center text-primary-gold hover:bg-others-gray3 disabled:opacity-50">
@@ -178,19 +182,22 @@
                   </div>
                   <!-- Children -->
                   <div class="flex items-center justify-between">
-                    <div class="font-medium text-others-gray1 text-lg">孩童 (2-11)</div>
+                    <div class="text-others-gray1 text-lg">孩童 (2-11)</div>
                     <div class="flex items-center gap-3">
                       <button @click="decrementChildren" :disabled="childrenCount <= 0" type="button"
                         class="w-10 h-10 rounded-lg bg-others-gray2 flex items-center justify-center text-primary-gold hover:bg-others-gray3 disabled:opacity-50">
                         <span class="text-3xl font-normal">−</span>
                       </button>
-                      <span class="text-xl font-medium text-others-gray1 min-w-[2rem] text-center">{{ childrenCount
+                      <span class="text-xl text-others-gray1 min-w-[2rem] text-center">{{ childrenCount
                       }}</span>
                       <button @click="incrementChildren" :disabled="childrenCount >= 8" type="button"
                         class="w-10 h-10 rounded-lg bg-others-gray2 flex items-center justify-center text-primary-gold hover:bg-others-gray3 disabled:opacity-50">
                         <span class="text-3xl font-normal">+</span>
                       </button>
                     </div>
+                  </div>
+                  <div class="text-sm text-others-gray5 mt-4 text-center">
+                      如有嬰兒(&lt;2歲)同行，請洽票務人工訂位
                   </div>
                 </div>
               </div>
@@ -202,125 +209,134 @@
 
     <!-- Search Button + filters -->
     <div class="flex justify-between mt-6">
-      <div class="flex items-center space-x-2">
-        <!-- Airline Search -->
-        <div class="relative" ref="airlineTriggerRef">
-          <button @click="toggleAirline"
-            class="flex items-center justify-between min-w-[200px] bg-divider-soft text-primary-gold px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200">
-            <span>{{ selectedAirline }}</span>
-            <svg class="w-4 h-4 ml-2 transition-transform duration-200" :class="{ 'rotate-180': isAirlineOpen }"
-              fill="currentColor" viewBox="0 0 12 12">
-              <path d="M6 9L2 4h8l-4 5z" />
-            </svg>
-          </button>
+        <div class="flex items-center space-x-2">
+            <!-- Airline Search -->
+            <div class="relative" ref="airlineTriggerRef">
+                <button @click="toggleAirline"
+                    class="flex items-center justify-between min-w-[200px] bg-divider-soft text-primary-gold px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200">
+                    <span>{{ selectedAirline }}</span>
+                    <svg class="w-4 h-4 ml-2 transition-transform duration-200"
+                        :class="{ 'rotate-180': isAirlineOpen }" fill="currentColor" viewBox="0 0 12 12">
+                        <path d="M6 9L2 4h8l-4 5z" />
+                    </svg>
+                </button>
 
-          <!-- Airline Popover -->
-          <transition name="fade-scale">
-            <div v-if="isAirlineOpen" ref="airlinePopoverRef"
-              class="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[550px] max-w-[85vw]"
-              @click.stop>
-              <!-- Header -->
-              <div class="bg-primary-gold text-white px-6 py-4 rounded-t-2xl">
-                <h3 class="text-base font-semibold pl-5">航空公司搜尋</h3>
-              </div>
+                <!-- Airline Popover -->
+                <transition name="fade-scale">
+                    <div v-if="isAirlineOpen" ref="airlinePopoverRef"
+                        class="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[450px] max-w-[85vw]"
+                        @click.stop>
+                        <!-- Header -->
+                        <div class="bg-primary-gold text-white px-4 py-4 rounded-t-2xl">
+                            <h3 class="text-base font-semibold pl-4">航空公司搜尋</h3>
+                        </div>
 
-              <!-- Body -->
-              <div class="p-6">
-                <!-- Search Input -->
-                <div class="mb-6">
-                  <input v-model="airlineSearchTerm" type="text" placeholder="輸入航空公司名稱 / 代碼"
-                    class="w-full px-4 py-3 border-2 border-primary-gold rounded-xl text-others-gray1 placeholder-others-gray1 focus:outline-none focus:ring-2 focus:ring-others-original focus:border-transparent" />
-                </div>
+                        <!-- Body -->
+                        <div class="p-6">
+                            <!-- Search Input -->
+                            <div class="mb-6">
+                                <input v-model="airlineSearchTerm" type="text" placeholder="輸入航空公司名稱 / 代碼"
+                                    class="w-full px-4 py-3 border-2 border-primary-gold rounded-xl text-others-gray1 placeholder-others-gray5 focus:outline-none focus:ring-2 focus:ring-others-original focus:border-transparent" />
+                            </div>
 
-                <!-- Search Results -->
-                <div v-if="airlineSearchTerm.trim() && filteredAirlines.length > 0"
-                  class="space-y-2 max-h-60 overflow-y-auto">
-                  <button v-for="airline in filteredAirlines" :key="airline.code"
-                    class="w-full text-left px-4 py-3 rounded-lg hover:bg-white transition-colors"
-                    @click="selectAirline(airline.name)">
-                    <div class="flex items-center">
-                      <span class="font-semibold text-others-gray1 mr-2">{{ airline.code }}</span>
-                      <span class="text-others-gray1">{{ airline.name }}</span>
+                            <!-- Search Results -->
+                            <div v-if="airlineSearchTerm.trim() && filteredAirlines.length > 0"
+                                class="space-y-0 max-h-60 overflow-y-auto leading-relaxed text-gray-700
+                                        [&::-webkit-scrollbar]:w-[6px]
+                                        [&::-webkit-scrollbar-track]:bg-others-gray8
+                                        [&::-webkit-scrollbar-thumb]:bg-others-original
+                                        [&::-webkit-scrollbar-thumb]:rounded-[10px]">
+                                <button v-for="airline in filteredAirlines" :key="airline.code"
+                                    class="w-full text-left px-4 py-1 rounded-lg hover:bg-others-gray9 transition-colors"
+                                    @click="selectAirline(airline.name)">
+                                    <div class="flex items-center">
+                                        <span class=" text-others-gray1 mr-2">{{ airline.code }}</span>
+                                        <span class="text-others-gray1">{{ airline.name }}</span>
+                                    </div>
+                                </button>
+                            </div>
+
+                            <!-- Popular Airlines (when no search) -->
+                            <div v-else-if="!airlineSearchTerm.trim()">
+                                <h4 class="text-primary-gold font-semibold mb-4 pl-4">熱門航空公司</h4>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button v-for="airline in popularAirlines" :key="airline"
+                                        class="text-left px-4 py-2 rounded-lg hover:text-others-original transition-colors text-others-gray1"
+                                        :class="selectedAirline === airline
+                                            ? 'text-others-original'
+                                            : 'text-others-gray1'"
+                                        @click="selectAirline(airline)">
+                                        {{ airline }}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- No Results -->
+                            <div v-else-if="airlineSearchTerm.trim() && filteredAirlines.length === 0"
+                                class="text-center py-4 text-primary-gold">
+                                找不到相關航空公司
+                            </div>
+                        </div>
                     </div>
-                  </button>
-                </div>
-
-                <!-- Popular Airlines (when no search) -->
-                <div v-else-if="!airlineSearchTerm.trim()">
-                  <h4 class="text-lg text-primary-gold font-bold mb-4 pl-4">熱門航空公司</h4>
-                  <div class="grid grid-cols-3 gap-4">
-                    <button v-for="airline in popularAirlines" :key="airline"
-                      class="text-left px-4 py-2 rounded-lg hover:text-others-original transition-colors text-others-gray1 font-medium"
-                      @click="selectAirline(airline)">
-                      {{ airline }}
-                    </button>
-                  </div>
-                </div>
-
-                <!-- No Results -->
-                <div v-else-if="airlineSearchTerm.trim() && filteredAirlines.length === 0"
-                  class="text-center py-4 text-primary-gold">
-                  找不到相關航空公司
-                </div>
-              </div>
+                </transition>
             </div>
-          </transition>
+
+            <!-- Cabin Class Selection -->
+            <div class="relative" ref="cabinClassTriggerRef">
+                <button @click="toggleCabinClass"
+                    class="flex items-center justify-between min-w-[150px] bg-divider-soft text-primary-gold px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200">
+                    <span>{{ selectedCabinClass }}</span>
+                    <svg class="w-4 h-4 ml-2 transition-transform duration-200"
+                        :class="{ 'rotate-180': isCabinClassOpen }" fill="currentColor" viewBox="0 0 12 12">
+                        <path d="M6 9L2 4h8l-4 5z" />
+                    </svg>
+                </button>
+
+                <!-- Cabin Class Popover -->
+                <transition name="fade-scale">
+                    <div v-if="isCabinClassOpen" ref="cabinClassPopoverRef"
+                        class="absolute -left-45 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[200px] max-w-[85vw]"
+                        @click.stop>
+                        <!-- Header -->
+                        <div class="bg-primary-gold text-white px-4 py-4 rounded-t-2xl">
+                            <h3 class="text-base font-semibold pl-4">艙等設定</h3>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="px-6 py-4">
+                            <div class="space-y-3">
+                                <button v-for="cabinClass in cabinClassOptions" :key="cabinClass"
+                                    class="w-full text-left px-4 py-2 rounded-lg transition-colors"
+                                    :class="selectedCabinClass === cabinClass
+                                        ? 'text-others-original hover:bg-others-gray9'
+                                        : 'text-others-gray1 hover:bg-others-gray9'"
+                                    @click="selectCabinClass(cabinClass)">
+                                    {{ cabinClass }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </transition>
+            </div>
+
+            <!-- Direct Flight -->
+            <div class="relative">
+                <input id="directFlight" type="checkbox" v-model="isNonStopFlight" class="sr-only" />
+                <label for="directFlight"
+                    class="flex items-center justify-between min-w-[120px] bg-divider-soft text-primary-gold px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200 cursor-pointer">
+                    <span>直飛</span>
+                    <div class="w-4 h-4 rounded-full border-2 transition-colors duration-200 flex items-center justify-center"
+                        :class="isNonStopFlight ? 'border-none bg-others-original' : 'border-primary-gold bg-none'">
+                    </div>
+                </label>
+            </div>
         </div>
 
-        <!-- Cabin Class Selection -->
-        <div class="relative" ref="cabinClassTriggerRef">
-          <button @click="toggleCabinClass"
-            class="flex items-center justify-between min-w-[150px] bg-divider-soft text-primary-gold px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200">
-            <span>{{ selectedCabinClass }}</span>
-            <svg class="w-4 h-4 ml-2 transition-transform duration-200" :class="{ 'rotate-180': isCabinClassOpen }"
-              fill="currentColor" viewBox="0 0 12 12">
-              <path d="M6 9L2 4h8l-4 5z" />
-            </svg>
-          </button>
-
-          <!-- Cabin Class Popover -->
-          <transition name="fade-scale">
-            <div v-if="isCabinClassOpen" ref="cabinClassPopoverRef"
-              class="absolute -left-45 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[200px] max-w-[85vw]"
-              @click.stop>
-              <!-- Header -->
-              <div class="bg-primary-gold text-white px-6 py-4 rounded-t-2xl">
-                <h3 class="text-base font-semibold pl-5">艙等設定</h3>
-              </div>
-
-              <!-- Body -->
-              <div class="px-6 py-4">
-                <div class="space-y-3">
-                  <button v-for="cabinClass in cabinClassOptions" :key="cabinClass"
-                    class="w-full text-left px-4 py-2 rounded-lg transition-colors text-lg font-medium" :class="selectedCabinClass === cabinClass
-                      ? 'text-others-original bg-white'
-                      : 'text-others-gray1 hover:bg-others-gray6'" @click="selectCabinClass(cabinClass)">
-                    {{ cabinClass }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </transition>
-        </div>
-
-        <!-- Direct Flight -->
-        <div class="relative">
-          <input id="directFlight" type="checkbox" v-model="isNonStopFlight" class="sr-only" />
-          <label for="directFlight"
-            class="flex items-center justify-between min-w-[120px] bg-divider-soft text-primary-gold px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200 cursor-pointer">
-            <span>直飛</span>
-            <div class="w-4 h-4 rounded-full border-2 transition-colors duration-200 flex items-center justify-center"
-              :class="isNonStopFlight ? 'border-none bg-others-original' : 'border-primary-gold bg-none'">
-            </div>
-          </label>
-        </div>
-      </div>
-
-      <button
-          class="px-4 py-1 w-[150px] h-[50px] rounded-[15px] border-none font-bold bg-others-original text-white hover:bg-others-hover transition"
-          @click="onSearch">
-          搜尋
-      </button>
+        <button
+            class="px-4 py-1 w-[150px] h-[50px] rounded-[15px] border-none font-bold bg-others-original text-white hover:bg-others-hover transition"
+            @click="onSearch">
+            搜尋
+        </button>
     </div>
   </div>
 </template>
@@ -347,6 +363,7 @@ function addSegment() {
   if (!canAdd.value) return
   segments.value.push(makeSeg())
   errors.value.push({
+    source: false,
     destination: false,
     startDate: false,
     endDate: false
@@ -485,32 +502,44 @@ function decrementChildren() { if (childrenCount.value > 0) childrenCount.value-
 /* -------------------- airline filter -------------------- */
 const isAirlineOpen = ref(false)
 const airlineSearchTerm = ref('')
-const selectedAirline = ref('星宇航空')
+const selectedAirline = ref('新加坡航空')
 
 function toggleAirline() {
   isAirlineOpen.value = !isAirlineOpen.value
   if (isAirlineOpen.value) airlineSearchTerm.value = ''
 }
 
+/** ------------------ AIRLINE ------------------ **/
 const allAirlines = ref([
-  { code: 'JX', name: '星宇航空' },
-  { code: 'BR', name: '長榮航空' },
-  { code: 'CI', name: '中華航空' },
-  { code: 'B7', name: '立榮航空' },
-  { code: 'AE', name: '華信航空' },
-  { code: 'JL', name: '日本航空' },
-  { code: 'SQ', name: '新加坡航空' },
-  { code: 'CX', name: '國泰航空' },
-  { code: 'KL', name: '荷蘭皇家航空' },
-  { code: 'LH', name: '德國漢莎航空' },
-  { code: 'MM', name: '樂桃航空' },
-  { code: 'MU', name: '中國東方航空' },
-  { code: 'NH', name: 'ANA全日空' },
-  { code: 'OZ', name: '韓亞航空' },
-  { code: 'KE', name: '大韓航空' },
-  { code: 'TG', name: '泰國國際航空' },
-  { code: 'AF', name: '法國航空' },
+    { code: 'JX', name: '星宇航空' },
+    { code: 'BR', name: '長榮航空' },
+    { code: 'CI', name: '中華航空' },
+    { code: 'B7', name: '立榮航空' },
+    { code: 'AE', name: '華信航空' },
+    { code: 'JL', name: '日本航空' },
+    { code: 'SQ', name: 'c' },
+    { code: 'CX', name: '國泰航空' },
+    { code: 'BF', name: 'FRENCH BEE' },
+    { code: 'HM', name: '暹席爾航空' },
+    { code: 'KL', name: '荷蘭皇家航空' },
+    { code: 'LH', name: '德國漢莎航空' },
+    { code: 'MM', name: '樂桃航空' },
+    { code: 'MU', name: '中國東方航空' },
+    { code: 'OK', name: '捷克航空' },
+    { code: 'NH', name: 'ANA全日空' },
+    { code: 'OZ', name: '韓亞航空' },
+    { code: 'KE', name: '大韓航空' },
+    { code: 'TG', name: '泰國國際航空' },
+    { code: 'AF', name: '法國航空' },
+    { code: 'AG', name: '榮航空' },
+    { code: 'AC', name: '荷蘭皇家航空' },
+    { code: 'AE', name: '法國航空' },
+    { code: 'TE', name: '荷家航空' },
+    { code: 'EA', name: '法國航空' },
+    { code: 'QQ', name: '法國航空' },
+    { code: 'AA', name: '荷蘭皇家航空' }
 ])
+
 const popularAirlines = ['日本航空', '新加坡航空', '國泰航空', '長榮航空', '中華航空', '星宇航空']
 
 const filteredAirlines = computed(() => {
@@ -555,11 +584,13 @@ const hasSearched = ref(false)
 
 const errors = ref([
   {
+    source: false,
     destination: false,
     startDate: false,
     endDate: false,
   },
   {
+    source: false,
     destination: false,
     startDate: false,
     endDate: false,
@@ -568,6 +599,7 @@ const errors = ref([
 
 watch(segments, (newSegments) => {
   errors.value = newSegments.map(seg => ({
+    source: hasSearched.value && !seg.fromCity,
     destination: hasSearched.value && !seg.toCity,
     startDate: hasSearched.value && !seg.departureDate
   }))
@@ -594,9 +626,12 @@ function getAirlineCode(nameOrCode) {
 function onSearch() {
   hasSearched.value = true 
   errors.value = segments.value.map((segment) => ({
+    source: !segment.fromCity,
     destination: !segment.toCity,
     startDate: !segment.departureDate
   }))
+
+  errors.value[0].source = false
 
   // If any error → stop search
   const hasError = errors.value.some(error =>

@@ -6,16 +6,29 @@
             <div class="bg-white mt-6 rounded-[10px] border-[2px] px-8 py-4 w-full">
                 <h2 class="font-semibold text-primary-gold">訂單狀況</h2>
                 <div class="space-x-4 mt-4">
-                    <span class="text-green-600 text-[22px] font-bold">付款完成</span>
-                    <span class="text-others-gray7">感謝您的訂購，客服人員將為您開票，並於開票完成後寄送電子機票email給您。</span>
+                    <!-- <span class="text-green-600 text-[22px] font-bold">付款完成</span> -->
+                    <span class="text-text-error text-[22px] font-bold">待付款</span>
+                    <!-- <span class="text-others-gray7">感謝您的訂購，客服人員將為您開票，並於開票完成後寄送電子機票email給您。</span> -->
+                    <span class="text-others-gray7">為保留機位及票價，請於付款期限內完成付款，逾期訂單將自動取消並釋出機位。</span>
                 </div>
-                <div class="space-x-4 mt-2">
-                    <span class="text-others-gray7">應付金額</span>
-                    <span class="text-others-gray7 text-[18px] font-bold">{{ formatPrice(total) }}</span>
-                </div>
-                <div class="space-x-4 mt-2">
-                    <span class="text-others-gray7">訂單編號</span>
-                    <span class="text-others-gray7 text-[18px] font-bold">{{ 'ORD0026597365' }}</span>
+                <div class="flex flex-row items-center justify-between">
+                    <div>
+                        <div class="space-x-4 mt-2">
+                            <span class="text-others-gray7">應付金額</span>
+                            <span class="text-others-gray7 text-[18px] font-bold">{{ formatPrice(total) }}</span>
+                        </div>
+                        <div class="space-x-4 mt-2">
+                            <span class="text-others-gray7">訂單編號</span>
+                            <span class="text-others-gray7 text-[18px] font-bold">{{ 'ORD0026597365' }}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <button
+                            class="px-4 py-1 w-[200px] h-[60px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition"
+                            >
+                            立即付款
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -65,54 +78,72 @@
             <section class="mt-6 border-none rounded-xl text-center overflow-hidden">
                 <table class="w-full text-sm">
                     <thead class="bg-primary-gold text-white">
-                    <tr>
-                        <th class="px-4 py-3 font-medium w-[22%]">旅客姓名</th>
-                        <th class="px-4 py-3 font-medium">商品名稱</th>
-                        <th class="px-4 py-3 font-medium whitespace-nowrap w-[14%]">商品金額</th>
-                        <th class="px-4 py-3 font-medium whitespace-nowrap w-[10%]">已付金額</th>
-                        <th class="px-4 py-3 font-medium whitespace-nowrap w-[10%]">未付金額</th>
-                        <th class="px-4 py-3 font-medium whitespace-nowrap w-[16%]">付款期限</th>
-                    </tr>
+                        <tr>
+                            <th class="px-4 py-3 font-medium whitespace-nowrap">
+                                <label class="flex gap-2 items-start text-sm text-slate-600 select-none">                        
+                                    <label class="flex items-center cursor-pointer relative">
+                                        <input type="checkbox" checked disabled
+                                            class="mt-[1px] peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-white"
+                                            id="check" v-model="passengerInfoAllChecked" />
+                                        <span
+                                            class="absolute text-primary-gold opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none bg-white">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"
+                                            stroke="currentColor" stroke-width="1">
+                                            <path fill-rule="evenodd"
+                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                clip-rule="evenodd"></path>
+                                            </svg>
+                                        </span>
+                                    </label>
+                                </label>
+                            </th>
+                            <th class="px-4 py-3 font-medium whitespace-nowrap">旅客姓名</th>
+                            <th class="px-4 py-3 font-medium whitespace-nowrap">商品名稱</th>
+                            <th class="px-4 py-3 font-medium whitespace-nowrap">商品金額</th>
+                            <th class="px-4 py-3 font-medium whitespace-nowrap">已付金額</th>
+                            <th class="px-4 py-3 font-medium whitespace-nowrap">未付金額</th>
+                            <th class="px-4 py-3 font-medium whitespace-nowrap">付款期限</th>
+                        </tr>
                     </thead>
                     <tbody class="divide-y">
                     <tr v-for="(it, i) in items" :key="i" class="bg-white border-2">
                         <td class="px-4 py-3 border-t-2 border-b-2">
-                        <label class="inline-flex items-center gap-2 select-none">
                             <label class="flex gap-2 items-start text-sm text-slate-600 select-none">                        
                                 <label class="flex items-center cursor-pointer relative">
-                                <input type="checkbox" checked
-                                    class="mt-[1px] peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-primary-gold"
-                                    id="check" v-model="it.checked" />
-                                <span
-                                    class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none bg-primary-gold">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"
-                                    stroke="currentColor" stroke-width="1">
-                                    <path fill-rule="evenodd"
-                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                        clip-rule="evenodd"></path>
-                                    </svg>
-                                </span>
+                                    <input type="checkbox" checked disabled
+                                        class="mt-[1px] peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-primary-gold"
+                                        id="check" v-model="it.checked" />
+                                    <span
+                                        class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none bg-primary-gold">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"
+                                        stroke="currentColor" stroke-width="1">
+                                        <path fill-rule="evenodd"
+                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                            clip-rule="evenodd"></path>
+                                        </svg>
+                                    </span>
                                 </label>
                             </label>
+                        </td>
+                        <td class="px-4 py-3 border-t-2 border-b-2">
                             <span class="font-medium text-others-gray1">{{ it.name }}</span>
-                        </label>
                         </td>
                         <td class="px-4 py-3 text-others-gray1 border-t-2 border-b-2">
-                        {{ it.productName }}
+                            {{ it.productName }}
                         </td>
-                        <td class="px-4 py-3 text-right text-others-gray1 border-t-2 border-b-2">
-                        <div>含稅金</div>
-                        <div class="tabular-nums font-bold">{{ formatPrice(it.fare) }}</div>
-                        <div class="tabular-nums">{{ formatPrice(it.tax) }}</div>
+                        <td class="px-4 py-3 text-center text-others-gray1 border-t-2 border-b-2">
+                            <div>含稅金</div>
+                            <div class="tabular-nums font-bold">{{ formatPrice(it.fare) }}</div>
+                            <div class="tabular-nums">{{ formatPrice(it.tax) }}</div>
                         </td>
-                        <td class="px-4 py-3 text-right tabular-nums text-others-gray1 border-t-2 border-b-2">
-                        {{ formatPrice(it.paid) }}
+                        <td class="px-4 py-3 text-center tabular-nums text-others-gray1 border-t-2 border-b-2">
+                            {{ formatPrice(it.paid) }}
                         </td>
-                        <td class="px-4 py-3 text-right tabular-nums text-others-gray1 font-bold border-t-2 border-b-2">
-                        {{ formatPrice(Math.max(it.fare + it.tax - it.paid, 0)) }}
+                        <td class="px-4 py-3 text-center tabular-nums text-others-gray1 font-bold border-t-2 border-b-2">
+                            {{ formatPrice(Math.max(it.fare + it.tax - it.paid, 0)) }}
                         </td>
-                        <td class="px-4 py-3 text-right text-others-original whitespace-nowrap border-t-2 border-b-2">
-                        {{ it.deadline }}
+                        <td class="px-4 py-3 text-center text-others-original whitespace-nowrap border-t-2 border-b-2">
+                            {{ it.deadline }}
                         </td>
                     </tr>
                     </tbody>
@@ -216,7 +247,7 @@
   </main>
 </template>
 <script setup lang="ts">
-import { reactive, computed } from "vue";
+import { reactive, computed, ref } from "vue";
 import { formatPrice } from "@/utils";
 
 type Flight = {
@@ -331,6 +362,8 @@ const specialCooperations = reactive<SpecialCooperation[]>([
         detail: "內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字，內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字"
     }
 ])
+
+const passengerInfoAllChecked = ref(true)
 
 const total = computed(() =>
   items

@@ -56,7 +56,7 @@
         </button>
         <button
           class="px-4 py-1 w-[93px] h-[40px] rounded-md border border-none hover:bg-others-gray2 hover:text-others-gray1 transition"
-          :class="[isOrderPage ? 'bg-others-gray4 text-black' : 'bg-white text-others-original']"
+          :class="[isOrderPage ? 'bg-others-gray4 text-others-gray1' : 'bg-white text-others-original']"
           @click="openDialog('signup')"
         >
           註冊

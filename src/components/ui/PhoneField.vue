@@ -2,7 +2,7 @@
   <div
     class="inline-flex w-full rounded-[10px] border bg-white
            border-primary-gold overflow-hidden "
-  >
+    >
     <!-- Country code -->
     <div class="relative flex items-center">
       <select
@@ -41,6 +41,7 @@
 
     <!-- Eye toggle -->
     <button
+      v-if="showEye"
       type="button"
       @click="show = !show"
       class="px-1 text-primary-gold hover:text-primary-gold1 focus:outline-none"
@@ -67,14 +68,17 @@ const props = defineProps<{
   countryCode?: string
   placeholder?: string
   codes?: Code[]
+  showEye?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', v: string): void
   (e: 'update:countryCode', v: string): void
+  (e: 'update:showEye', v: boolean): void
 }>()
 
-const show = ref(false)
+const showEye = ref(props.showEye)
+const show = ref(true)
 const codes: Code[] = props.codes ?? [
   { label: '+886', value: '+886' }, // Taiwan
   { label: '+852', value: '+852' }, // Hong Kong

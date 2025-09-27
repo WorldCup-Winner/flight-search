@@ -20,8 +20,10 @@
             <div class="pl-48 pr-6 py-5 text-white">
               <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
                 <div class="text-[18px]">{{ dateText }}</div>
-                <div class="text-[18px]">
-                  {{ origin.name }}({{ origin.code }}) &nbsp;—&nbsp; {{ destination.name }}({{ destination.code }})
+                <div class="flex flex-row items-center gap-3 text-[18px]">
+                  <span>{{ origin.name }}({{ origin.code }})</span>
+                  <img src="@/assets/imgs/icon-arrow-right-white.svg" />
+                  <span>{{ destination.name }}({{ destination.code }})</span>
                 </div>
               </div>
               <div class="text-[15px] mt-1 text-others-gray7">
@@ -44,11 +46,16 @@
                 @click="toggleSort('price')">
                 <span>價格</span>
                 <div class="space-y-[-5px]">
-                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'price' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray7'">
-                    <path d="M6 12l4-4 4 4" fill="currentColor" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      :class="sort.key === 'price' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray1'">
+                    <path d="M6 14l6-6 6 6" />
                   </svg>
-                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'price' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray7'">
-                    <path d="M6 8l4 4 4-4" fill="currentColor" />
+
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      :class="sort.key === 'price' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray1'">
+                    <path d="M18 10l-6 6-6-6"/>
                   </svg>
                 </div>
               </button>
@@ -57,11 +64,16 @@
                 @click="toggleSort('depTime')">
                 <span>出發時間</span>
                 <div class="space-y-[-5px]">
-                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'depTime' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray7'">
-                    <path d="M6 12l4-4 4 4" fill="currentColor" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      :class="sort.key === 'depTime' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray1'">
+                    <path d="M6 14l6-6 6 6" />
                   </svg>
-                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'depTime' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray7'">
-                    <path d="M6 8l4 4 4-4" fill="currentColor" />
+
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      :class="sort.key === 'depTime' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray1'">
+                    <path d="M18 10l-6 6-6-6"/>
                   </svg>
                 </div>
               </button>
@@ -70,11 +82,16 @@
                 @click="toggleSort('arrTime')">
                 <span>抵達時間</span>
                 <div class="space-y-[-5px]">
-                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'arrTime' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray7'">
-                    <path d="M6 12l4-4 4 4" fill="currentColor" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      :class="sort.key === 'arrTime' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray1'">
+                    <path d="M6 14l6-6 6 6" />
                   </svg>
-                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'arrTime' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray7'">
-                    <path d="M6 8l4 4 4-4" fill="currentColor" />
+
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      :class="sort.key === 'arrTime' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray1'">
+                    <path d="M18 10l-6 6-6-6"/>
                   </svg>
                 </div>
               </button>
@@ -83,11 +100,16 @@
                 @click="toggleSort('duration')">
                 <span>飛行總時間</span>
                 <div class="space-y-[-5px]">
-                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'duration' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray7'">
-                    <path d="M6 12l4-4 4 4" fill="currentColor" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      :class="sort.key === 'duration' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray1'">
+                    <path d="M6 14l6-6 6 6" />
                   </svg>
-                  <svg viewBox="0 0 20 20" width="14" height="14" class="opacity-70" :class="sort.key === 'duration' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray7'">
-                    <path d="M6 8l4 4 4-4" fill="currentColor" />
+
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      :class="sort.key === 'duration' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray1'">
+                    <path d="M18 10l-6 6-6-6"/>
                   </svg>
                 </div>
               </button>
@@ -95,10 +117,10 @@
               <div class="ml-auto">
                 <!-- Tax segmented control -->
                 <div class="rounded-[10px] p-1 inline-flex gap-2 border-[1.5px] border-primary-gold">
-                  <button class="px-6 py-1 rounded-md text-sm font-bold"
+                  <button class="px-6 py-1 rounded-md text-sm"
                     :class="taxMode === 'in' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-white'"
                     @click="taxMode = 'in'">含稅</button>
-                  <button class="px-6 py-1 rounded-md text-sm font-bold"
+                  <button class="px-6 py-1 rounded-md text-sm"
                     :class="taxMode === 'ex' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-white'"
                     @click="taxMode = 'ex'">未稅</button>
                 </div>

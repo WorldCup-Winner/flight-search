@@ -128,3 +128,12 @@ export function noteTextClass(type: FareNoteType) {
     default: return 'text-[#6b7280]'     // gray-500
   }
 }
+
+export function formatDate(date: Date | null) {
+  if (!date) return ''
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+  return `${y} / ${m} / ${d} (${weekdays[date.getDay()]})`
+}

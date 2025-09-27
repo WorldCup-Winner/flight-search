@@ -32,7 +32,6 @@
                 </button>
             </div>
 
-
             <!-- Two months side-by-side -->
             <div class="grid grid-cols-2 gap-12">
                 <!-- LEFT MONTH -->
@@ -63,7 +62,7 @@
                                 <button v-if="cell.inMonth"
                                     class="relative z-[1] mx-auto flex h-14 w-full items-start pt-1.5 justify-center rounded-xl transition-colors"
                                     :class="[
-                                        'text-gray-600',
+                                        'text-others-gray7',
                                         sameDay(cell.date, start) || sameDay(cell.date, end)
                                             ? 'bg-others-original text-white'
                                             : '',
@@ -96,7 +95,8 @@
                             <div v-for="(cell, di) in week" :key="di" class="relative h-14">
                                 <!-- Range background -->
                                 <div v-if="cell.inMonth && isBetween(cell.date, start, end)"
-                                    class="absolute h-14 pt-1.5 top-0  inset-y-2 inset-x-0 bg-others-gray6" :class="[
+                                    class="absolute h-14 pt-1.5 top-0  inset-y-2 inset-x-0 bg-others-gray6"
+                                    :class="[
                                         sameDay(cell.date, start) ? 'rounded-l-xl' : '',
                                         sameDay(cell.date, end) ? 'rounded-r-xl' : '',
                                         di === 0 ? 'rounded-l-xl' : '',
@@ -105,11 +105,12 @@
                                         isTwoConsecutiveDays() && sameDay(cell.date, end) ? 'rounded-l-none' : ''
 
                                     ]" />
+                                    
                                 <!-- Day button -->
                                 <button v-if="cell.inMonth"
                                     class="relative z-[1] mx-auto flex h-14 w-full items-start pt-1.5 justify-center rounded-xl transition-colors"
                                     :class="[
-                                        'text-others-gray1',
+                                        'text-others-gray7',
                                         sameDay(cell.date, start) || sameDay(cell.date, end)
                                             ? 'bg-others-original text-white'
                                             : '',
@@ -124,8 +125,6 @@
                     </div>
                 </div>
             </div>
-
-
         </div>
     </div>
 </template>
@@ -226,7 +225,7 @@ function getGrid(month: Date) {
     startDate.setDate(first.getDate() - startOffset)
 
     const days: { date: Date; inMonth: boolean }[] = []
-    for (let i = 0; i < 31; i++) {
+    for (let i = 0; i < 42; i++) {
         const d = new Date(startDate)
         d.setDate(startDate.getDate() + i)
         const inMonth = d.getMonth() === first.getMonth()

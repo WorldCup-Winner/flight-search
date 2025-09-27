@@ -2,7 +2,7 @@
   <div class="bg-white mt-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-8 w-full">
     <!-- Header -->
     <div class="flex items-center justify-between mb-4">
-      <h2 class="font-semibold text-others-gray1">機票商品資料</h2>
+      <h2 class="font-semibold text-primary-gold">機票商品資料</h2>
       <p href="#" class="text-others-original font-semibold whitespace-nowrap"><span class="text-others-gray7">訂單編號</span>&nbsp;&nbsp;ORD0026597365</p>
     </div>
 
@@ -47,7 +47,9 @@
       <table class="w-full text-sm">
         <thead class="bg-primary-gold text-white">
           <tr>
-            <th class="px-4 py-3 font-medium w-[22%]">旅客姓名</th>
+            <th class="px-4 py-3 font-medium whitespace-nowrap w-[5%]">
+            </th>
+            <th class="px-4 py-3 font-medium">旅客姓名</th>
             <th class="px-4 py-3 font-medium">商品名稱</th>
             <th class="px-4 py-3 font-medium whitespace-nowrap w-[14%]">商品金額</th>
             <th class="px-4 py-3 font-medium whitespace-nowrap w-[10%]">已付金額</th>
@@ -58,41 +60,41 @@
         <tbody class="divide-y">
           <tr v-for="(it, i) in items" :key="i" class="bg-white border-2">
             <td class="px-4 py-3 border-t-2 border-b-2">
-              <label class="inline-flex items-center gap-2 select-none">
                 <label class="flex gap-2 items-start text-sm text-slate-600 select-none">                        
                     <label class="flex items-center cursor-pointer relative">
-                    <input type="checkbox" checked
-                        class="mt-[1px] peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-primary-gold"
-                        id="check" v-model="it.checked" />
-                    <span
-                        class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none bg-primary-gold">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"
-                        stroke="currentColor" stroke-width="1">
-                        <path fill-rule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clip-rule="evenodd"></path>
-                        </svg>
-                    </span>
+                        <input type="checkbox" checked disabled
+                            class="mt-[1px] peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-primary-gold"
+                            id="check" v-model="it.checked" />
+                        <span
+                            class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none bg-primary-gold">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"
+                            stroke="currentColor" stroke-width="1">
+                            <path fill-rule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clip-rule="evenodd"></path>
+                            </svg>
+                        </span>
                     </label>
                 </label>
+            </td>
+            <td class="px-4 py-3 border-t-2 border-b-2">
                 <span class="font-medium text-others-gray1">{{ it.name }}</span>
-              </label>
             </td>
             <td class="px-4 py-3 text-others-gray1 border-t-2 border-b-2">
               {{ it.productName }}
             </td>
-            <td class="px-4 py-3 text-right text-others-gray1 border-t-2 border-b-2">
+            <td class="px-4 py-3 text-center text-others-gray1 border-t-2 border-b-2">
               <div>含稅金</div>
               <div class="tabular-nums font-bold">{{ formatPrice(it.fare) }}</div>
               <div class="tabular-nums">{{ formatPrice(it.tax) }}</div>
             </td>
-            <td class="px-4 py-3 text-right tabular-nums text-others-gray1 border-t-2 border-b-2">
+            <td class="px-4 py-3 text-center tabular-nums text-others-gray1 border-t-2 border-b-2">
               {{ formatPrice(it.paid) }}
             </td>
-            <td class="px-4 py-3 text-right tabular-nums text-others-gray1 font-bold border-t-2 border-b-2">
+            <td class="px-4 py-3 text-center tabular-nums text-others-gray1 font-bold border-t-2 border-b-2">
               {{ formatPrice(Math.max(it.fare + it.tax - it.paid, 0)) }}
             </td>
-            <td class="px-4 py-3 text-right text-others-original whitespace-nowrap border-t-2 border-b-2">
+            <td class="px-4 py-3 text-center text-others-original whitespace-nowrap border-t-2 border-b-2">
               {{ it.deadline }}
             </td>
           </tr>
@@ -166,7 +168,7 @@ const items = reactive<Item[]>([
     deadline: "2025/8/31 14:20",
   },
   {
-    checked: false,
+    checked: true,
     name: "LEE WEIEN - -, MR.",
     productName: "SL/台北/東京/台北/泰國獅子航空 - TPE/NRT NRT/TPE",
     fare: 5278,
@@ -175,7 +177,7 @@ const items = reactive<Item[]>([
     deadline: "2025/8/31 14:20",
   },
   {
-    checked: false,
+    checked: true,
     name: "LEE WEIEN - -, MR.",
     productName: "SL/台北/東京/台北/泰國獅子航空 - TPE/NRT NRT/TPE",
     fare: 5278,

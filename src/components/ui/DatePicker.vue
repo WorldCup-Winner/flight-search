@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-white rounded-2xl shadow-2xl w-[730px] max-w-[95vw]">
+    <div class="bg-white rounded-2xl shadow-2xl w-[730px] max-w-[95vw] z-100">
         <!-- Title bar -->
         <div class="bg-primary-gold text-white px-6 py-3 rounded-t-2xl text-[18px] font-semibold">
             日期選擇
@@ -50,7 +50,7 @@
                                 <button v-if="cell.inMonth"
                                     class="relative z-[1] mx-auto flex h-14 w-full items-start pt-1.5 justify-center rounded-xl transition-colors"
                                     :class="[
-                                        sameDay(cell.date, selectedDate) ? 'bg-others-original text-white' : 'text-gray-600',
+                                        sameDay(cell.date, selectedDate) ? 'bg-others-original text-white' : 'text-others-gray7',
                                         isDisabled(cell.date) ? 'opacity-50 cursor-not-allowed hover:bg-transparent' : 'cursor-pointer'
                                     ]" :disabled="isDisabled(cell.date)" @click="onPick(cell.date)">
                                     {{ cell.date.getDate() }}
@@ -77,7 +77,7 @@
                                 <button v-if="cell.inMonth"
                                     class="relative z-[1] mx-auto flex h-14 w-full items-start pt-1.5 justify-center rounded-xl transition-colors"
                                     :class="[
-                                        sameDay(cell.date, selectedDate) ? 'bg-others-original text-white' : 'text-gray-600',
+                                        sameDay(cell.date, selectedDate) ? 'bg-others-original text-white' : 'text-others-gray7',
                                         isDisabled(cell.date) ? 'opacity-50 cursor-not-allowed hover:bg-transparent' : 'cursor-pointer'
                                     ]" :disabled="isDisabled(cell.date)" @click="onPick(cell.date)">
                                     {{ cell.date.getDate() }}
@@ -95,12 +95,15 @@
 import { ref, watch } from 'vue'
 
 const props = defineProps<{
-    modelValue?: Date | null
-    min?: Date | null
-    max?: Date | null
+    modelValue?: Date
+    min?: Date
+    max?: Date
 }>()
 
-const emit = defineEmits<{ (e: 'update:modelValue', v: Date | null): void }>()
+const emit = defineEmits<{
+    (e: 'update:modelValue', v: Date): void
+    (e: 'apply', v: Date): void
+}>()
 
 const selectedDate = ref<Date | null>(props.modelValue ?? null)
 watch(() => props.modelValue, v => (selectedDate.value = v ?? null))
@@ -150,5 +153,6 @@ function onPick(d: Date) {
     if (isDisabled(d)) return
     selectedDate.value = d
     emit('update:modelValue', selectedDate.value)
+    emit('apply', selectedDate.value)
 }
 </script>

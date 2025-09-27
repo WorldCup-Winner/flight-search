@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col items-center justify-center bg-white">
-        <div class="bg-white rounded-t-2xl border-b-0 px-[40px] py-[30px] w-[500px] border border-primary-gold">
+        <div class="bg-white rounded-t-2xl border-b-0 px-[40px] py-[30px] w-[500px] border-2 border-primary-gold">
             <!-- Tabs -->
             <div class="flex gap-4">
                 <button class="flex-1 py-2 rounded-md text-white bg-primary-gold">
@@ -11,14 +11,14 @@
                 </button>
             </div>
         </div>
-        <div class="bg-white rounded-b-2xl px-[40px] py-[30px] w-[500px] border border-primary-gold">
+        <div class="bg-white rounded-b-2xl px-[40px] py-[30px] w-[500px] border-2 border-primary-gold">
             <h6 class="text-h6 text-others-original mb-4 md:text-h6-d">訪客購買需先驗證手機，或切換至會員登入頁籤進行登入非本國籍請輸入護照英文拼音</h6>
             <!-- Form -->
             <form @submit.prevent="handleLogin" class="flex flex-col items-center">
                 <!-- 身分證號 -->
                 <div class="mb-4 w-full">
                     <label class="block mb-1 text-others-gray1 text-sm">您的姓名</label>
-                    <div class="relative flex flex-row justify-between">
+                    <div class="relative flex flex-row justify-between text-others-gray1">
                         <input v-model="form.firstname" type="text" placeholder="姓氏"
                             class="w-[190px] px-5 py-2 border rounded-md focus:ring-2 focus:ring-others-original focus:outline-none" />
                         <input v-model="form.lastname" type="text" placeholder="名字"

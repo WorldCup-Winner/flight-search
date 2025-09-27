@@ -132,41 +132,86 @@
                 </div>
                 <div class="relative mt-[20px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-16 py-8 w-full">
                     <p class="absolute left-[40px] top-[20px] text-primary-gold font-bold">旅客名單</p>
-                    <div class="grid grid-cols-12 justify-between gap-x-5 items-center text-others-gray1 pt-8">
-                        <div class="relative grid-cols-12 md:col-span-3 mb-4">
-                            <label class="block mb-1 text-others-gray1">姓氏</label>
-                            <input 
-                                type="text" 
-                                placeholder="英文姓 例：PENG"
-                                class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
-                        </div>
-                        <div class="relative grid-cols-12 md:col-span-3 mb-4">
-                            <label class="block mb-1 text-others-gray1">名字</label>
-                            <input 
-                                type="text" 
-                                placeholder="英文名 例：DAKUAI"
-                                class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
-                        </div>
-                        <div class="relative grid-cols-12 md:col-span-3 mb-4">
-                            <label class="block mb-1 text-others-gray1">性別</label>
-                            <input 
-                                type="text" 
-                                placeholder="請選擇"
-                                class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
-                        </div>
-                        <div class="relative grid-cols-12 md:col-span-3 mb-4">
-                            <label class="block mb-1 text-others-gray1">出生日期</label>
-                            <input 
-                                type="text" 
-                                placeholder="請選擇"
-                                class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
-                        </div>
-                        <div class="relative grid-cols-12 md:col-span-3 mb-4">
-                            <label class="block mb-1 text-others-gray1">國籍</label>
-                            <input 
-                                type="text" 
-                                placeholder="TW台灣"
-                                class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
+                    <div class="pt-8">
+                        <div v-for="(p, idx) in passengers" :key="idx" class="mb-8">
+                            <p class="font-bold">旅客{{idx + 1}} ({{p.type === 'adult' ? '成人' : '小孩'}})</p>
+                            <div class="grid grid-cols-12 justify-between gap-x-5 items-center text-others-gray1" >
+                                <div class="relative grid-cols-12 md:col-span-3 mb-4">
+                                    <label class="block mb-1 text-others-gray1">姓氏</label>
+                                    <input
+                                        v-model="p.firstName"
+                                        type="text"
+                                        placeholder="英文姓 例：PENG"
+                                        class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
+                                </div>
+                                <div class="relative grid-cols-12 md:col-span-3 mb-4">
+                                    <label class="block mb-1 text-others-gray1">名字</label>
+                                    <input
+                                        v-model="p.lastName"
+                                        type="text" 
+                                        placeholder="英文名 例：DAKUAI"
+                                        class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
+                                </div>
+                                <div class="relative grid-cols-12 md:col-span-3 mb-4">
+                                    <label class="block mb-1 text-others-gray1">性別</label>
+                                    <div class="relative">
+                                        <select
+                                            v-model="p.gender"
+                                            placeholder="請選擇"
+                                            class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none appearance-none bg-transparent cursor-pointer"
+                                            aria-label="Gender"
+                                            >
+                                            <option value="male">
+                                                男
+                                            </option>
+                                            <option value="female">
+                                                女
+                                            </option>
+                                        </select>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                            class="text-primary-goldpointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M18 10l-6 6-6-6" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="relative grid-cols-12 md:col-span-3 mb-4">
+                                    <label class="block mb-1 text-others-gray1">出生日期</label>
+                                    <input
+                                        type="text"
+                                        placeholder="請選擇"
+                                        v-model="p.birthDateText"
+                                        class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none"
+                                        @focus="toggleDatePicker($event, p, 'birthDate')"
+                                        />
+
+                                        <transition name="fade-scale">
+                                            <teleport to="body">
+                                                <div
+                                                v-if="isDatePickerOpen"
+                                                ref="datePopoverRef"
+                                                class="fixed z-[10000]"
+                                                :style="popoverStyle"
+                                                @click.stop
+                                                >
+                                                <DatePicker
+                                                    :modelValue="activeDateField?.passenger ? activeDateField.passenger.birthDate : startDate"
+                                                    :min="new Date()"
+                                                    @update:modelValue="handleSingleDateApply"
+                                                    @apply="handleSingleDateApply"
+                                                />
+                                                </div>
+                                            </teleport>
+                                        </transition>
+                                </div>
+                                <div class="relative grid-cols-12 md:col-span-3 mb-4">
+                                    <label class="block mb-1 text-others-gray1">國籍</label>
+                                    <input
+                                        v-model="p.nationality"
+                                        type="text"
+                                        placeholder="TW台灣"
+                                        class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -181,17 +226,14 @@
                                 class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                         </div>
                         <div class="relative grid-cols-12 md:col-span-4 mb-4">
-                            <label class="block mb-1 text-others-gray1">+886</label>
-                            <input 
-                                type="text" 
-                                placeholder="英文名 例：DAKUAI"
-                                class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
+                            <label class="block mb-1 text-others-gray1">聯絡手機</label>
+                            <PhoneField v-model="phoneNumber" :countryCode="code" :show-eye="false" />
                         </div>
                         <div class="relative grid-cols-12 md:col-span-4 mb-4">
-                            <label class="block mb-1 text-others-gray1">必填</label>
+                            <label class="block mb-1 text-others-gray1">聯絡email</label>
                             <input 
                                 type="text" 
-                                placeholder="請選擇"
+                                placeholder="必填"
                                 class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                         </div>
                     </div>
@@ -373,7 +415,8 @@
                         </div>
                     </div>
 
-                    <div class="my-2 border-t border-slate-200" />
+                    <div class="my-2 border-t border-others-gray3"></div>
+                    
                     <!-- Payable total -->
                     <div class="flex items-baseline justify-between">
                         <span class="text-primary-gold font-semibold">{{ totalLabel }}</span>
@@ -384,29 +427,28 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Agreement -->
-                    <div class="mt-2 flex gap-2 items-start text-sm text-slate-600 select-none">                        
-                        <label class="flex items-center cursor-pointer relative">
-                        <input type="checkbox" checked
-                            class="mt-[1px] peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-primary-gold"
-                            id="check" v-model="agreed" />
-                            <span
-                                class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none bg-primary-gold">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"
-                                stroke="currentColor" stroke-width="1">
-                                <path fill-rule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                    clip-rule="evenodd"></path>
-                                </svg>
-                            </span>
-                        </label>
-                        <span>
-                            我已閱讀「
-                            <span class="text-others-original cursor-pointer hover:text-others-hover" @click="isOpenBookingInstruction = true">訂購須知</span>
-                            」含個資聲明）並同意其內容
+                </div>
+                <!-- Agreement -->
+                <div class="mt-10 flex gap-2 items-start text-sm text-slate-600 select-none">                        
+                    <label class="flex mt-[3px] items-center cursor-pointer relative">
+                    <input type="checkbox" checked
+                        class="peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-primary-gold"
+                        id="check" v-model="agreed" />
+                        <span
+                            class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none bg-primary-gold">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"
+                            stroke="currentColor" stroke-width="1">
+                            <path fill-rule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clip-rule="evenodd"></path>
+                            </svg>
                         </span>
-                    </div>
+                    </label>
+                    <span>
+                        我已閱讀「
+                        <span class="text-others-original cursor-pointer hover:text-others-hover" @click="isOpenBookingInstruction = true">訂購須知</span>
+                        」含個資聲明）並同意其內容
+                    </span>
                 </div>
                 <!-- Submit button -->
                 <button
@@ -440,8 +482,8 @@
     </Transition>
 </template>
 <script setup lang="ts">
-import { provide, inject, computed, ref } from 'vue'
-import { formatPrice, makeDirect, noteIcon, noteTextClass, toDuration } from '@/utils'
+import { provide, inject, computed, onBeforeUnmount, ref } from 'vue'
+import { formatDate, formatPrice, makeDirect, noteIcon, noteTextClass, toDuration } from '@/utils'
 
 import Airline_1 from '@/assets/imgs/airlines/airline-1.png'
 
@@ -452,6 +494,8 @@ import BookingInstruction from '@/components/ui/BookingInstruction.vue'
 import BaggageInfoAndFeeRule from '@/components/ui/BaggageInfoAndFeeRule.vue'
 
 import type { CardRow } from '@/utils/types'
+import PhoneField from '../ui/PhoneField.vue'
+import DatePicker from '../ui/DatePicker.vue'
 
 // Same type as grandparent
 interface SharedData {
@@ -470,6 +514,64 @@ function openBaggageInfoAndFeeRule() {
   updateValue?.({ isOpenBaggageInfoAndFeeRule: true})
 }
 
+const isDatePickerOpen = ref(false)
+const startDate = ref<any>(new Date())
+const activeInputEl = ref<HTMLElement | null>(null)
+const activeDateField = ref<{ passenger?: any; field: string } | null>(null)
+const dateInputRef = ref<HTMLElement | null>(null)
+const popoverStyle = ref<Record<string, string>>({})
+
+const outboundDateText = computed(() => (startDate.value ? formatDate(startDate.value) : ''))
+
+const passengers = ref([
+  { id: '', type: 'adult', lastName: '', firstName: '', gender: '', birthDate: new Date(), birthDateText: '', nationality: '' },
+  { id: '', type: 'child', lastName: '', firstName: '', gender: '', birthDate: new Date(), birthDateText: '', nationality: '' },
+])
+
+function toggleDatePicker(event: FocusEvent, passenger?: any, field: string = 'outbound') {
+  activeInputEl.value = event.target as HTMLElement
+  activeDateField.value = { passenger, field }
+
+  isDatePickerOpen.value = true
+  updatePopoverPosition()
+
+  window.addEventListener('scroll', updatePopoverPosition, true)
+  window.addEventListener('resize', updatePopoverPosition, true)
+}
+
+
+function closeDatePicker() {
+  isDatePickerOpen.value = false
+  window.removeEventListener('scroll', updatePopoverPosition, true)
+  window.removeEventListener('resize', updatePopoverPosition, true)
+}
+
+function updatePopoverPosition() {
+  const el = activeInputEl.value
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const gap = 8
+  popoverStyle.value = {
+    top: `${rect.bottom + gap}px`,
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+  }
+}
+
+function handleSingleDateApply(d: Date) {
+  if (!activeDateField.value) return
+
+  if (activeDateField.value.field === 'outbound') {
+    startDate.value = d
+  } else if (activeDateField.value.passenger) {
+    activeDateField.value.passenger.birthDate = d
+    activeDateField.value.passenger.birthDateText = formatDate(d)
+  }
+
+  closeDatePicker()
+}
+
+onBeforeUnmount(() => closeDatePicker())
 
 // Provide the updater function
 provide<(val: SharedData) => void>('updateValue', updateValue)
@@ -504,6 +606,10 @@ const isSpecialNeed = ref(false)
 const isOpenWakeUp = ref(false)
 const isOpenBookingInstruction = ref(false)
 
+const gender = ref('male')
+
+const code  = ref('+886')
+const phoneNumber  = ref('')
 
 const departure = ref<CardRow>(
     makeDirect('JAL', '加加航空', Airline_1, '06:45', '11:00', 195, 5799, { fare: true }),

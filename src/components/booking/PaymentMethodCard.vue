@@ -1,13 +1,13 @@
 <template>
   <div class="bg-white my-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-8 w-full">
-      <h2 class="font-semibold text-others-gray1">付款方式</h2>
+      <h2 class="font-semibold text-primary-gold">付款方式</h2>
       <div class="grid grid-cols-12 py-6 gap-12">
         <div class="col-span-12 md:col-span-3 w-full space-y-4">
-            <button @click="paymentMethod = 1" class="w-full py-2 rounded-md"
+            <button @click="paymentMethod = 1" class="w-full py-4 rounded-md"
                 :class="[paymentMethod === 1 ? 'text-white bg-primary-gold' : 'bg-others-gray4 text-others-gray1']">
                 信用卡
             </button>
-            <button @click="paymentMethod = 2" class="w-full py-2 rounded-md"
+            <button @click="paymentMethod = 2" class="w-full py-4 rounded-md"
                 :class="[paymentMethod === 2 ? 'text-white bg-primary-gold' : 'bg-others-gray4 text-others-gray1']">
                 LINE Pay
             </button>
@@ -30,7 +30,7 @@
                                 <label
                                     for="card-1"
                                     class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
-                                            bg-divider-soft text-primary-gold transition-color duration-200
+                                            bg-divider-soft text-others-gray1 transition-color duration-200
                                             before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
                                             peer-checked:before:bg-others-original peer-checked:before:border-none">
                                     台新卡
@@ -48,7 +48,7 @@
                                 <label
                                     for="card-2"
                                     class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
-                                            bg-divider-soft text-primary-gold transition duration-200
+                                            bg-divider-soft text-others-gray1 transition duration-200
                                             before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
                                             peer-checked:before:bg-others-original peer-checked:before:border-none">
                                     聯邦卡
@@ -66,7 +66,7 @@
                                 <label
                                     for="card-3"
                                     class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
-                                            bg-divider-soft text-primary-gold transition duration-200
+                                            bg-divider-soft text-others-gray1 transition duration-200
                                             before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
                                             peer-checked:before:bg-others-original peer-checked:before:border-none">
                                     其他銀行
@@ -84,7 +84,7 @@
                                 <label
                                     for="card-4"
                                     class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
-                                            bg-divider-soft text-primary-gold transition duration-200
+                                            bg-divider-soft text-others-gray1 transition duration-200
                                             before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
                                             peer-checked:before:bg-others-original peer-checked:before:border-none">
                                     美國運通/海外卡(國外發行的信用卡)
@@ -106,7 +106,7 @@
                                 <label
                                     for="method-1"
                                     class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
-                                            bg-divider-soft text-primary-gold transition-color duration-200
+                                            bg-divider-soft text-others-gray1 transition-color duration-200
                                             before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
                                             peer-checked:before:bg-others-original peer-checked:before:border-none">
                                     一次付清
@@ -124,7 +124,7 @@
                                 <label
                                     for="method-2"
                                     class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
-                                            bg-divider-soft text-primary-gold transition duration-200
+                                            bg-divider-soft text-others-gray1 transition duration-200
                                             before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
                                             peer-checked:before:bg-others-original peer-checked:before:border-none">
                                     分期付款
@@ -146,7 +146,7 @@
                                 <label
                                     for="phase-1"
                                     class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
-                                            bg-divider-soft text-primary-gold transition-color duration-200
+                                            bg-divider-soft text-others-gray1 transition-color duration-200
                                             before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
                                             peer-checked:before:bg-others-original peer-checked:before:border-none">
                                     ３期
@@ -164,7 +164,7 @@
                                 <label
                                     for="phase-2"
                                     class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
-                                            bg-divider-soft text-primary-gold transition duration-200
+                                            bg-divider-soft text-others-gray1 transition duration-200
                                             before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
                                             peer-checked:before:bg-others-original peer-checked:before:border-none">
                                     ６期
@@ -182,7 +182,7 @@
                                 <label
                                     for="phase-3"
                                     class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
-                                            bg-divider-soft text-primary-gold transition duration-200
+                                            bg-divider-soft text-others-gray1 transition duration-200
                                             before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
                                             peer-checked:before:bg-others-original peer-checked:before:border-none">
                                     ９期
@@ -193,22 +193,21 @@
                 </div>
                 <div v-if="methodType === 1" class="w-full mt-4 border-others-gray8 border-2 rounded-[10px] p-6">
                     <h2 class="font-bold text-primary-gold">付款注意事項</h2>
-                    <div class="space-y-2 mt-4">
-                        <p class="text-others-gray1">1. 銀行規定，分期刷卡退費需整筆全額刷退，若該筆訂單已產生手續費或違約金，先向您收取後，方能辦理分期全額退款作業。</p>
-                        <p class="text-others-gray1">2. 付款方式確認後將無法修改，訂購前請慎選付款方式。</p>
-                        <p class="text-others-gray1">3. 確定付款後，看到授權成功的書面才算是完成刷卡付款。</p>
-                        <p class="text-others-gray1">4. 本功能只接受VISA、MASTER CARD、JCB，除此之外請用傳真刷卡。</p>
-                        <p class="text-others-gray1">5. 為降低被盜刷之風險、維護網路交易安全，本網已提供支援網路交易3D驗證。</p>
-                        <p class="text-others-gray1">6. 按下「確定付款，後，請勿關閉畫面，直到「信用卡授權成功」 的畫面出現後，刷卡付款程序才完成。</p>
-                    </div>
+                    <ol class="space-y-2 mt-4 list-decimal pl-6">
+                        <li class="text-others-gray1">銀行規定，分期刷卡退費需整筆全額刷退，若該筆訂單已產生手續費或違約金，先向您收取後，方能辦理分期全額退款作業。</li>
+                        <li class="text-others-gray1">付款方式確認後將無法修改，訂購前請慎選付款方式。</li>
+                        <li class="text-others-gray1">確定付款後，看到授權成功的書面才算是完成刷卡付款。</li>
+                        <li class="text-others-gray1">本功能只接受VISA、MASTER CARD、JCB，除此之外請用傳真刷卡。</li>
+                        <li class="text-others-gray1">為降低被盜刷之風險、維護網路交易安全，本網已提供支援網路交易3D驗證。</li>
+                        <li class="text-others-gray1">按下「確定付款，後，請勿關閉畫面，直到「信用卡授權成功」 的畫面出現後，刷卡付款程序才完成。</li>
+                    </ol>
                 </div>
                 <div v-if="methodType === 2" class="w-full mt-4 border-others-gray8 border-2 rounded-[10px] p-6">
                     <h2 class="font-bold text-primary-gold">分期付款說明</h2>
-                    <div class="space-y-2 mt-4">
-                        <p class="text-others-gray1">1. 美國運通/海外卡(國外發行的信用卡) 【不提供】分期付款，請改選一次付清，或選擇其他卡別。</p>
-                        <p class="text-others-gray1">2. 分期刷卡限【3期 / 6期】台新、富邦、玉山、華南、第一、星展、聯邦銀行【10期】台新、玉山、星展、花旗銀行之信用卡。</p>
-                        <p class="text-others-gray1">3. 分期試算金額僅供參考，實際金額以銀行扣款為準</p>
-                    </div>
+                    <ol class="space-y-2 mt-4 list-decimal px-6">
+                        <li class="text-others-gray1">【3期 / 6期】限台新、玉山、華南、花旗、第一、富邦、星展、聯邦銀行之信用卡【10期】台新、玉山、星展、銀行之信用卡。</li>
+                        <li class="text-others-gray1"> 美國運通 【不提供】分期付款，請改選一次付清，或選擇其他卡別。</li>
+                    </ol>
                 </div>
             </div>
             <div v-if="paymentMethod === 2">
@@ -228,10 +227,10 @@
                                 <label
                                     for="card-1"
                                     class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
-                                            bg-divider-soft text-primary-gold transition-color duration-200
+                                            bg-divider-soft text-others-gray1 transition-color duration-200
                                             before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
                                             peer-checked:before:bg-others-original peer-checked:before:border-none">
-                                    台新卡
+                                    LINE Pay
                                 </label>
                             </div>
                         </div>

@@ -1,7 +1,7 @@
 <template>
   <!-- Main Flight Search Box-->
   <div class="relative top-52 z-10 flex items-center justify-center">
-    <div class="bg-white rounded-2xl shadow-2xl p-8 px-14 w-full mx-auto max-w-6xl">
+    <div class="bg-white rounded-2xl rounded-br-none shadow-2xl p-8 px-14 w-full mx-auto max-w-6xl">
       <div class="flex justify-between w-full">
         <!-- Title -->
         <h1 class="text-h1 font-light text-others-gray1 md:text-h1-d">機票搜尋</h1>
@@ -33,7 +33,7 @@
       </div>
     </div>
   </div>
-  <div class="pt-64">
+  <div class="pt-80">
     <div v-if="state === 'default'">
       <BannerImg />
       <RecommendedTrips />
@@ -64,11 +64,13 @@ const activeTab = ref('roundtrip')
 const state = ref('default') // "default" | "loading" | "result"
 
 interface SharedData {
-  isOpenBaggageInfoAndFeeRule: boolean
+  isOpenBaggageInfoAndFeeRule: boolean,
+  isSearch: boolean
 }
 
 const sharedValue = ref<SharedData>({
-  isOpenBaggageInfoAndFeeRule: false
+  isOpenBaggageInfoAndFeeRule: false,
+  isSearch: false
 })
 
 function updateValue(val: SharedData) {
@@ -81,7 +83,7 @@ provide<(val: SharedData) => void>('updateValue', updateValue)
 function handleRoundSearch(payload: any) {
   console.log('handleRoundSearch:', payload)  
   state.value = 'loading'
-
+  sharedValue.value.isSearch = true;
   setTimeout(() => {
     state.value = 'result'
   }, 1500)
@@ -90,7 +92,7 @@ function handleRoundSearch(payload: any) {
 function handleSingleSearch(payload: any) {
   console.log('handleSingleSearch:', payload)
   state.value = 'loading'
-
+  sharedValue.value.isSearch = true;
   setTimeout(() => {
     state.value = 'result'
   }, 1500)
@@ -99,7 +101,7 @@ function handleSingleSearch(payload: any) {
 function handleMultiSearch(payload: any) {
   console.log('handleMultiSearch:', payload)
   state.value = 'loading'
-
+  sharedValue.value.isSearch = true;
   setTimeout(() => {
     state.value = 'result'
   }, 1500)

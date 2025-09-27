@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col items-center justify-center bg-white">
-        <div class="bg-white rounded-t-2xl border-b-0 px-[40px] py-[30px] w-[500px] border border-primary-gold">
+        <div class="bg-white rounded-t-2xl border-b-0 px-[40px] py-[30px] w-[500px] border-2 border-primary-gold">
             <!-- Tabs -->
             <div class="flex gap-4">
                 <button @click="activeTab = 'login-member'" class="flex-1 py-2 rounded-md"
@@ -13,7 +13,7 @@
                 </button>
             </div>
         </div>
-        <div class="bg-white rounded-b-2xl px-[40px] py-[30px] w-[500px] border border-primary-gold">
+        <div class="bg-white rounded-b-2xl px-[40px] py-[30px] w-[500px] border-2 border-primary-gold">
             <div v-if="activeTab === 'login-member'">
                 <form @submit.prevent="handleLogin" class="flex flex-col items-center">
                     <!-- 身分證號 -->

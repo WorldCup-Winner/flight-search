@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col items-center justify-center bg-white">
-        <div class="bg-white rounded-t-2xl border-b-0 px-[40px] py-[30px] w-[500px] border border-primary-gold">
+        <div class="bg-white rounded-t-2xl border-b-0 px-[40px] py-[30px] w-[500px] border-2 border-primary-gold">
             <!-- Tabs -->
             <div class="flex gap-4">
                 <button @click="activeTab = 'login-member'" class="flex-1 py-2 rounded-md"
@@ -13,18 +13,26 @@
                 </button>
             </div>
         </div>
-        <div class="bg-white rounded-b-2xl px-[40px] py-[30px] w-[500px] border border-primary-gold">
+        <div class="bg-white rounded-b-2xl px-[40px] py-[30px] w-[500px] border-2 border-primary-gold">
             <div v-if="activeTab === 'login-member'">
                 <form @submit.prevent="handleLogin" class="flex flex-col items-center">
                     <!-- 身分證號 -->
                     <div class="mb-4 w-full">
                         <label class="block mb-1 text-others-gray1 text-sm">身分證號 / 外籍人士護照號碼</label>
-                        <div class="relative">
-                            <input v-model="form.username" type="text" placeholder="H12156689"
+                        <div class="relative flex items-center">
+                            <input v-model="form.username"  :type="showUsername ? 'text' : 'password'" placeholder="H12156689"
                                 class="w-full px-5 py-2 border rounded-md border-primary-gold text-others-gray1 focus:ring-2 focus:ring-others-original focus:outline-none" />
-                            <span class="absolute right-3 top-2.5 text-others-gray1">
-                                <i class="fas fa-eye"></i>
-                            </span>
+                            <button type="button" class="absolute right-2 mx-0 text-others-gray1"
+                                @click="toggleUsername">
+                                <div v-if="showUsername">
+                                    <!-- Login dialog -->
+                                    <img src="@/assets/imgs/icon-eye1.svg" />
+                                </div>
+                                <div v-else>
+                                    <!-- Signup dialog -->
+                                    <img src="@/assets/imgs/icon-eye2.svg" />
+                                </div>
+                            </button>
                         </div>
                     </div>
 
@@ -80,7 +88,7 @@
                     <div class="mb-4 w-full">
                         <label class="block mb-1 text-others-gray1 text-sm">手機號碼</label>
                         <div class="relative flex items-center justify-between gap-4">
-                            <PhoneField v-model="phone" v-model:countryCode="code" />
+                            <PhoneField v-model="phone" v-model:countryCode="code" :showEye="true" />
                             <button
                                 v-if="!isCodeSent"
                                 class="flex-none inline-flex items-center justify-center w-fit whitespace-nowrap
@@ -102,15 +110,32 @@
                             <CodeField v-model="verificationCode" />
                         </div>
                     </div>
-                    <!-- Footer text -->
-                    <div class="flex flex-row w-full mb-4">
-                        <span class="text-h6 text-others-gray1 md:text-h6-d">
-                            我已閱讀
-                        </span>
-                        <span class="text-h6 text-others-original cursor-pointer md:text-h6-d" @click="goPrivacy">「隱私權政策」</span>
-                        <span class="text-h6 text-others-gray1 md:text-h6-d">
-                            並同意其內容
-                        </span>
+                    
+                    <div class="flex w-full gap-2 items-start text-sm text-slate-600 select-none">                        
+                        <label class="flex mt-[3px]  items-center cursor-pointer relative">
+                            <input type="checkbox" checked
+                                class="peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-primary-gold"
+                                id="check" v-model="agreed" />
+                            <span
+                                class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none bg-primary-gold">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"
+                                stroke="currentColor" stroke-width="1">
+                                <path fill-rule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clip-rule="evenodd"></path>
+                                </svg>
+                            </span>
+                        </label>
+                        <!-- Footer text -->
+                        <div class="flex flex-row w-full mb-4">
+                            <span class="text-h6 text-others-gray1 md:text-h6-d">
+                                我已閱讀
+                            </span>
+                            <span class="text-h6 text-others-original cursor-pointer md:text-h6-d" @click="goPrivacy">「隱私權政策」</span>
+                            <span class="text-h6 text-others-gray1 md:text-h6-d">
+                                並同意其內容
+                            </span>
+                        </div>
                     </div>
                     <!-- Submit -->
                     <button type="submit"
@@ -141,12 +166,17 @@ const form = ref({
     password: ''
 })
 
+const showUsername = ref(false)
 const showPassword = ref(false)
 const activeTab = ref('login-member')
 const isCodeSent = ref(false)
 
 const togglePassword = () => {
     showPassword.value = !showPassword.value
+}
+
+const toggleUsername = () => {
+    showUsername.value = !showUsername.value
 }
 
 const handleLogin = () => {

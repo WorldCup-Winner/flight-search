@@ -1,5 +1,5 @@
 <template>
-  <main class="w-full flex flex-col items-center justify-center">
+  <main class="w-full flex flex-col items-center justify-center bg-[#EFEFEF]">
     <BookingProcessBar :step="step"/>
     <StepTwo v-if="step === 2" v-model:step="step" />
     <StepThree v-else-if="step === 3" v-model:step="step"/>
@@ -15,6 +15,7 @@ import StepThree from '@/components/booking/StepThree.vue'
 import StepFour from '@/components/booking/StepFour.vue'
 
 const step = ref(2)
+
 // With options for smooth scrolling
 window.scrollTo({
   top: 0,

@@ -71,10 +71,14 @@
 
                 <div class="text-others-gray1 mb-4">
                     <div class="rounded-t-[10px] space-x-4 bg-tb-header text-[17px] p-3">
-                        <button class="px-6 py-1 rounded-[10px] border-2 border-others-original bg-others-original text-white font-bold">台北 - 東京</button>
-                        <button class="px-6 py-1 rounded-[10px] border-2 border-others-original bg-none text-others-original font-bold">台北 - 東京</button>
+                        <button class="px-6 py-1 rounded-[10px] border-2 font-bold"
+                                :class="[departureOrarrival ? 'border-others-original bg-others-original text-white' : 'border-others-original bg-none text-others-original']"
+                                @click="departureOrarrival = true">台北 - 東京</button>
+                        <button class="px-6 py-1 rounded-[10px] border-2 font-bold"
+                                :class="[!departureOrarrival ? 'border-others-original bg-others-original text-white' : 'border-others-original bg-none text-others-original']"
+                                @click="departureOrarrival = false">東京 - 台北</button>
                     </div>
-                    <section id="panel2" class="panel bg-tb-body">
+                    <section v-if="departureOrarrival" class="panel bg-tb-body">
                         <table class="w-full border-collapse">
                         <colgroup>
                             <col class="w-[18%]" />
@@ -139,6 +143,48 @@
                         </tbody>
                         </table>
                     </section>
+                    <section v-else class="panel bg-tb-body">
+                        <table class="w-full border-collapse">
+                        <colgroup>
+                            <col class="w-[18%]" />
+                            <col />
+                        </colgroup>
+                        <tbody>
+                            <tr class="border-t border-gray-200">
+                                <th scope="row" class="p-4">退改說明</th>
+                                <td colspan="2" class="p-4">
+                                    <ol class="list-decimal pl-5 space-y-1">
+                                        <li>退票：依起飛前後之規定，按系統計算之退票費用收費，若機票已部分使用，需扣除已使用航段的價格/稅金，通常已部分使用的機票無退票價值。</li>
+                                        <li>改期：依起飛前後之規定，按系統計算之改票費用收費，若更改後票價及稅費較高，須另外補足差額。</li>
+                                    </ol>
+                                </td>
+                            </tr>
+
+                            <tr class="border-t border-gray-200">
+                                <th scope="row" class="p-4">服務費</th>
+                                <td colspan="3" class="p-4">
+                                    <ol class="list-decimal pl-5 space-y-1">
+                                        <li>退票：加利利旅遊服務費 TWD 800 元。</li>
+                                        <li>改期：加利利旅遊服務費 TWD 500 元。</li>
+                                        <li>若非自營票而產生供應商服務費，則依服務人員提供之退/改票服務費金額為準。</li>
+                                    </ol>
+                                </td>
+                            </tr>
+
+                            <tr class="border-t border-b border-gray-200">
+                                <th scope="row" class="p-4">備註</th>
+                                <td colspan="3" class="p-4">
+                                    <ol class="list-decimal pl-5 space-y-1">
+                                        <li>若未在出發前 24～72 小時內取消機位，且當日未搭乘，辦理退票或改票時，將依航空公司規定加收「未登機費」，需結清費用後才能辦理退款。</li>
+                                        <li>退改實際費用包含：航空公司之退改手續費＋票價/稅金差額＋服務費，按每人每次計算。</li>
+                                        <li>航空公司訂位費已含於稅金內，各航空公司收費標準不同，退票時不退還。</li>
+                                        <li>請務必於規定退改期限前至少 2 個工作天（不含假日）提出申請，避免因時間不足導致無法辦理退票或改票。</li>
+                                    </ol>
+                                </td>
+                            </tr>
+                        </tbody>
+                        </table>
+                    </section>
                 </div>
             </div>
         </div>
@@ -151,6 +197,8 @@ import { ref, defineProps, defineEmits } from "vue";
 const props = defineProps<{
   open: boolean;
 }>();
+
+const departureOrarrival = ref(true)
 
 const emit = defineEmits<{
   (e: "close"): void;

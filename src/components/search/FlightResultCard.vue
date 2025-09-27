@@ -78,8 +78,9 @@
           <button class="text-[16px] font-bold text-primary-gold hover:opacity-80 inline-flex items-center gap-1"
             @click="expanded = !expanded" :aria-expanded="expanded" type="button">
             航班資訊
-            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-              <path :d="expanded ? 'M5 12l5-5 5 5' : 'M5 8l5 5 5-5'" fill="currentColor" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path :d="!expanded ? 'M18 10l-6 6-6-6' : 'M6 14l6-6 6 6'" />
             </svg>
           </button>
         </div>
@@ -92,8 +93,11 @@
               <div class="text-[28px] text-others-original leading-none">
                 {{ formatPrice(priceFrom) }}
               </div>
+              <div class="text-[12px] text-others-gray1">
+                &nbsp; 起
+              </div>
             </div>
-            <div class="text-[12px] text-others-gray1">{{ roundTripIncluded ? '來回含稅價' : '含稅價' }}</div>
+            <div class="text-[12px] pt-1 text-others-gray1">{{ roundTripIncluded ? '來回含稅價' : '含稅價' }}</div>
           </div>
 
           <button
@@ -108,8 +112,9 @@
             class="flex items-center gap-2 min-w-[98px] px-6 py-3 rounded-[15px] text-white font-bold"
             :class="expanded1 ? 'bg-others-gray3 hover:bg-others-gray5' : 'bg-primary-gold hover:bg-primary-gold3'" @click="expanded1 = !expanded1" type="button">
             <p>{{ expanded1 ? '收起' : '選擇' }}</p>
-            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-              <path :d="expanded1 ? 'M5 12l5-5 5 5' : 'M5 8l5 5 5-5'" fill="currentColor" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path :d="!expanded1 ? 'M18 10l-6 6-6-6' : 'M6 14l6-6 6 6'" />
             </svg>
           </button>
         </div>
@@ -118,7 +123,7 @@
 
     <!-- BODY (expanded) -->
     <Transition name="fade">
-      <div v-if="expanded" class="bg-[#E5E5E5]">
+      <div v-if="expanded" class="bg-[#E5E5E5]" :class="[!expanded1 ? 'rounded-b-[10px]' : '']">
         <!-- Timeline for each segment -->
         <div v-for="(seg, i) in segments" :key="i">
           <div class="grid grid-cols-12 gap-4 py-8">
@@ -179,9 +184,10 @@
     <Transition name="fade">
       <div v-if="expanded1" class="bg-[#E5E5E5]">
         <!-- Fare options (optional) -->
-        <div v-if="fareOptions?.length" class="mt-4 bg-white overflow-hidden">
+        <div v-if="fareOptions?.length" class="mt-4 bg-white rounded-b-[10px] overflow-hidden">
           <div v-for="(fare, idx) in visibleFares" :key="idx"
-            class="grid grid-cols-12 gap-4 p-5 border-b last:border-b-0 border-others-gray3">
+            class="relative grid grid-cols-12 gap-4 p-5 border-others-gray3">
+            <div v-if="idx >= 1" class="absolute mx-[2%] w-[96%] h-[1px] bg-others-gray3"></div>
             <div class="col-span-12 md:col-span-2 text-others-gray1 font-bold flex items-center justify-center">
               {{ fare.cabin }}
             </div>
@@ -202,7 +208,7 @@
                     {{ formatPrice(fare.price) }}
                   </div>
                 </div>
-                <div class="text-[12px] text-others-gray1">{{ roundTripIncluded ? '來回含稅價' : '含稅價' }}</div>
+                <div class="text-[12px] pt-2 text-others-gray1">{{ roundTripIncluded ? '來回含稅價' : '含稅價' }}</div>
               </div>
               <button class="bg-others-original hover:bg-others-hover min-w-[98px] text-white font-bold rounded-[10px] px-6 py-3"
                 @click="goBooking(fare)" type="button">
@@ -211,9 +217,13 @@
             </div>
           </div>
 
-          <div v-if="fareOptions.length > fareShow" class="p-4 text-right">
-            <button class="text-others-original font-bold hover:opacity-80" @click="fareShow = fareOptions.length">
-              顯示更多 ▾
+          <div v-if="fareOptions.length > fareShow" class="p-4 flex justify-end">
+            <button class="flex items-center w-fit text-others-original hover:opacity-80" @click="fareShow = fareOptions.length">
+              <span>顯示更多</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                  class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 10l-6 6-6-6" />
+              </svg>
             </button>
           </div>
         </div>
@@ -233,7 +243,8 @@ import AirlineDefault from '@/assets/imgs/airlines/airline-default.svg'
 
 // Same type as grandparent
 interface SharedData {
-  isOpenBaggageInfoAndFeeRule: boolean
+  isOpenBaggageInfoAndFeeRule?: boolean,
+  isSearch?: boolean
 }
 
 // Inject function and type it properly
