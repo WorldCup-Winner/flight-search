@@ -1,54 +1,55 @@
 <template>
-  <!-- Main Flight Search Box-->
-  <div class="relative top-52 z-10 flex items-center justify-center">
-    <div class="bg-white rounded-2xl rounded-br-none shadow-2xl p-8 px-14 w-full mx-auto max-w-6xl">
-      <div class="flex justify-between w-full">
-        <!-- Title -->
-        <h1 class="text-h1 font-light text-others-gray1 md:text-h1-d">機票搜尋</h1>
+  <div :class="[ sharedValue?.isSearch ? 'mt-32' : 'mt-80' ]">
+    <div class="relative z-10 flex items-center justify-center">
+      <div class="bg-white rounded-2xl rounded-br-none shadow-2xl p-8 px-14 w-full mx-auto max-w-6xl">
+        <div class="flex justify-between w-full">
+          <!-- Title -->
+          <h1 class="text-h1 font-light text-others-gray1 md:text-h1-d">機票搜尋</h1>
 
-        <!-- Tab Navigation -->
-        <div class="flex space-x-2 px-4 py-3 border-2 rounded-xl rounded-b-none border-b-0 border-primary-gold">
-          <button @click="activeTab = 'roundtrip'" :class="[
-            'px-6 min-w-[148px] min-h-[38px] py-2 rounded-lg font-medium transition',
-            activeTab === 'roundtrip' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-others-gray1 hover:bg-gray-300'
-          ]">來回</button>
-          <button @click="activeTab = 'oneway'" :class="[
-            'px-6 py-2 min-w-[148px] min-h-[38px] rounded-lg font-medium transition',
-            activeTab === 'oneway' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-others-gray1 hover:bg-gray-300'
-          ]">單程</button>
-          <button @click="activeTab = 'multi'" :class="[
-            'px-6 py-2 min-w-[148px] min-h-[38px] rounded-lg font-medium transition',
-            activeTab === 'multi' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-others-gray1 hover:bg-gray-300'
-          ]">多行程</button>
+          <!-- Tab Navigation -->
+          <div class="flex space-x-2 px-4 py-3 border-2 rounded-xl rounded-b-none border-b-0 border-primary-gold">
+            <button @click="activeTab = 'roundtrip'" :class="[
+              'px-6 min-w-[148px] min-h-[38px] py-2 rounded-lg font-medium transition',
+              activeTab === 'roundtrip' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-others-gray1 hover:bg-gray-300'
+            ]">來回</button>
+            <button @click="activeTab = 'oneway'" :class="[
+              'px-6 py-2 min-w-[148px] min-h-[38px] rounded-lg font-medium transition',
+              activeTab === 'oneway' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-others-gray1 hover:bg-gray-300'
+            ]">單程</button>
+            <button @click="activeTab = 'multi'" :class="[
+              'px-6 py-2 min-w-[148px] min-h-[38px] rounded-lg font-medium transition',
+              activeTab === 'multi' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-others-gray1 hover:bg-gray-300'
+            ]">多行程</button>
+          </div>
+        </div>
+        <div v-if="activeTab == 'roundtrip'">
+          <RoundSearchBox @search="handleRoundSearch" />
+        </div>
+        <div v-else-if="activeTab === 'oneway'">
+          <SingleSearchBox @search="handleSingleSearch" />
+        </div>
+        <div v-else-if="activeTab === 'multi'">
+          <MultiSearchBox @search="handleMultiSearch" />
         </div>
       </div>
-      <div v-if="activeTab == 'roundtrip'">
-        <RoundSearchBox @search="handleRoundSearch" />
-      </div>
-      <div v-else-if="activeTab === 'oneway'">
-        <SingleSearchBox @search="handleSingleSearch" />
-      </div>
-      <div v-else-if="activeTab === 'multi'">
-        <MultiSearchBox @search="handleMultiSearch" />
-      </div>
     </div>
-  </div>
-  <div class="pt-80">
-    <div v-if="state === 'default'">
-      <BannerImg />
-      <RecommendedTrips />
+    <div class="mt-24">
+      <div v-if="state === 'default'">
+        <BannerImg />
+        <RecommendedTrips />
+      </div>
+      <SearchResultLoading v-else-if="state === 'loading'" v-model="state" :rows="11" :speed="1300" />
+      <ResultsMain v-else-if="state === 'result'"  />
     </div>
-    <SearchResultLoading v-else-if="state === 'loading'" v-model="state" :rows="11" :speed="1300" />
-    <ResultsMain v-else-if="state === 'result'"  />
+    
+    <Transition name="fade">
+        <BaggageInfoAndFeeRule :open="sharedValue?.isOpenBaggageInfoAndFeeRule" @close="updateValue?.({ isOpenBaggageInfoAndFeeRule: false })" />
+    </Transition>
   </div>
-  
-  <Transition name="fade">
-      <BaggageInfoAndFeeRule :open="sharedValue.isOpenBaggageInfoAndFeeRule" @close="sharedValue.isOpenBaggageInfoAndFeeRule = false" />
-  </Transition>
 </template>
 
 <script setup lang="ts">
-import { provide, ref } from 'vue'
+import { inject, provide, ref } from 'vue'
 
 import MultiSearchBox from '@/components/home/MultiSearchBox.vue'
 import SingleSearchBox from '@/components/home/SingleSearchBox.vue'
@@ -64,26 +65,18 @@ const activeTab = ref('roundtrip')
 const state = ref('default') // "default" | "loading" | "result"
 
 interface SharedData {
-  isOpenBaggageInfoAndFeeRule: boolean,
-  isSearch: boolean
+  isOpenBaggageInfoAndFeeRule?: boolean,
+  isSearch?: boolean
 }
 
-const sharedValue = ref<SharedData>({
-  isOpenBaggageInfoAndFeeRule: false,
-  isSearch: false
-})
-
-function updateValue(val: SharedData) {
-  sharedValue.value = val
-}
-
-// Provide the updater function
-provide<(val: SharedData) => void>('updateValue', updateValue)
+const sharedValue = inject<{ isOpenBaggageInfoAndFeeRule: boolean; isSearch: boolean }>('sharedValue')
+const updateValue = inject<(val: SharedData) => void>('updateValue')
 
 function handleRoundSearch(payload: any) {
   console.log('handleRoundSearch:', payload)  
   state.value = 'loading'
-  sharedValue.value.isSearch = true;
+  updateValue?.({ isSearch: true })
+
   setTimeout(() => {
     state.value = 'result'
   }, 1500)
@@ -92,7 +85,7 @@ function handleRoundSearch(payload: any) {
 function handleSingleSearch(payload: any) {
   console.log('handleSingleSearch:', payload)
   state.value = 'loading'
-  sharedValue.value.isSearch = true;
+  updateValue?.({ isSearch: true })
   setTimeout(() => {
     state.value = 'result'
   }, 1500)
@@ -101,7 +94,7 @@ function handleSingleSearch(payload: any) {
 function handleMultiSearch(payload: any) {
   console.log('handleMultiSearch:', payload)
   state.value = 'loading'
-  sharedValue.value.isSearch = true;
+  updateValue?.({ isSearch: true })
   setTimeout(() => {
     state.value = 'result'
   }, 1500)

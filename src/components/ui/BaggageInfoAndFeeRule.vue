@@ -195,7 +195,7 @@
 import { ref, defineProps, defineEmits } from "vue";
 
 const props = defineProps<{
-  open: boolean;
+  open?: boolean;
 }>();
 
 const departureOrarrival = ref(true)

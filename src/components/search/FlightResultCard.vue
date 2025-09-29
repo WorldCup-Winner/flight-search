@@ -235,7 +235,7 @@
 <script setup lang="ts">
 import { inject, computed, ref } from 'vue'
 
-import { formatPrice, noteIcon, noteTextClass, toDuration } from '@/utils'
+import { formatPrice, noteIcon, toDuration } from '@/utils'
 import type { Airline, Segment, EndPoint, TransferNote, FareOption } from '@/utils/types'
 
 import AirlineTwo from '@/assets/imgs/airlines/airline-two.svg'
@@ -247,7 +247,6 @@ interface SharedData {
   isSearch?: boolean
 }
 
-// Inject function and type it properly
 const updateValue = inject<(val: SharedData) => void>('updateValue')
 
 function openBaggageInfoAndFeeRule() {
