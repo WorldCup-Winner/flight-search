@@ -1,5 +1,5 @@
 <template>
-    <div class="mt-[100px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] p-8 px-32 w-full mx-auto max-w-6xl">
+    <div class="mt-[100px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] p-4 px-32 w-full mx-auto max-w-6xl">
         <p class="absolute left-[40px] top-[20px] text-primary-gold font-bold">訂購流程</p>
         <div class="grid grid-cols-12 items-center px-32">
             <div class="flex flex-col items-center justify-center col-span-12 md:col-span-3">

@@ -11,7 +11,7 @@
       <section class="col-span-12 md:col-span-9">
         <!-- HEADER STRIP -->
         <div class="mb-4 bg-none">
-          <div class="relative rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] mb-4" :class="[ departureOrArrival === 'departure' ? 'bg-primary-gold' : 'bg-others-gray4' ]">
+          <div class="relative rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] mb-4" :class="[ departureOrArrival === 'departure' ? 'bg-primary-gold2' : 'bg-others-gray4' ]">
             <!-- Left orange tab -->
             <div class="absolute inset-y-0 left-0 w-28 bg-others-original text-white grid place-items-center rounded-l-[10px]">
               <span class="text-[22px]">{{ departureOrArrival === 'departure' ? '去程' : '回程' }}</span>
@@ -375,8 +375,19 @@ const onScroll = () => {
   }
 }
 
-onMounted(() => window.addEventListener('scroll', onScroll))
-onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
+const apply = (on: boolean) => document.body.classList.toggle('result-bg', !!on)
+
+onBeforeUnmount(() => {
+  document.body.classList.remove('home-special')
+})
+onMounted(() => {
+  window.addEventListener('scroll', onScroll)
+  apply(true)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll)
+  document.body.classList.remove('result-bg')
+})
 
 </script>
 

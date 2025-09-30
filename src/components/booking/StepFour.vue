@@ -65,8 +65,8 @@
                 <table class="w-full text-sm">
                     <thead class="bg-primary-gold text-white">
                         <tr>
-                            <th class="px-4 py-3 font-medium whitespace-nowrap">
-                                <label class="flex gap-2 items-start text-sm text-slate-600 select-none">                        
+                            <th class="px-4 py-3 font-medium whitespace-nowrap relative">
+                                <label class="absolute flex text-sm text-slate-600 select-none w-fit top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2">
                                     <label class="flex items-center cursor-pointer relative">
                                         <input type="checkbox" checked disabled
                                             class="mt-[1px] peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-white"
@@ -93,14 +93,14 @@
                     </thead>
                     <tbody class="divide-y">
                     <tr v-for="(it, i) in items" :key="i" class="bg-white border-2">
-                        <td class="px-4 py-3 border-t-2 border-b-2">
-                            <label class="flex gap-2 items-start text-sm text-slate-600 select-none">                        
+                        <td class="py-3 border-t-2 border-b-2 relative">
+                            <label class="absolute flex text-sm text-slate-600 select-none w-fit top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2">
                                 <label class="flex items-center cursor-pointer relative">
                                     <input type="checkbox" checked disabled
-                                        class="mt-[1px] peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-primary-gold"
+                                        class="mt-[1px] peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md checked:bg-primary-gold disabled:bg-primary-gold/30"
                                         id="check" v-model="it.checked" />
                                     <span
-                                        class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none bg-primary-gold">
+                                        class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"
                                         stroke="currentColor" stroke-width="1">
                                         <path fill-rule="evenodd"
