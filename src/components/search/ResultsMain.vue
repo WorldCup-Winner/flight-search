@@ -377,16 +377,13 @@ const onScroll = () => {
 
 const apply = (on: boolean) => document.body.classList.toggle('result-bg', !!on)
 
-onBeforeUnmount(() => {
-  document.body.classList.remove('home-special')
-})
 onMounted(() => {
-  window.addEventListener('scroll', onScroll)
   apply(true)
+  window.addEventListener('scroll', onScroll)
 })
 onBeforeUnmount(() => {
+  apply(false)
   window.removeEventListener('scroll', onScroll)
-  document.body.classList.remove('result-bg')
 })
 
 </script>
