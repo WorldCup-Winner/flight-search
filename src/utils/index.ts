@@ -52,11 +52,11 @@ export const goMemberPage = () => {
   window.open('https://www.galilee.com.tw/Member/Login', '_blank', 'noopener,noreferrer')
 }
 
-export function makeDirect(code: string, name: string, logo: string, t1: string, t2: string, dur: number, price: number, opt: any = {}): CardRow {
+export function makeDirect(code: string, name: string, logo: string, t1: string, t2: string, dur: number, price: number, opt: any = {}) {
   return {
     id: cryptoId(),
     airlines: [{ name, logo, code }],
-    head: { dep: { time: t1, code: 'TPE', terminal: 'T1' }, arr: { time: t2, code: 'NRT', terminal: 'T1N' } },
+    head: { dep: { time: t1, code: 'TPE', terminal: 'T1' }, arr: { tie: t2, code: 'NRT', terminal: 'T1N' } },
     segments: [{
       dep: { date: '8月27日', time: t1, code: 'TPE', terminal: 'T1', airportName: 'TPE桃園國際機場T1台北' },
       arr: { date: '8月27日', time: t2, code: 'NRT', terminal: 'T1N', airportName: 'NRT成田機場T1N東京' },

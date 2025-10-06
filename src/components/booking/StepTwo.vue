@@ -611,7 +611,7 @@ const gender = ref('male')
 const code  = ref('+886')
 const phoneNumber  = ref('')
 
-const departure = ref<CardRow>(
+const departure = ref<any>(
     makeDirect('JAL', '加加航空', Airline_1, '06:45', '11:00', 195, 5799, { fare: true }),
 )
 

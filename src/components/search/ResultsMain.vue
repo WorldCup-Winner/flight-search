@@ -198,7 +198,7 @@ import SorryNoData from '@/components/ui/SorryNoData.vue'
 
 // ---------- Props ----------
 const props = defineProps<{
-  data: CardRow[]
+  data: CardRow[] | null
 }>()
 
 // ---------- Header context (derived from props.data) ----------
