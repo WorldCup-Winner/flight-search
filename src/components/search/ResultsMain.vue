@@ -25,7 +25,7 @@
 
             <div class="pl-48 pr-6 py-5 text-white">
               <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
-                <div class="text-[18px]">{{ formatDateToChinese(dateText) }}</div>
+                <div class="text-[18px]">2025年 {{ formatDateToChinese(dateText) }}</div>
                 <div class="flex flex-row items-center gap-3 text-[18px]">
                   <span>{{ origin.name }}({{ origin.code }})</span>
                   <img src="@/assets/imgs/icon-arrow-right-white.svg" />
@@ -209,11 +209,11 @@ const dateText = computed(() => {
   return d ? d : ''
 })
 const origin = computed(() => ({
-  code: first.value?.departureCityCode ?? first.value?.sectors?.[0]?.departureCityCode ?? '',
+  code: first.value?.departureAirportCode ?? first.value?.sectors?.[0]?.departureAirportCode ?? '',
   name: first.value?.departureCityName ?? first.value?.sectors?.[0]?.departureCityName ?? ''
 }))
 const destination = computed(() => ({
-  code: first.value?.arrivalCityCode ?? first.value?.sectors?.slice(-1)?.[0]?.arrivalCityCode ?? '',
+  code: first.value?.arrivalAirportCode ?? first.value?.sectors?.slice(-1)?.[0]?.arrivalAirportCode ?? '',
   name: first.value?.arrivalCityName ?? first.value?.sectors?.slice(-1)?.[0]?.arrivalCityName ?? ''
 }))
 
