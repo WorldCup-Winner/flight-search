@@ -137,3 +137,12 @@ export function formatDate(date: Date | null) {
   const weekdays = ['日', '一', '二', '三', '四', '五', '六']
   return `${y} / ${m} / ${d} (${weekdays[date.getDay()]})`
 }
+
+export function formatDateToChinese(dateStr: string) {
+  const date = new Date(dateStr); // e.g., "November 1"
+
+  const month = date.getMonth() + 1; // JS months are 0-based
+  const day = date.getDate();
+
+  return `${month}月${day}日`;
+}

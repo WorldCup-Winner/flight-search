@@ -1,4 +1,19 @@
-export type Airline = { name: string; logo?: string; code?: string }
+export type Airline = {
+  iataCode: string;
+  nameZhTw: string
+}
+
+export type Location = {
+  region: string;
+  airports: [
+    {
+      iataCode: string;
+      cityNameZhTw: string;
+      airportNameZh: string;
+    }
+  ];
+}
+
 export type EndPoint = {
   date?: string
   time: string
@@ -29,19 +44,73 @@ export type FareOption = {
   notes: { type: FareNoteType; icon: FareIconType; text: string }[]
 }
 
-export type CardRow = {
-  id: string
-  airlines: Airline[]
-  head: { dep: EndPoint; arr: EndPoint }
-  segments: Segment[]
-  transferNotes?: {
-    location?: string
-    durationMinutes?: number
-    differentAirport?: boolean
-    baggageThrough?: boolean
-  }[]
+export interface CardRow {
+  refNumber: number
+  price: number
+  taxAmount: number
+  departureDate: string
+  departureTime: string
+  arrivalDate: string
+  arrivalTime: string
+  crossDays: number
   durationMinutes: number
-  stopsCount: number
-  priceFrom: number
-  fareOptions?: any[]
+  departureCityCode: string
+  arrivalCityCode: string
+  departureCityName: string
+  arrivalCityName: string
+  departureAirportCode: string
+  departureAirportName: string
+  arrivalAirportCode: string
+  arrivalAirportName: string
+  departureTerminal: string
+  arrivalTerminal: string
+  airlineName: string[]
+  airlineCode: string[]
+  seats: any[] // can type later if you have structure
+  sectors: Sector[]
+}
+
+export interface Sector {
+  departureDate: string
+  departureTime: string
+  toDate: string
+  arrivalDate: string
+  arrivalTime: string
+  isRedEye: boolean
+  durationMinutes: number
+  departureCityCode: string
+  departureCityName: string
+  arrivalCityCode: string
+  arrivalCityName: string
+  flightNo: string
+  operatingAirlineCode: string
+  operatingAirlineName: string
+  marketingAirlineCode: string
+  marketingAirlineName: string
+  operatingFlightNo: string
+  craft: {
+    craftType: string
+    enName: string | null
+    minSeats: number
+    maxSeats: number
+    craftName: string
+  }
+  departureAirportCode: string
+  departureAirportName: string
+  departureTerminal: string
+  arrivalAirportCode: string
+  arrivalAirportName: string
+  arrivalTerminal: string
+  cabinType: string
+  cabinDesc: string
+  bookingClass: string
+  crossDays: number
+  transfer: {
+    transferCity: string
+    transferStayMinutes: number
+    isCrossday: boolean
+    isChangeAirport: boolean
+    isChangeTerminal: boolean
+  } | null
+  baggageStraight: number
 }

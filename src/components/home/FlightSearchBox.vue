@@ -34,12 +34,12 @@
       </div>
     </div>
     <div class="mt-24">
-      <div v-if="state === 'default'">
+      <div v-if="flightSearchStore.loading === 'default'">
         <BannerImg />
         <RecommendedTrips />
       </div>
-      <SearchResultLoading v-else-if="state === 'loading'" v-model="state" :rows="11" :speed="1300" />
-      <ResultsMain v-else-if="state === 'result'"  />
+      <SearchResultLoading v-else-if="flightSearchStore.loading === 'loading'" v-model="state" :rows="11" :speed="1300" />
+      <ResultsMain v-else-if="flightSearchStore.loading === 'success'" :data="flightSearchStore.data"  />
     </div>
     
     <Transition name="fade">
@@ -49,7 +49,9 @@
 </template>
 
 <script setup lang="ts">
-import { inject, provide, ref } from 'vue'
+import { inject, onMounted, provide, ref } from 'vue'
+
+import { useFlightSearchStore } from '@/stores/flightSearch'
 
 import MultiSearchBox from '@/components/home/MultiSearchBox.vue'
 import SingleSearchBox from '@/components/home/SingleSearchBox.vue'
@@ -59,6 +61,9 @@ import BannerImg from '@/components/home/BannerImg.vue'
 import SearchResultLoading from '@/components/ui/SearchResultLoading.vue'
 import ResultsMain from '@/components/search/ResultsMain.vue';
 import BaggageInfoAndFeeRule from '@/components/ui/BaggageInfoAndFeeRule.vue'
+
+// Store
+const flightSearchStore = useFlightSearchStore()
 
 const activeTab = ref('roundtrip')
 
@@ -73,34 +78,26 @@ const sharedValue = inject<{ isOpenBaggageInfoAndFeeRule: boolean; isSearch: boo
 const updateValue = inject<(val: SharedData) => void>('updateValue')
 
 function handleRoundSearch(payload: any) {
-  console.log('handleRoundSearch:', payload)  
-  state.value = 'loading'
+  console.log('handleRoundSearch:', payload)
+  flightSearchStore.fetchFlightSearch(payload)
+  
   updateValue?.({ isSearch: true })
-
-  setTimeout(() => {
-    state.value = 'result'
-  }, 1500)
 }
 
 function handleSingleSearch(payload: any) {
   console.log('handleSingleSearch:', payload)
-  state.value = 'loading'
+  flightSearchStore.fetchFlightSearch(payload)
+
   updateValue?.({ isSearch: true })
-  setTimeout(() => {
-    state.value = 'result'
-  }, 1500)
 }
 
 function handleMultiSearch(payload: any) {
   console.log('handleMultiSearch:', payload)
-  state.value = 'loading'
+  flightSearchStore.fetchFlightSearch(payload)
+
   updateValue?.({ isSearch: true })
-  setTimeout(() => {
-    state.value = 'result'
-  }, 1500)
 }
 </script>
-
 <style scoped>
 /* subtle entrance for the small modal */
 .fade-scale-enter-active,

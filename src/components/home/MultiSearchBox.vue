@@ -16,12 +16,12 @@
           <!-- Departure -->
           <div class="relative py-6 w-[35%]" :ref="setDepTriggerRef(idx)">
             <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">出發地</label>
-            <div class="cursor-pointer" :class="errors[idx].source ? 'text-text-error' : ''" @click="toggleDeparture(idx)">
+            <div class="cursor-pointer" :class="errors[idx].departure ? 'text-text-error' : ''" @click="toggleDeparture(idx)">
               <div v-if="idx === 0" class="text-others-gray1 mb-1">
-                {{ seg.fromCity || 'TPE 台北(任何)' }}
+                {{ seg.departureCity?.cityNameZhTw || 'TPE 台北(任何)' }}
               </div>
-              <div v-else class="text-others-gray1 mb-1" :class="errors[idx].source ? 'text-text-error' : ''">
-                {{ seg.fromCity || '輸入國家/城市/機場關鍵字' }}
+              <div v-else class="text-others-gray1 mb-1" :class="errors[idx].departure ? 'text-text-error' : ''">
+                {{ seg.departureCity?.cityNameZhTw || '輸入國家/城市/機場關鍵字' }}
               </div>
             </div>
             <!-- Departure Popover -->
@@ -35,21 +35,26 @@
 
                 <div class="p-4">
                   <div class="flex flex-row gap-1 mb-8">
-                    <button v-for="region in regions" :key="`dep-${idx}-${region}`"
-                      class="rounded-xl font-medium py-2 px-3 text-[18px] leading-none transition-colors" :class="[
-                        seg.departureLocation === region
-                          ? 'border-2 border-others-original text-others-original'
-                          : 'text-others-gray1 hover:text-primary-gold'
-                      ]" @click="seg.departureLocation = region">
-                      {{ region }}
-                    </button>
+                      <button v-for="location in locationStore.locations" :key="`dep-${idx}-${location}`"
+                          class="rounded-xl font-medium py-2 px-3 text-[18px] leading-none transition-colors"
+                          :class="[
+                              seg.departureLocation?.region === location.region
+                                  ? 'border-2 border-others-original text-others-original'
+                                  : 'text-others-gray1 hover:text-others-original'
+                          ]" @click="seg.departureLocation = location">
+                          {{ location.region }}
+                      </button>
                   </div>
-
                   <div class="grid grid-cols-7 gap-0 gap-y-5 pb-4">
-                    <button v-for="city in citiesByRegion[seg.departureLocation] || []" :key="`dep-city-${idx}-${city}`"
+                      <button v-for="airport in seg.departureLocation?.airports" :key="`dep-city-${idx}-${airport}`"
                       class="text-[17px] text-others-gray1 hover:text-others-original transition-colors"
-                      @click="selectDepartureCity(idx, city)">
-                      {{ city }}
+                      :class="[
+                                seg.departureCity?.iataCode === airport.iataCode
+                                ? 'text-others-original'
+                                :'text-others-gray1 hover:text-others-original'
+                            ]"
+                      @click="selectDepartureCity(idx, airport)">
+                        {{ airport.cityNameZhTw }}
                     </button>
                   </div>
                 </div>
@@ -59,22 +64,22 @@
 
           <!-- Swap -->
           <button class="flex py-6 w-[20%] items-center justify-center hover:opacity-80 transition"
-            aria-label="swap cities" type="button">
+            aria-label="swap cities" @click="swapCities(idx)" type="button">
             <img src="@/assets/imgs/arrow-right.svg" alt="Swap Arrow" />
           </button>
 
-          <!-- Destination -->
-          <div class="relative py-6 w-[45%]" :ref="setDestTriggerRef(idx)">
+          <!-- Arrival -->
+          <div class="relative py-6 w-[45%]" :ref="setArrTriggerRef(idx)">
             <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">目的地</label>
-            <div class="cursor-pointer pr-4" :class="errors[idx].destination ? 'text-text-error' : ''" @click="toggleDestination(idx)">
-              <div class="text-others-gray1" :class="errors[idx].destination ? 'text-text-error' : ''">
-                {{ seg.toCity || '輸入國家/城市/機場關鍵字' }}
+            <div class="cursor-pointer pr-4" :class="errors[idx].arrival ? 'text-text-error' : ''" @click="toggleArrival(idx)">
+              <div class="text-others-gray1" :class="errors[idx].arrival ? 'text-text-error' : ''">
+                {{ seg.arrivalCity?.cityNameZhTw || '輸入國家/城市/機場關鍵字' }}
               </div>
             </div>
 
-            <!-- Destination Popover -->
+            <!-- Arrival Popover -->
             <transition name="fade-scale">
-              <div v-if="openDestIndex === idx" :ref="setDestPopoverRef(idx)"
+              <div v-if="openArrIndex === idx" :ref="setArrPopoverRef(idx)"
                 class="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[750px] max-w-[85vw]"
                 @click.stop>
                 <div class="bg-primary-gold text-white p-4 rounded-t-2xl">
@@ -83,21 +88,26 @@
 
                 <div class="p-4">
                   <div class="flex flex-row gap-1 mb-8">
-                    <button v-for="region in regions" :key="`dest-${idx}-${region}`"
+                    <button v-for="location in locationStore.locations" :key="`arr-${idx}-${location}`"
                       class="rounded-xl font-medium py-2 px-3 text-[18px] leading-none transition-colors" :class="[
-                        seg.arrivalLocation === region
+                        seg.arrivalLocation?.region === location.region
                           ? 'border-2 border-others-original text-others-original'
                           : 'text-others-gray1 hover:text-others-original'
-                      ]" @click="seg.arrivalLocation = region">
-                      {{ region }}
+                      ]" @click="seg.arrivalLocation = location">
+                      {{ location.region }}
                     </button>
                   </div>
 
                   <div class="grid grid-cols-7 gap-0 gap-y-5 pb-4">
-                    <button v-for="city in citiesByRegion[seg.arrivalLocation] || []" :key="`dest-city-${idx}-${city}`"
+                    <button v-for="airport in seg.arrivalLocation?.airports" :key="`arr-city-${idx}-${airport}`"
                       class="text-[17px] text-others-gray1 hover:text-others-original transition-colors"
-                      @click="selectDestinationCity(idx, city)">
-                      {{ city }}
+                      :class="[
+                                seg.arrivalCity?.iataCode === airport.iataCode
+                                ? 'text-others-original'
+                                :'text-others-gray1 hover:text-others-original'
+                            ]"
+                      @click="selectArrivalCity(idx, airport)">
+                        {{ airport.cityNameZhTw }}
                     </button>
                   </div>
                 </div>
@@ -214,7 +224,7 @@
             <div class="relative" ref="airlineTriggerRef">
                 <button @click="toggleAirline"
                     class="flex items-center justify-between min-w-[200px] bg-divider-soft text-primary-gold px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200">
-                    <span>{{ selectedAirline }}</span>
+                    <span>{{ selectedAirline.nameZhTw?.trim() || "航空公司偏好" }}</span>
                     <svg class="w-4 h-4 ml-2 transition-transform duration-200"
                         :class="{ 'rotate-180': isAirlineOpen }" fill="currentColor" viewBox="0 0 12 12">
                         <path d="M6 9L2 4h8l-4 5z" />
@@ -248,10 +258,10 @@
                                         [&::-webkit-scrollbar-thumb]:rounded-[10px]">
                                 <button v-for="airline in filteredAirlines" :key="airline.code"
                                     class="w-full text-left px-4 py-1 rounded-lg hover:bg-others-gray9 transition-colors"
-                                    @click="selectAirline(airline.name)">
+                                    @click="selectAirline(airline)">
                                     <div class="flex items-center">
-                                        <span class=" text-others-gray1 mr-2">{{ airline.code }}</span>
-                                        <span class="text-others-gray1">{{ airline.name }}</span>
+                                        <span class=" text-others-gray1 mr-2">{{ airline.iataCode }}</span>
+                                        <span class="text-others-gray1">{{ airline.nameZhTw }}</span>
                                     </div>
                                 </button>
                             </div>
@@ -260,13 +270,13 @@
                             <div v-else-if="!airlineSearchTerm.trim()">
                                 <h4 class="text-primary-gold font-semibold mb-4 pl-4">熱門航空公司</h4>
                                 <div class="grid grid-cols-3 gap-2">
-                                    <button v-for="airline in popularAirlines" :key="airline"
+                                    <button v-for="airline in airlineStore.airlines.slice(0, 6)" :key="airline.iataCode"
                                         class="text-left px-4 py-2 rounded-lg hover:text-others-original transition-colors text-others-gray1"
-                                        :class="selectedAirline === airline
+                                        :class="selectedAirline.iataCode === airline.iataCode
                                             ? 'text-others-original'
                                             : 'text-others-gray1'"
                                         @click="selectAirline(airline)">
-                                        {{ airline }}
+                                        {{ airline.nameZhTw }}
                                     </button>
                                 </div>
                             </div>
@@ -343,81 +353,46 @@
 
 <script setup>
 import { ref, watch, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useLocationStore } from '@/stores/location'
+import { useAirlineStore } from '@/stores/airline'
+
 import DatePicker from '@/components/ui/DatePicker.vue'
+import { formatDate } from '@/utils'
 
-/* -------------------- segment model -------------------- */
-let nextId = 1
-const makeSeg = () => ({
-  id: nextId++,
-  departureLocation: '日韓',
-  arrivalLocation: '日韓',
-  fromCity: '',
-  toCity: '',
-  departureDate: null
+// Stores
+const airlineStore = useAirlineStore()
+const locationStore = useLocationStore()
+
+// Adults and Children
+const adultCount = ref(1)
+const childrenCount = ref(0)
+
+// Filter Options
+const airlineSearchTerm = ref('')
+const selectedAirline = ref({
+    iataCode: null,
+    nameZhTw: null
 })
-const segments = ref([makeSeg(), makeSeg()])
-
-const canAdd = computed(() => segments.value.length < 5)
-
-function addSegment() {
-  if (!canAdd.value) return
-  segments.value.push(makeSeg())
-  errors.value.push({
-    source: false,
-    destination: false,
-    startDate: false,
-    endDate: false
-  })
+const cabinClassOptions = ['艙等不限', '經濟艙', '豪華經濟艙', '商務艙', '頭等艙']
+const selectedCabinClass = ref('艙等不限')
+const isNonStopFlight = ref(false)
+const cabinClassMap = {
+  '艙等不限': null,
+  '經濟艙': 'M',
+  '豪華經濟艙': 'W',
+  '商務艙': 'C',
+  '頭等艙': 'F'
 }
 
-function removeSegment(idx) {
-  if (segments.value.length <= 2) return
-  segments.value.splice(idx, 1)
-  errors.value.splice(idx, 1)
-}
-
-/* -------------------- regions & cities -------------------- */
-const regions = ['台灣', '日韓', '東南亞', '港澳大陸', '美洲', '歐洲', '紐澳', '其他']
-
-const citiesByRegion = {
-  '台灣': ['台北', '台中', '台南', '高雄', '桃園', '新竹'],
-  '日韓': ['東京', '大阪', '沖繩', '首爾', '釜山', '福岡', '名古屋', '札幌', '神戶', '熊本', '仙台', '高松', '函館', '濟州島', '大邱'],
-  '東南亞': ['曼谷', '新加坡', '吉隆坡', '雅加達', '馬尼拉', '胡志明市'],
-  '港澳大陸': ['香港', '澳門', '上海', '北京', '廣州', '深圳'],
-  '美洲': ['洛杉磯', '紐約', '舊金山', '多倫多', '溫哥華', '芝加哥'],
-  '歐洲': ['倫敦', '巴黎', '羅馬', '阿姆斯特丹', '法蘭克福', '馬德里'],
-  '紐澳': ['雪梨', '墨爾本', '奧克蘭', '布里斯本', '伯斯', '阿德萊德'],
-  '其他': ['杜拜', '伊斯坦堡', '新德里', '孟買', '開羅', '約翰尼斯堡'],
-}
-
-/* -------------------- popover management (per-index) -------------------- */
+// Open States
 const openDepIndex = ref(-1)
-const openDestIndex = ref(-1)
+const openArrIndex = ref(-1)
 const openDateIndex = ref(-1)
+const isPassengersOpen = ref(false)
+const isAirlineOpen = ref(false)
+const isCabinClassOpen = ref(false)
 
-function toggleDeparture(i) { openDepIndex.value = openDepIndex.value === i ? -1 : i }
-function toggleDestination(i) { openDestIndex.value = openDestIndex.value === i ? -1 : i }
-function toggleDate(i) { openDateIndex.value = openDateIndex.value === i ? -1 : i }
-
-function selectDepartureCity(i, city) {
-  segments.value[i].fromCity = city
-  openDepIndex.value = -1
-}
-function selectDestinationCity(i, city) {
-  segments.value[i].toCity = city
-  openDestIndex.value = -1
-}
-function onDateApply(i, d) {
-  segments.value[i].departureDate = d
-  openDateIndex.value = -1
-}
-function swapCities(i) {
-  const s = segments.value[i]
-    ;[s.fromCity, s.toCity] = [s.toCity, s.fromCity]
-    ;[s.departureLocation, s.arrivalLocation] = [s.arrivalLocation, s.departureLocation]
-}
-
-/* -------------------- click-outside handling -------------------- */
+// Triggers
 const depTriggerRefs = reactive({})
 const depPopoverRefs = reactive({})
 const destTriggerRefs = reactive({})
@@ -425,12 +400,121 @@ const destPopoverRefs = reactive({})
 const dateTriggerRefs = reactive({})
 const datePopoverRefs = reactive({})
 
+const passTriggerRef = ref(null)
+const passPopoverRef = ref(null)
+const airlineTriggerRef = ref(null)
+const airlinePopoverRef = ref(null)
+const cabinClassTriggerRef = ref(null)
+const cabinClassPopoverRef = ref(null)
+
 const setDepTriggerRef = i => el => { if (el) depTriggerRefs[i] = el }
 const setDepPopoverRef = i => el => { if (el) depPopoverRefs[i] = el }
-const setDestTriggerRef = i => el => { if (el) destTriggerRefs[i] = el }
-const setDestPopoverRef = i => el => { if (el) destPopoverRefs[i] = el }
+const setArrTriggerRef = i => el => { if (el) destTriggerRefs[i] = el }
+const setArrPopoverRef = i => el => { if (el) destPopoverRefs[i] = el }
 const setDateTriggerRef = i => el => { if (el) dateTriggerRefs[i] = el }
 const setDatePopoverRef = i => el => { if (el) datePopoverRefs[i] = el }
+
+// Methods
+function toggleDeparture(i) { openDepIndex.value = openDepIndex.value === i ? -1 : i }
+function toggleArrival(i) { openArrIndex.value = openArrIndex.value === i ? -1 : i }
+function toggleDate(i) { openDateIndex.value = openDateIndex.value === i ? -1 : i }
+function togglePassengers() { isPassengersOpen.value = !isPassengersOpen.value }
+function toggleCabinClass() { isCabinClassOpen.value = !isCabinClassOpen.value }
+function toggleAirline() {
+  isAirlineOpen.value = !isAirlineOpen.value
+  if (isAirlineOpen.value) airlineSearchTerm.value = ''
+}
+
+function incrementAdults() { if (adultCount.value < 9) adultCount.value++ }
+function decrementAdults() { if (adultCount.value > 1) adultCount.value-- }
+function incrementChildren() { if (childrenCount.value < 8) childrenCount.value++ }
+function decrementChildren() { if (childrenCount.value > 0) childrenCount.value-- }
+
+function addSegment() {
+  if (!canAdd.value) return
+  segments.value.push(makeSeg())
+  errors.value.push({
+    departure: false,
+    arrival: false,
+    startDate: false,
+  })
+}
+function removeSegment(idx) {
+  if (segments.value.length <= 2) return
+  segments.value.splice(idx, 1)
+  errors.value.splice(idx, 1)
+}
+
+function selectDepartureCity(i, city) {
+  segments.value[i].departureCity = city
+  openDepIndex.value = -1
+}
+function selectArrivalCity(i, city) {
+  segments.value[i].arrivalCity = city
+  openArrIndex.value = -1
+}
+function selectCabinClass(v) {
+  selectedCabinClass.value = v
+  isCabinClassOpen.value = false
+}
+function onDateApply(i, d) {
+  segments.value[i].departureDate = d
+  openDateIndex.value = -1
+}
+function swapCities(i) {
+  const s = segments.value[i]
+
+  let temp = s.departureLocation
+  s.departureLocation = s.arrivalLocation
+  s.arrivalLocation = temp
+
+  temp = s.departureCity
+  s.departureCity = s.arrivalCity
+  s.arrivalCity = temp
+}
+function selectAirline(airline) {
+  selectedAirline.value = airline
+  isAirlineOpen.value = false
+  airlineSearchTerm.value = ''
+}
+
+// Computed
+const canAdd = computed(() => segments.value.length < 5)
+const passengerDisplayText = computed(
+  () => `${adultCount.value}成人 / ${childrenCount.value}孩童`
+)
+const filteredAirlines = computed(() => {
+  const s = airlineSearchTerm.value.toLowerCase()
+  return airlineStore.airlines.filter(a => a.iataCode.toLowerCase().includes(s) || a.nameZhTw.toLowerCase().includes(s))
+})
+
+// Lifecycles
+onMounted(() => {
+  document.addEventListener('click', onDocClick)
+  document.addEventListener('keydown', onKey)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocClick)
+  document.removeEventListener('keydown', onKey)
+})
+
+//////////////////////
+// Segments
+let nextId = 1
+
+const makeSeg = () => ({
+  id: nextId++,
+  departureLocation: null,
+  arrivalLocation: null,
+  departureCity: null,
+  arrivalCity: null,
+  departureDate: null
+})
+
+const segments = ref([makeSeg(), makeSeg()])
+
+// Others
+const hasSearched = ref(false)
 
 function onDocClick(e) {
   const t = e.target
@@ -442,7 +526,7 @@ function onDocClick(e) {
     if (!pop.contains(t) && !trig.contains(t)) openIdxRef.value = -1
   }
   closeIfOutside(openDepIndex, depPopoverRefs, depTriggerRefs)
-  closeIfOutside(openDestIndex, destPopoverRefs, destTriggerRefs)
+  closeIfOutside(openArrIndex, destPopoverRefs, destTriggerRefs)
   closeIfOutside(openDateIndex, datePopoverRefs, dateTriggerRefs)
 
   // bottom popovers
@@ -464,11 +548,10 @@ function onDocClick(e) {
     isCabinClassOpen.value = false
   }
 }
-
 function onKey(e) {
   if (e.key === 'Escape') {
     openDepIndex.value = -1
-    openDestIndex.value = -1
+    openArrIndex.value = -1
     openDateIndex.value = -1
     isPassengersOpen.value = false
     isAirlineOpen.value = false
@@ -476,162 +559,39 @@ function onKey(e) {
   }
 }
 
-/* -------------------- refs for bottom popovers -------------------- */
-const passTriggerRef = ref(null)
-const passPopoverRef = ref(null)
-const airlineTriggerRef = ref(null)
-const airlinePopoverRef = ref(null)
-const cabinClassTriggerRef = ref(null)
-const cabinClassPopoverRef = ref(null)
-
-/* -------------------- passengers -------------------- */
-const isPassengersOpen = ref(false)
-const adultCount = ref(1)
-const childrenCount = ref(0)
-
-const passengerDisplayText = computed(
-  () => `${adultCount.value}成人 / ${childrenCount.value}孩童`
-)
-
-function togglePassengers() { isPassengersOpen.value = !isPassengersOpen.value }
-function incrementAdults() { if (adultCount.value < 9) adultCount.value++ }
-function decrementAdults() { if (adultCount.value > 1) adultCount.value-- }
-function incrementChildren() { if (childrenCount.value < 8) childrenCount.value++ }
-function decrementChildren() { if (childrenCount.value > 0) childrenCount.value-- }
-
-/* -------------------- airline filter -------------------- */
-const isAirlineOpen = ref(false)
-const airlineSearchTerm = ref('')
-const selectedAirline = ref('新加坡航空')
-
-function toggleAirline() {
-  isAirlineOpen.value = !isAirlineOpen.value
-  if (isAirlineOpen.value) airlineSearchTerm.value = ''
-}
-
-/** ------------------ AIRLINE ------------------ **/
-const allAirlines = ref([
-    { code: 'JX', name: '星宇航空' },
-    { code: 'BR', name: '長榮航空' },
-    { code: 'CI', name: '中華航空' },
-    { code: 'B7', name: '立榮航空' },
-    { code: 'AE', name: '華信航空' },
-    { code: 'JL', name: '日本航空' },
-    { code: 'SQ', name: 'c' },
-    { code: 'CX', name: '國泰航空' },
-    { code: 'BF', name: 'FRENCH BEE' },
-    { code: 'HM', name: '暹席爾航空' },
-    { code: 'KL', name: '荷蘭皇家航空' },
-    { code: 'LH', name: '德國漢莎航空' },
-    { code: 'MM', name: '樂桃航空' },
-    { code: 'MU', name: '中國東方航空' },
-    { code: 'OK', name: '捷克航空' },
-    { code: 'NH', name: 'ANA全日空' },
-    { code: 'OZ', name: '韓亞航空' },
-    { code: 'KE', name: '大韓航空' },
-    { code: 'TG', name: '泰國國際航空' },
-    { code: 'AF', name: '法國航空' },
-    { code: 'AG', name: '榮航空' },
-    { code: 'AC', name: '荷蘭皇家航空' },
-    { code: 'AE', name: '法國航空' },
-    { code: 'TE', name: '荷家航空' },
-    { code: 'EA', name: '法國航空' },
-    { code: 'QQ', name: '法國航空' },
-    { code: 'AA', name: '荷蘭皇家航空' }
-])
-
-const popularAirlines = ['日本航空', '新加坡航空', '國泰航空', '長榮航空', '中華航空', '星宇航空']
-
-const filteredAirlines = computed(() => {
-  const q = airlineSearchTerm.value.trim().toLowerCase()
-  if (!q) return []
-  return allAirlines.value.filter(
-    a => a.code.toLowerCase().includes(q) || a.name.toLowerCase().includes(q)
-  )
-})
-
-function selectAirline(name) {
-  selectedAirline.value = name
-  isAirlineOpen.value = false
-  airlineSearchTerm.value = ''
-}
-
-/* -------------------- cabin class -------------------- */
-const isCabinClassOpen = ref(false)
-const selectedCabinClass = ref('艙等')
-const cabinClassOptions = ['艙等不限', '經濟艙', '豪華經濟艙', '商務艙', '頭等艙']
-
-function toggleCabinClass() { isCabinClassOpen.value = !isCabinClassOpen.value }
-function selectCabinClass(v) {
-  selectedCabinClass.value = v
-  isCabinClassOpen.value = false
-}
-
-/* -------------------- direct toggle -------------------- */
-const isNonStopFlight = ref(false)
-
-/* -------------------- helpers -------------------- */
-function formatDate(date) {
-  if (!date) return ''
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  const wd = ['日', '一', '二', '三', '四', '五', '六'][date.getDay()]
-  return `${y} / ${m} / ${d} (${wd})`
-}
-
-const hasSearched = ref(false)
-
 const errors = ref([
   {
-    source: false,
-    destination: false,
+    departure: false,
+    arrival: false,
     startDate: false,
-    endDate: false,
   },
   {
-    source: false,
-    destination: false,
+    departure: false,
+    arrival: false,
     startDate: false,
-    endDate: false,
   }
 ])
 
 watch(segments, (newSegments) => {
   errors.value = newSegments.map(seg => ({
-    source: hasSearched.value && !seg.fromCity,
-    destination: hasSearched.value && !seg.toCity,
+    departure: hasSearched.value && !seg.departureCity,
+    arrival: hasSearched.value && !seg.arrivalCity,
     startDate: hasSearched.value && !seg.departureDate
   }))
 }, { deep: true })
 
-/** ------------------ SEARCH PAYLOAD ------------------ **/
+// Emit
 const emit = defineEmits(['search'])
 
-// Map cabin class label → booking code
-const cabinClassMap = {
-  '艙等不限': 'ALL',
-  '經濟艙': 'M',
-  '豪華經濟艙': 'W',
-  '商務艙': 'C',
-  '頭等艙': 'F'
-}
-
-// Find airline code from name
-function getAirlineCode(nameOrCode) {
-  const match = allAirlines.value.find(a => a.name === nameOrCode || a.code === nameOrCode)
-  return match ? match.code : nameOrCode
-}
-
 function onSearch() {
-  hasSearched.value = true 
+  hasSearched.value = true
   errors.value = segments.value.map((segment) => ({
-    source: !segment.fromCity,
-    destination: !segment.toCity,
+    departure: !segment.departureCity,
+    arrival: !segment.arrivalCity,
     startDate: !segment.departureDate
   }))
 
-  errors.value[0].source = false
+  errors.value[0].departure = false
 
   // If any error → stop search
   const hasError = errors.value.some(error =>
@@ -642,38 +602,25 @@ function onSearch() {
     console.warn("Validation failed", errors.value)
     return
   }
-  
+
   const payload = {
     flightSegments: segments.value.map((s, idx) => ({
       order: idx + 1,
-      departureLocation: s.fromCity || 'TPE',
-      arrivalLocation: s.toCity || '',
+      departureLocation: s.departureCity?.iataCode || 'TPE',
+      arrivalLocation: s.arrivalCity?.iataCode || '',
       departureDate: s.departureDate ? s.departureDate.toISOString().slice(0, 10) : null,
       returnDate: null
     })),
     adultCount: adultCount.value,
     childCount: childrenCount.value,
-    carrierId: getAirlineCode(selectedAirline.value),   // always airline code
-    cabinId: cabinClassMap[selectedCabinClass.value] || 'ALL',
+    carrierId: selectedAirline.value.iataCode || null,
+    cabinId: cabinClassMap[selectedCabinClass.value] || null,
     isNonStopFlight: isNonStopFlight.value,
     selectedRefNumbers: []
   }
-  console.log(payload)
   emit('search', payload)
 }
-
-/* -------------------- lifecycle -------------------- */
-onMounted(() => {
-  document.addEventListener('click', onDocClick)
-  document.addEventListener('keydown', onKey)
-})
-onBeforeUnmount(() => {
-  document.removeEventListener('click', onDocClick)
-  document.removeEventListener('keydown', onKey)
-})
-
 </script>
-
 <style scoped>
 .fade-scale-enter-active,
 .fade-scale-leave-active {

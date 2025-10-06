@@ -9,7 +9,7 @@
                         <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">出發地</label>
                         <div class="cursor-pointer" @click="toggleDeparture">
                             <div class="text-others-gray1 mb-1">
-                                {{ selectedDepartureCity || 'TPE 台北(任何)' }}
+                                {{ selectedDepartureCity?.cityNameZhTw || 'TPE 台北(任何)' }}
                             </div>
                         </div>
                         <!-- Departure Popover -->
@@ -23,22 +23,27 @@
 
                                 <div class="p-4">
                                     <div class="flex flex-row gap-1 mb-8">
-                                        <button v-for="region in regions" :key="`dep-${region}`"
+                                        <button v-for="location in locationStore.locations" :key="`dep-${location}`"
                                             class="rounded-xl font-medium py-2 px-3 text-[18px] leading-none transition-colors"
                                             :class="[
-                                                selectedDepartureRegion === region
+                                                selectedDepartureLocation?.region === location.region
                                                     ? 'border-2 border-others-original text-others-original'
                                                     : 'text-others-gray1 hover:text-others-original'
-                                            ]" @click="selectedDepartureRegion = region">
-                                            {{ region }}
+                                            ]" @click="selectedDepartureLocation = location">
+                                            {{ location.region }}
                                         </button>
                                     </div>
 
                                     <div class="grid grid-cols-7 gap-0 gap-y-5 pb-4">
-                                        <button v-for="city in currentDepartureCities" :key="`dep-city-${city}`"
+                                        <button v-for="airport in selectedDepartureLocation?.airports" :key="`dep-city-${airport}`"
                                             class="text-[17px] text-others-gray1 hover:text-others-original transition-colors"
-                                            @click="selectDepartureCity(city)">
-                                            {{ city }}
+                                            :class="[
+                                                selectedDepartureCity?.iataCode === airport.iataCode
+                                                ? 'text-others-original'
+                                                :'text-others-gray1 hover:text-others-original'
+                                            ]"
+                                            @click="selectDepartureCity(airport)">
+                                            {{ airport.cityNameZhTw }}
                                         </button>
                                     </div>
                                 </div>
@@ -52,19 +57,19 @@
                         <img src="@/assets/imgs/arrow-both.svg" alt="Swap Arrow" />
                     </button>
 
-                    <!-- Destination -->
+                    <!-- Arrival -->
                     <div class="relative py-6 pl-6" ref="destTriggerRef">
                         <label class="text-h5 text-primary-gold font-bold mb-2 block hover:text-h5-d">目的地</label>
-                        <div class="cursor-pointer" :class="errors.destination ? 'text-text-error' : ''"
+                        <div class="cursor-pointer" :class="errors.arrival ? 'text-text-error' : ''"
                             @click="toggleDestination">
                             <div class="text-others-gray1 mb-1"
-                                :class="errors.destination ? 'text-text-error' : ''">
-                                {{ selectedDestinationCity || '輸入國家/城市/機場關鍵字' }}
+                                :class="errors.arrival ? 'text-text-error' : ''">
+                                {{ selectedArrivalCity?.cityNameZhTw || '輸入國家/城市/機場關鍵字' }}
                             </div>
                         </div>
-                        <!-- Destination Popover -->
+                        <!-- Arrival Popover -->
                         <transition name="fade-scale">
-                            <div v-if="isDestinationOpen" ref="destPopoverRef"
+                            <div v-if="isArrivalOpen" ref="arrPopoverRef"
                                 class="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl w-[700px]"
                                 @click.stop>
                                 <div class="bg-primary-gold text-white p-4 rounded-t-2xl">
@@ -73,22 +78,27 @@
 
                                 <div class="p-4">
                                     <div class="flex flex-row gap-1 mb-8">
-                                        <button v-for="region in regions" :key="`dest-${region}`"
+                                        <button v-for="location in locationStore.locations" :key="`arr-${location}`"
                                             class="rounded-xl font-medium py-2 px-3 text-[18px] leading-none transition-colors"
                                             :class="[
-                                                selectedDestinationRegion === region
+                                                selectedArrivalLocation?.region === location.region
                                                     ? 'border-2 border-others-original text-others-original'
                                                     : 'text-others-gray1 hover:text-others-original'
-                                            ]" @click="selectedDestinationRegion = region">
-                                            {{ region }}
+                                            ]" @click="selectedArrivalLocation = location">
+                                            {{ location.region }}
                                         </button>
                                     </div>
 
                                     <div class="grid grid-cols-7 gap-0 gap-y-5 pb-4">
-                                        <button v-for="city in currentDestinationCities" :key="`dest-city-${city}`"
+                                        <button v-for="airport in selectedArrivalLocation?.airports" :key="`arr-city-${airport}`"
                                             class="text-[17px] text-others-gray1 hover:text-others-original transition-colors"
-                                            @click="selectDestinationCity(city)">
-                                            {{ city }}
+                                            :class="[
+                                                selectedArrivalCity?.iataCode === airport.iataCode
+                                                ? 'text-others-original'
+                                                :'text-others-gray1 hover:text-others-original'
+                                            ]"
+                                            @click="selectArrivalCity(airport)">
+                                            {{ airport.cityNameZhTw }}
                                         </button>
                                     </div>
                                 </div>
@@ -198,7 +208,7 @@
                 <div class="relative" ref="airlineTriggerRef">
                     <button @click="toggleAirline"
                         class="flex items-center justify-between min-w-[200px] bg-divider-soft text-primary-gold px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-200">
-                        <span>{{ selectedAirline }}</span>
+                        <span>{{ selectedAirline.nameZhTw?.trim() || "航空公司偏好" }}</span>
                         <svg class="w-4 h-4 ml-2 transition-transform duration-200"
                             :class="{ 'rotate-180': isAirlineOpen }" fill="currentColor" viewBox="0 0 12 12">
                             <path d="M6 9L2 4h8l-4 5z" />
@@ -232,10 +242,10 @@
                                             [&::-webkit-scrollbar-thumb]:rounded-[10px]">
                                     <button v-for="airline in filteredAirlines" :key="airline.code"
                                         class="w-full text-left px-4 py-1 rounded-lg hover:bg-others-gray9 transition-colors"
-                                        @click="selectAirline(airline.name)">
+                                        @click="selectAirline(airline)">
                                         <div class="flex items-center">
-                                            <span class=" text-others-gray1 mr-2">{{ airline.code }}</span>
-                                            <span class="text-others-gray1">{{ airline.name }}</span>
+                                            <span class=" text-others-gray1 mr-2">{{ airline.iataCode }}</span>
+                                            <span class="text-others-gray1">{{ airline.nameZhTw }}</span>
                                         </div>
                                     </button>
                                 </div>
@@ -244,13 +254,13 @@
                                 <div v-else-if="!airlineSearchTerm.trim()">
                                     <h4 class="text-primary-gold font-semibold mb-4 pl-4">熱門航空公司</h4>
                                     <div class="grid grid-cols-3 gap-2">
-                                        <button v-for="airline in popularAirlines" :key="airline"
+                                        <button v-for="airline in airlineStore.airlines.slice(0, 6)" :key="airline.iataCode"
                                             class="text-left px-4 py-2 rounded-lg hover:text-others-original transition-colors text-others-gray1"
-                                            :class="selectedAirline === airline
+                                            :class="selectedAirline.iataCode === airline.iataCode
                                                 ? 'text-others-original'
                                                 : 'text-others-gray1'"
                                             @click="selectAirline(airline)">
-                                            {{ airline }}
+                                            {{ airline.nameZhTw }}
                                         </button>
                                     </div>
                                 </div>
@@ -325,22 +335,45 @@
     </div>
 </template>
 
-<script setup>
+<script setup script="ts">
 import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
-import RangeDatePicker from '@/components/ui/RangeDatePicker.vue'
+import { useAirlineStore } from '@/stores/airline'
+import { useLocationStore } from '@/stores/location'
 
-/** ------------------ STATE ------------------ **/
+import RangeDatePicker from '@/components/ui/RangeDatePicker.vue'
+import { formatDate } from '@/utils'
+
+// Stores
+const airlineStore = useAirlineStore()
+const locationStore = useLocationStore()
+
+// Location (Departure and Arrival)
+const selectedDepartureLocation = ref(locationStore.locations[0])
+const selectedDepartureCity = ref(locationStore.locations[0]?.["airports"][0])
+const selectedArrivalLocation = ref(locationStore.locations[0])
+const selectedArrivalCity = ref(locationStore.locations[0]?.["airports"][0])
+
+// Date Range
+const startDate = ref('')
+const endDate = ref('')
+
+// Adults and Childrenss
+const adultCount = ref(1)
+const childrenCount = ref(0)
+
+// Open States
 const isDepartureOpen = ref(false)
-const isDestinationOpen = ref(false)
+const isArrivalOpen = ref(false)
 const isDatePickerOpen = ref(false)
 const isPassengersOpen = ref(false)
 const isAirlineOpen = ref(false)
 const isCabinClassOpen = ref(false)
 
+// Triggers
 const depTriggerRef = ref(null)
 const depPopoverRef = ref(null)
 const destTriggerRef = ref(null)
-const destPopoverRef = ref(null)
+const arrPopoverRef = ref(null)
 const dateTriggerRef = ref(null)
 const datePopoverRef = ref(null)
 const passTriggerRef = ref(null)
@@ -350,104 +383,55 @@ const airlinePopoverRef = ref(null)
 const cabinClassTriggerRef = ref(null)
 const cabinClassPopoverRef = ref(null)
 
-const selectedDepartureRegion = ref('日韓')
-const selectedDestinationRegion = ref('日韓')
-const selectedDepartureCity = ref('')
-const selectedDestinationCity = ref('')
-
-const startDate = ref('') // October 12, 2025
-const endDate = ref('') // October 24, 2025
-
-const adultCount = ref(1)
-const childrenCount = ref(0)
-
-const selectedAirline = ref('新加坡航空')
-const selectedCabinClass = ref('艙等')
+// Filter Options
+const selectedAirline = ref({
+    iataCode: null,
+    nameZhTw: null
+})
+const selectedCabinClass = ref('艙等不限')
+const cabinClassOptions = ['艙等不限', '經濟艙', '豪華經濟艙', '商務艙', '頭等艙']
 const isNonStopFlight = ref(false)
-
 const airlineSearchTerm = ref('')
 
-/** ------------------ DATA ------------------ **/
-const regions = ['台灣', '日韓', '東南亞', '港澳大陸', '美洲', '歐洲', '紐澳', '其他']
-const citiesByRegion = {
-    '台灣': ['台北', '台中', '台南', '高雄', '桃園', '新竹'],
-    '日韓': ['東京', '大阪', '沖繩', '首爾', '釜山', '福岡', '名古屋', '札幌', '神戶', '熊本', '仙台', '高松', '函館', '濟州島', '大邱'],
-    '東南亞': ['曼谷', '新加坡', '吉隆坡', '雅加達', '馬尼拉', '胡志明市'],
-    '港澳大陸': ['香港', '澳門', '上海', '北京', '廣州', '深圳'],
-    '美洲': ['洛杉磯', '紐約', '舊金山', '多倫多', '溫哥華', '芝加哥'],
-    '歐洲': ['倫敦', '巴黎', '羅馬', '阿姆斯特丹', '法蘭克福', '馬德里'],
-    '紐澳': ['雪梨', '墨爾本', '奧克蘭', '布里斯本', '伯斯', '阿德萊德'],
-    '其他': ['杜拜', '伊斯坦堡', '新德里', '孟買', '開羅', '約翰尼斯堡'],
-}
-
-const currentDepartureCities = computed(() => citiesByRegion[selectedDepartureRegion.value] || [])
-const currentDestinationCities = computed(() => citiesByRegion[selectedDestinationRegion.value] || [])
-
-/** ------------------ AIRLINE ------------------ **/
-const allAirlines = ref([
-    { code: 'JX', name: '星宇航空' },
-    { code: 'BR', name: '長榮航空' },
-    { code: 'CI', name: '中華航空' },
-    { code: 'B7', name: '立榮航空' },
-    { code: 'AE', name: '華信航空' },
-    { code: 'JL', name: '日本航空' },
-    { code: 'SQ', name: 'c' },
-    { code: 'CX', name: '國泰航空' },
-    { code: 'BF', name: 'FRENCH BEE' },
-    { code: 'HM', name: '暹席爾航空' },
-    { code: 'KL', name: '荷蘭皇家航空' },
-    { code: 'LH', name: '德國漢莎航空' },
-    { code: 'MM', name: '樂桃航空' },
-    { code: 'MU', name: '中國東方航空' },
-    { code: 'OK', name: '捷克航空' },
-    { code: 'NH', name: 'ANA全日空' },
-    { code: 'OZ', name: '韓亞航空' },
-    { code: 'KE', name: '大韓航空' },
-    { code: 'TG', name: '泰國國際航空' },
-    { code: 'AF', name: '法國航空' },
-    { code: 'AG', name: '榮航空' },
-    { code: 'AC', name: '荷蘭皇家航空' },
-    { code: 'AE', name: '法國航空' },
-    { code: 'TE', name: '荷家航空' },
-    { code: 'EA', name: '法國航空' },
-    { code: 'QQ', name: '法國航空' },
-    { code: 'AA', name: '荷蘭皇家航空' }
-])
-const popularAirlines = ['日本航空', '新加坡航空', '國泰航空', '長榮航空', '中華航空', '星宇航空']
-
+// Computed
 const filteredAirlines = computed(() => {
-    if (!airlineSearchTerm.value.trim()) return []
     const s = airlineSearchTerm.value.toLowerCase()
-    return allAirlines.value.filter(a => a.code.toLowerCase().includes(s) || a.name.toLowerCase().includes(s))
+    return airlineStore.airlines.filter(a => a.iataCode.toLowerCase().includes(s) || a.nameZhTw.toLowerCase().includes(s))
 })
-
-/** ------------------ COMPUTED ------------------ **/
 const passengerDisplayText = computed(() => `${adultCount.value}成人 / ${childrenCount.value}孩童`)
-
 const outboundDateText = computed(() => formatDate(startDate.value))
 const returnDateText = computed(() => formatDate(endDate.value))
 
-/** ------------------ METHODS ------------------ **/
-function formatDate(date) {
-    if (!date) return ''
-    const y = date.getFullYear()
-    const m = String(date.getMonth() + 1).padStart(2, '0')
-    const d = String(date.getDate()).padStart(2, '0')
-    const weekdays = ['日', '一', '二', '三', '四', '五', '六']
-    return `${y} / ${m} / ${d} (${weekdays[date.getDay()]})`
-}
+// Lifecycles
+onMounted(() => {
+    airlineStore.fetchAirlines()
+    locationStore.fetchLocations()
+    document.addEventListener('click', onDocClick)
+    document.addEventListener('keydown', onKey)
+})
 
+onBeforeUnmount(() => {
+    document.removeEventListener('click', onDocClick)
+    document.removeEventListener('keydown', onKey)
+})
+
+// Methods
 function selectDepartureCity(city) {
     selectedDepartureCity.value = city
     isDepartureOpen.value = false
 }
-function selectDestinationCity(city) {
-    selectedDestinationCity.value = city
-    isDestinationOpen.value = false
+function selectArrivalCity(city) {
+    selectedArrivalCity.value = city
+    isArrivalOpen.value = false
 }
-
-function swapCities() {
-    ;[selectedDepartureCity.value, selectedDestinationCity.value] = [selectedDestinationCity.value, selectedDepartureCity.value]
+function selectAirline(airline) {
+    selectedAirline.value = airline
+    isAirlineOpen.value = false
+    airlineSearchTerm.value = ''
+}
+function selectCabinClass(v) {
+    selectedCabinClass.value = v
+    isCabinClassOpen.value = false
 }
 
 function incrementAdults() { if (adultCount.value < 9) adultCount.value++ }
@@ -456,57 +440,41 @@ function incrementChildren() { if (childrenCount.value < 8) childrenCount.value+
 function decrementChildren() { if (childrenCount.value > 0) childrenCount.value-- }
 
 function toggleDeparture() { isDepartureOpen.value = !isDepartureOpen.value }
-function toggleDestination() { isDestinationOpen.value = !isDestinationOpen.value }
+function toggleDestination() { isArrivalOpen.value = !isArrivalOpen.value }
 function togglePassengers() { isPassengersOpen.value = !isPassengersOpen.value }
 function toggleDatePicker() { isDatePickerOpen.value = !isDatePickerOpen.value }
+function toggleCabinClass() { isCabinClassOpen.value = !isCabinClassOpen.value }
 function toggleAirline() {
     isAirlineOpen.value = !isAirlineOpen.value
     if (isAirlineOpen.value) airlineSearchTerm.value = ''
 }
-function toggleCabinClass() { isCabinClassOpen.value = !isCabinClassOpen.value }
 
 function handleDateApply(range) {
     if (range?.start) startDate.value = range.start
     isDatePickerOpen.value = false
 }
-function selectAirline(name) {
-    selectedAirline.value = name
-    isAirlineOpen.value = false
-    airlineSearchTerm.value = ''
-}
-const cabinClassOptions = ['艙等不限', '經濟艙', '豪華經濟艙', '商務艙', '頭等艙']
-function selectCabinClass(v) {
-    selectedCabinClass.value = v
-    isCabinClassOpen.value = false
+function swapCities() {
+    let temp = selectedDepartureLocation.value
+    selectedDepartureLocation.value = selectedArrivalLocation.value
+    selectedArrivalLocation.value = temp
+
+    temp = selectedDepartureCity.value
+    selectedDepartureCity.value = selectedArrivalCity.value
+    selectedArrivalCity.value = temp
 }
 
 const errors = ref({
-    destination: false,
+    arrival: false,
     startDate: false,
     endDate: false,
 })
 
-// 👀 Watch destination
-watch(selectedDestinationCity, (newVal) => {
-  errors.value.destination = !newVal
-})
-
-// 👀 Watch start date
-watch(startDate, (newVal) => {
-  errors.value.startDate = !newVal
-})
-
-// 👀 Watch end date
-watch(endDate, (newVal) => {
-  errors.value.endDate = !newVal
-})
-
-/** ------------------ SEARCH PAYLOAD ------------------ **/
+// Emit
 const emit = defineEmits(['search'])
 
-// Map cabin class label → booking code
+// Cabin classes
 const cabinClassMap = {
-    '艙等不限': 'ALL',
+    '艙等不限': null,
     '經濟艙': 'M',
     '豪華經濟艙': 'W',
     '商務艙': 'C',
@@ -516,7 +484,7 @@ const cabinClassMap = {
 function onSearch() {
     // Reset errors
     errors.value = {
-        destination: !selectedDestinationCity.value,
+        arrival: !selectedArrivalCity.value,
         startDate: !startDate.value,
         endDate: !endDate.value,
     }
@@ -531,24 +499,23 @@ function onSearch() {
         flightSegments: [
             {
                 order: 1,
-                departureLocation: selectedDepartureCity.value || 'TPE',
-                arrivalLocation: selectedDestinationCity.value || '',
+                departureLocation: selectedDepartureCity.value?.iataCode || 'TPE',
+                arrivalLocation: selectedArrivalCity.value?.iataCode || '',
                 departureDate: startDate.value ? startDate.value.toISOString().slice(0, 10) : null,
                 returnDate: endDate.value ? endDate.value.toISOString().slice(0, 10) : null,
             }
         ],
         adultCount: adultCount.value,
         childCount: childrenCount.value,
-        carrierId: selectedAirline.value, // 航空公司代碼
-        cabinId: cabinClassMap[selectedCabinClass.value] || 'ALL',
+        carrierId: selectedAirline.value.iataCode || null,
+        cabinId: cabinClassMap[selectedCabinClass.value] || null,
         isNonStopFlight: isNonStopFlight.value,
         selectedRefNumbers: []
     }
-    console.log(payload)
     emit('search', payload)
 }
 
-/** ------------------ CLOSE ON OUTSIDE / ESC ------------------ **/
+// Others
 function onDocClick(e) {
     const t = e.target
     const closeIfOutside = (openRef, popRef, trigRef, setter) => {
@@ -557,7 +524,7 @@ function onDocClick(e) {
     }
 
     closeIfOutside(isDepartureOpen, depPopoverRef, depTriggerRef, v => (isDepartureOpen.value = v))
-    closeIfOutside(isDestinationOpen, destPopoverRef, destTriggerRef, v => (isDestinationOpen.value = v))
+    closeIfOutside(isArrivalOpen, arrPopoverRef, destTriggerRef, v => (isArrivalOpen.value = v))
     closeIfOutside(isDatePickerOpen, datePopoverRef, dateTriggerRef, v => (isDatePickerOpen.value = v))
     closeIfOutside(isPassengersOpen, passPopoverRef, passTriggerRef, v => (isPassengersOpen.value = v))
     closeIfOutside(isAirlineOpen, airlinePopoverRef, airlineTriggerRef, v => (isAirlineOpen.value = v))
@@ -567,22 +534,28 @@ function onDocClick(e) {
 function onKey(e) {
     if (e.key === 'Escape') {
         isDepartureOpen.value = false
-        isDestinationOpen.value = false
+        isArrivalOpen.value = false
         isDatePickerOpen.value = false
         isPassengersOpen.value = false
         isAirlineOpen.value = false
         isCabinClassOpen.value = false
     }
 }
+// 👀 Watch Arrival
+watch(selectedArrivalCity, (newVal) => {
+  errors.value.arrival = !newVal
+})
 
-onMounted(() => {
-    document.addEventListener('click', onDocClick)
-    document.addEventListener('keydown', onKey)
+// 👀 Watch start date
+watch(startDate, (newVal) => {
+  errors.value.startDate = !newVal
 })
-onBeforeUnmount(() => {
-    document.removeEventListener('click', onDocClick)
-    document.removeEventListener('keydown', onKey)
+
+// 👀 Watch end date
+watch(endDate, (newVal) => {
+  errors.value.endDate = !newVal
 })
+
 </script>
 
 <style scoped>
