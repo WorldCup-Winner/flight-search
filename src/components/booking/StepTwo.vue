@@ -485,7 +485,7 @@
 import { provide, inject, computed, onBeforeUnmount, ref } from 'vue'
 import { formatDate, formatPrice, makeDirect, noteIcon, noteTextClass, toDuration } from '@/utils'
 
-import Airline_1 from '@/assets/imgs/airlines/AE.png'
+import Airline_1 from '@/assets/imgs/airlines/TK.png'
 
 import SignIn from "@/components/auth/SignIn.vue"
 import SignUp from "@/components/auth/SignUp.vue"

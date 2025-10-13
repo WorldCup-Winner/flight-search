@@ -78,9 +78,9 @@
                         <p class="block mb-3 text-others-original text-sm">非本國籍請輸入護照英文拼音</p>
                         <label class="block mb-1 text-others-gray1 text-sm">您的姓名</label>
                         <div class="relative flex flex-row justify-between">
-                            <input v-model="form.firstname" type="text" placeholder="姓氏"
+                            <input v-model="form1.firstname" type="text" placeholder="姓氏"
                                 class="w-[190px] px-5 py-2 border rounded-md border-primary-gold text-others-gray1 focus:ring-2 focus:ring-others-original focus:outline-none" />
-                            <input v-model="form.lastname" type="text" placeholder="名字"
+                            <input v-model="form1.lastname" type="text" placeholder="名字"
                                 class="w-[190px] px-5 py-2 border rounded-md border-primary-gold text-others-gray1 focus:ring-2 focus:ring-others-original focus:outline-none" />
                         </div>
                         <p class="block mb-1 text-others-gray1 text-sm">非本國籍請輸入護照英文拼音</p>
@@ -88,12 +88,12 @@
                     <div class="mb-4 w-full">
                         <label class="block mb-1 text-others-gray1 text-sm">手機號碼</label>
                         <div class="relative flex items-center justify-between gap-4">
-                            <PhoneField v-model="phone" v-model:countryCode="code" :showEye="true" />
+                            <PhoneField v-model:model-value="form1.phone" v-model:countryCode="form1.code" :showEye="true" />
                             <button
-                                v-if="!isCodeSent"
+                                v-if="!isCodeSent || codeLeftTime == 0"
                                 class="flex-none inline-flex items-center justify-center w-fit whitespace-nowrap
                                     bg-others-original text-white px-5 py-2 rounded-[10px] hover:bg-others-hover transition"
-                                @click="isCodeSent = true">
+                                @click="handleCodeSMS">
                                 發送驗證簡訊
                             </button>
                             <button
@@ -149,27 +149,35 @@
 </template>
 <script setup>
 import { ref, watch, onUnmounted } from 'vue';
+import { useAuthStore } from '@/stores/auth';
 
 import PhoneField from '@/components/ui/PhoneField.vue'
 import CodeField from '@/components/ui/CodeField.vue'
 
 import { goPrivacy, goMemberPage } from '@/utils';
 
-const phone = ref('')
-const code  = ref('+886')
+const emit = defineEmits(['close'])
 const verificationCode = ref('')
 const codeLeftTime = ref(300)
 const timerRunning = ref(false)
-
 const form = ref({
     username: '',
     password: ''
 })
+const form1 = ref({
+    firstname: '',
+    lastname: '',
+    code: '+886',
+    phone: ''
+})
+
 
 const showUsername = ref(false)
 const showPassword = ref(false)
 const activeTab = ref('login-member')
 const isCodeSent = ref(false)
+
+const authStore = useAuthStore()
 
 const togglePassword = () => {
     showPassword.value = !showPassword.value
@@ -182,6 +190,20 @@ const toggleUsername = () => {
 const handleLogin = () => {
     console.log('Login with:', form.value)
     // Your login logic here
+    authStore.login({
+        "PAR01": form.value.username,
+        "PAR02": form.value.password
+    })
+    emit('close')
+}
+
+const handleCodeSMS = () => {
+    isCodeSent.value = true
+    authStore.sendSMS({
+        "PAR01": form1.value.firstname,
+        "PAR02": form1.value.lastname,
+        "PAR03": form1.value.phone
+    })
 }
 
 let timerId = null

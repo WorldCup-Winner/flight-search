@@ -39,7 +39,7 @@
         <RecommendedTrips />
       </div>
       <SearchResultLoading v-else-if="flightSearchStore.loading === 'loading'" v-model="state" :rows="11" :speed="1300" />
-      <ResultsMain v-else-if="flightSearchStore.loading === 'success'" :data="flightSearchStore.data"  />
+      <ResultsMain v-else-if="flightSearchStore.loading === 'success'" :data="flightSearchStore.data" :tripType="activeTab" />
     </div>
     
     <Transition name="fade">
@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { inject, onMounted, provide, ref } from 'vue'
+import { inject, ref } from 'vue'
 
 import { useFlightSearchStore } from '@/stores/flightSearch'
 
@@ -61,9 +61,11 @@ import BannerImg from '@/components/home/BannerImg.vue'
 import SearchResultLoading from '@/components/ui/SearchResultLoading.vue'
 import ResultsMain from '@/components/search/ResultsMain.vue';
 import BaggageInfoAndFeeRule from '@/components/ui/BaggageInfoAndFeeRule.vue'
+import { useAirlineStore } from '@/stores/airline'
 
 // Store
 const flightSearchStore = useFlightSearchStore()
+const airlineStore = useAirlineStore()
 
 const activeTab = ref('roundtrip')
 
@@ -80,6 +82,7 @@ const updateValue = inject<(val: SharedData) => void>('updateValue')
 function handleRoundSearch(payload: any) {
   console.log('handleRoundSearch:', payload)
   flightSearchStore.fetchFlightSearch(payload)
+  airlineStore.fetchAirlineAlliance()
   
   updateValue?.({ isSearch: true })
 }
@@ -87,6 +90,7 @@ function handleRoundSearch(payload: any) {
 function handleSingleSearch(payload: any) {
   console.log('handleSingleSearch:', payload)
   flightSearchStore.fetchFlightSearch(payload)
+  airlineStore.fetchAirlineAlliance()
 
   updateValue?.({ isSearch: true })
 }
@@ -94,6 +98,7 @@ function handleSingleSearch(payload: any) {
 function handleMultiSearch(payload: any) {
   console.log('handleMultiSearch:', payload)
   flightSearchStore.fetchFlightSearch(payload)
+  airlineStore.fetchAirlineAlliance()
 
   updateValue?.({ isSearch: true })
 }

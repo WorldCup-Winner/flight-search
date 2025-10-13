@@ -17,15 +17,15 @@
       <section class="col-span-12 md:col-span-9">
         <!-- HEADER STRIP -->
         <div class="mb-4 bg-none">
-          <div class="relative rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] mb-4" :class="[ departureOrArrival === 'departure' ? 'bg-primary-gold2' : 'bg-others-gray4' ]">
+          <div class="relative rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] mb-4" :class="[ outboundOrReturn === 'outbound' ? 'bg-primary-gold2' : 'bg-others-gray4' ]">
             <!-- Left orange tab -->
             <div class="absolute inset-y-0 left-0 w-28 bg-others-original text-white grid place-items-center rounded-l-[10px]">
-              <span class="text-[22px]">{{ departureOrArrival === 'departure' ? '去程' : '回程' }}</span>
+              <span class="text-[22px]">{{ outboundOrReturn === 'outbound' ? '去程' : '回程' }}</span>
             </div>
 
             <div class="pl-48 pr-6 py-5 text-white">
               <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
-                <div class="text-[18px]">2025年 {{ formatDateToChinese(dateText) }}</div>
+                <div class="text-[18px]">{{ formatDateToChinese(dateText) }}</div>
                 <div class="flex flex-row items-center gap-3 text-[18px]">
                   <span>{{ origin.name }}({{ origin.code }})</span>
                   <img src="@/assets/imgs/icon-arrow-right-white.svg" />
@@ -138,17 +138,19 @@
         <!-- RESULTS LIST -->
         <div v-if="shownFlights.length >= 1" class="space-y-4 relative isolate">
           <TransitionGroup 
-              v-if="departureOrArrival === 'departure'"
+              v-if="outboundOrReturn === 'outbound'"
               appear>
             <FlightResultCard
               v-for="(it, i) in shownFlights" :key="it.refNumber"
               v-bind="it"
               :style="{ transitionDelay: i * 100 + 'ms' }"
-              :leg="departureOrArrival"
+              :leg="outboundOrReturn"
+              :trip-type="tripType"
               :price-from="displayPrice(it)"
+              :tax-mode="taxMode"
               :round-trip-included="true"
               currency="TWD"
-              @update:leg="departureOrArrival = $event"
+              @update:leg="outboundOrReturn = $event"
               @select="handleSelect"
               @purchase="onPurchase"
             />
@@ -160,11 +162,13 @@
               v-for="(it, i) in shownFlights" :key="it.refNumber"
               v-bind="it"
               :style="{ transitionDelay: i * 100 + 'ms' }"
-              :leg="departureOrArrival"
+              :leg="outboundOrReturn"
+              :trip-type="tripType"
               :price-from="displayPrice(it)"
+              :tax-mode="taxMode"
               :round-trip-included="true"
               currency="TWD"
-              @update:leg="departureOrArrival = $event"
+              @update:leg="outboundOrReturn = $event"
               @select="handleSelect"
               @purchase="onPurchase"
             />
@@ -190,15 +194,19 @@ import { computed, watch, onMounted, onBeforeUnmount, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { timeToMin, inWindow, formatDateToChinese } from '@/utils'
-import type { CardRow, Sector } from '@/utils/types'
+import type { AirlineAlliance, CardRow, Sector } from '@/utils/types'
 
 import FlightResultCard from '@/components/search/FlightResultCard.vue'
 import FilterSideBar from '@/components/search/FilterSideBar.vue'
 import SorryNoData from '@/components/ui/SorryNoData.vue'
+import { useAirlineStore } from '@/stores/airline'
+
+const airlineStore = useAirlineStore()
 
 // ---------- Props ----------
 const props = defineProps<{
-  data: CardRow[] | null
+  data: CardRow[],
+  tripType: string
 }>()
 
 // ---------- Header context (derived from props.data) ----------
@@ -209,19 +217,21 @@ const dateText = computed(() => {
   return d ? d : ''
 })
 const origin = computed(() => ({
-  code: first.value?.departureAirportCode ?? first.value?.sectors?.[0]?.departureAirportCode ?? '',
+  code: first.value?.departureCityCode ?? first.value?.sectors?.[0]?.departureCityCode ?? '',
   name: first.value?.departureCityName ?? first.value?.sectors?.[0]?.departureCityName ?? ''
 }))
 const destination = computed(() => ({
-  code: first.value?.arrivalAirportCode ?? first.value?.sectors?.slice(-1)?.[0]?.arrivalAirportCode ?? '',
+  code: first.value?.arrivalCityCode ?? first.value?.sectors?.slice(-1)?.[0]?.arrivalCityCode ?? '',
   name: first.value?.arrivalCityName ?? first.value?.sectors?.slice(-1)?.[0]?.arrivalCityName ?? ''
 }))
 
-const departureOrArrival = ref<'departure' | 'arrival'>('departure')
+const tripType = computed(() => props.tripType);
+
+const outboundOrReturn = ref<'outbound' | 'return'>('outbound')
 
 // ---------- Sidebar data (derived from props.data) ----------
 type OptionItem = { id: string; name: string; price: number }
-const alliances = ref<OptionItem[]>([]) // unknown in new shape; keep empty unless you add it server-side
+const alliances = computed(() => airlineStore.airlineAlliance ?? [])
 
 const airlines = computed<OptionItem[]>(() => {
   const map = new Map<string, { name: string; min: number }>()

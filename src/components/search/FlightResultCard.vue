@@ -113,19 +113,20 @@
               <div class="text-[28px] text-others-original leading-none">{{ formatPrice(priceTotal) }}</div>
               <div class="text-[12px] text-others-gray1">&nbsp; 起</div>
             </div>
-            <div class="text-[12px] pt-1 text-others-gray1">{{ roundTripIncluded ? '來回含稅價' : '含稅價' }}</div>
+            <div v-if="taxMode == 'in'" class="text-[12px] pt-1 text-others-gray1">{{ '來回含稅價'  }}</div>
+            <div v-else class="text-[12px] pt-1 text-others-gray1">{{ '參考稅費'  }}&nbsp;{{ currencyDisplay }}&nbsp;{{ formatPrice(taxAmount ?? 0) }}</div>
           </div>
 
           <button
-            v-if="leg === 'departure'"
+            v-if="leg === 'outbound'"
             class="min-w-[98px] px-6 py-3 rounded-[15px] text-white bg-primary-gold font-bold hover:bg-primary-gold1"
-            @click="goArrival"
+            @click="goReturn"
             type="button"
           >
             <p>選擇</p>
           </button>
           <button
-            v-if="leg === 'arrival'"
+            v-if="leg === 'return'"
             class="flex items-center gap-2 min-w-[98px] px-6 py-3 rounded-[15px] text-white font-bold"
             :class="expanded1 ? 'bg-others-gray3 hover:bg-others-gray5' : 'bg-primary-gold hover:bg-primary-gold3'"
             @click="expanded1 = !expanded1"
@@ -258,65 +259,11 @@ import { formatDateToChinese, formatPrice, noteIcon, toDuration } from '@/utils'
 // Icons
 import AirlineTwo from '@/assets/imgs/airlines/airline-two.svg'
 import AirlineDefault from '@/assets/imgs/airlines/airline-default.svg'
-import type { FareIconType, FareNoteType } from '@/utils/types'
-
-/** New-shape ONLY **/
-
-type Craft = {
-  craftType: string
-  enName: string | null
-  minSeats: number
-  maxSeats: number
-  craftName: string
-}
-
-export type SectorNew = {
-  departureDate: string
-  departureTime: string
-  toDate?: string
-  arrivalDate: string
-  arrivalTime: string
-  isRedEye: boolean
-  durationMinutes: number
-  departureCityCode: string
-  departureCityName: string
-  arrivalCityCode: string
-  arrivalCityName: string
-  flightNo: string
-  operatingAirlineCode: string
-  operatingAirlineName: string
-  marketingAirlineCode: string
-  marketingAirlineName: string
-  operatingFlightNo: string
-  craft: Craft
-  departureAirportCode: string
-  departureAirportName: string
-  departureTerminal: string
-  arrivalAirportCode: string
-  arrivalAirportName: string
-  arrivalTerminal: string
-  cabinType: string
-  cabinDesc: string
-  bookingClass: string
-  crossDays: number
-  transfer: {
-    transferCity: string
-    transferStayMinutes: number
-    isCrossday: boolean
-    isChangeAirport: boolean
-    isChangeTerminal: boolean
-  } | null
-  baggageStraight: number
-}
-
-export type FareOption = {
-  cabin: string
-  price: number
-  notes: { type: string; icon?: string; text: string }[]
-}
+import type { Craft, FareIconType, FareNoteType, FareOption, Sector } from '@/utils/types'
 
 const props = defineProps<{
-  leg: 'departure' | 'arrival'
+  tripType: string
+  leg: 'outbound' | 'return'
   // New-shape (v-bind="it")
   refNumber?: number
   price?: number
@@ -339,11 +286,12 @@ const props = defineProps<{
   arrivalTerminal?: string
   airlineName?: string[]
   airlineCode?: string[]
-  sectors?: SectorNew[]
+  sectors?: Sector[]
 
   // UI extras
   currency?: string
   priceFrom?: number
+  taxMode?: string
   roundTripIncluded?: boolean
   fareOptions?: FareOption[]
   defaultOpen?: boolean
@@ -359,7 +307,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'select', payload: {
     refNumber?: number
-    sectors: SectorNew[]
+    sectors: Sector[]
     totalMinutes: number
     stopsCount: number
     totalPrice: number
@@ -375,7 +323,7 @@ const emit = defineEmits<{
     }
   }): void
   (e: 'purchase', payload: { fare: FareOption; refNumber?: number }): void
-  (e: 'update:leg', v: 'departure' | 'arrival'): void
+  (e: 'update:leg', v: 'outbound' | 'return'): void
 }>()
 
 /** -------------------- State -------------------- */
@@ -386,7 +334,7 @@ const showTooltip = ref(false)
 const tooltipStyle = ref<{ top: string; left: string }>({ top: '0px', left: '0px' })
 
 /** -------------------- Derived -------------------- */
-const sectors = computed<SectorNew[]>(() => props.sectors ?? [])
+const sectors = computed<Sector[]>(() => props.sectors ?? [])
 
 const airlines = computed(() => {
   const codes = props.airlineCode ?? []
@@ -418,6 +366,7 @@ const stopsCount = computed(() => Math.max(0, sectors.value.length - 1))
 
 const currencyDisplay = computed(() => props.currency ?? 'TWD')
 const priceTotal = computed(() => (props.priceFrom ?? 0))
+const taxMode = computed(() => props.taxMode ?? "來回含稅價")
 const visibleFares = computed(() => (props.fareOptions ?? []).slice(0, fareShow.value))
 
 function resolveAirlineLogo(code?: string) {
@@ -432,7 +381,7 @@ const onImageError = (event: Event) => {
   target.src = AirlineDefault;  // Fallback to default logo when image fails to load
 }
 
-function airlineLogoFor(sec: SectorNew) {
+function airlineLogoFor(sec: Sector) {
   const code = sec.marketingAirlineCode || sec.operatingAirlineCode
   return resolveAirlineLogo(code)
 }
@@ -451,7 +400,7 @@ function onMouseEnter(e: MouseEvent) {
 function onMouseLeave() { showTooltip.value = false }
 
 /** -------------------- Emits -------------------- */
-function goArrival() {
+function goReturn() {
   emit('select', {
     refNumber: props.refNumber,
     sectors: sectors.value,
@@ -469,7 +418,7 @@ function goArrival() {
       arrivalTerminal: arrivalTerminal.value,
     },
   })
-  emit('update:leg', 'arrival')
+  emit('update:leg', 'return')
 }
 function goBooking(fare: FareOption) {
   emit('purchase', { fare, refNumber: props.refNumber })

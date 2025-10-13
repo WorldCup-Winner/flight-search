@@ -83,19 +83,19 @@
 
     <!-- 航空公司（聯盟卡片） -->
     <h4 class="tracking-wide text-primary-gold font-bold">航空公司</h4>
-
-    <div class="mt-4 rounded-[10px] overflow-hidden border border-others-gray2 divide-y divide-others-gray2">
+<!--     
+    <div class="mt-4 rounded-[10px] overflow-hidden">
       <button v-for="card in alliances" :key="card.id" type="button" @click="toggleAlliance(card.id)"
         class="flex items-center gap-4 w-full bg-white px-4 py-3 text-left hover:bg-others-gray9"
         :class="state.alliances.has(card.id) ? 'bg-[#FFF6DD]' : ''">
-        <!-- <img :src="card.logo" :alt="card.name" class="w-14 h-14 object-contain" /> -->
+        <img :src="card.logo" :alt="card.name" class="w-14 h-14 object-contain" />
         <div class="flex-1">
           <div class="text-others-gray1">{{ card.name }}</div>
           <div class="font-semibold text-others-gray1">{{ formatCurrency(card.price) }}</div>
         </div>
       </button>
-    </div>
-
+    </div> -->
+    
     <!-- 航空公司清單 (可展開) -->
     <div class="mt-5 space-y-3">
       <div v-for="air in visibleAirlines" :key="air.id" class="flex items-center gap-3">
@@ -229,14 +229,14 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { minutesToText, formatCurrency, getDualRangeStyle } from '@/utils';
+import type { AirlineAlliance } from '@/utils/types';
 
 /** ---------- Props ---------- */
-type Card = { id: string; name: string; price?: number }
 type Row = { id: string; name: string; price?: number }
 
 const props = defineProps<{
   stopsPricing?: { direct?: number; oneStop?: number }
-  alliances: Card[]
+  alliances: AirlineAlliance[]
   airlines: Row[]
   depAirports: Row[]
   arrAirports: Row[]

@@ -19,7 +19,8 @@ export const useLocationStore = defineStore('location', {
             try {
                 const res = await getLocations()
                 this.locations = res.data.data
-            } catch (err) {
+            } catch (err: any) {
+                this.error = err.response?.data?.message || 'Login failed'
                 console.log(err)
             }
             this.loading = false

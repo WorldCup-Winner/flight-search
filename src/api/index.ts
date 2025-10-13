@@ -11,3 +11,15 @@ export function getLocations() {
 export function flightSearch(req: any) {
     return axios.post('https://galilee-flight-backend.pamis.dev/api/flight-search', req)
 }
+
+export function signIn(req: any) {
+    return axios.post('https://galilee-flight-backend.pamis.dev/api/Liyi/FA01', req)
+}
+
+export function sendSMS(req: any) {
+    return axios.post('https://galilee-flight-backend.pamis.dev/api/Liyi/FA01B', req)
+}
+
+export function getAirlineAlliance() {
+    return axios.get('https://galilee-flight-backend.pamis.dev/api/airline-alliance/airlines')
+}

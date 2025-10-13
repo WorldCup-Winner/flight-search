@@ -1,6 +1,8 @@
 export type Airline = {
+  id?: string;
   iataCode: string;
-  nameZhTw: string
+  nameZhTw: string;
+  nameEnUs?: string;
 }
 
 export type Location = {
@@ -21,6 +23,7 @@ export type EndPoint = {
   terminal?: string
   airportName?: string
 }
+
 export type Segment = {
   dep: EndPoint
   arr: EndPoint
@@ -70,6 +73,14 @@ export interface CardRow {
   sectors: Sector[]
 }
 
+export type Craft = {
+  craftType: string
+  enName: string | null
+  minSeats: number
+  maxSeats: number
+  craftName: string
+}
+
 export interface Sector {
   departureDate: string
   departureTime: string
@@ -88,13 +99,7 @@ export interface Sector {
   marketingAirlineCode: string
   marketingAirlineName: string
   operatingFlightNo: string
-  craft: {
-    craftType: string
-    enName: string | null
-    minSeats: number
-    maxSeats: number
-    craftName: string
-  }
+  craft: Craft
   departureAirportCode: string
   departureAirportName: string
   departureTerminal: string
@@ -113,4 +118,11 @@ export interface Sector {
     isChangeTerminal: boolean
   } | null
   baggageStraight: number
+}
+
+export interface AirlineAlliance {
+  id: string,
+  nameZh: string,
+  nameEn: string,
+  airlines: Array<Airline>
 }
