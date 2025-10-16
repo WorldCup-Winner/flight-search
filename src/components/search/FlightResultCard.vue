@@ -129,7 +129,7 @@
             v-if="leg === 'return'"
             class="flex items-center gap-2 min-w-[98px] px-6 py-3 rounded-[15px] text-white font-bold"
             :class="expanded1 ? 'bg-others-gray3 hover:bg-others-gray5' : 'bg-primary-gold hover:bg-primary-gold3'"
-            @click="expanded1 = !expanded1"
+            @click="handleExpanded1"
             type="button"
           >
             <p>{{ expanded1 ? '收起' : '選擇' }}</p>
@@ -170,7 +170,7 @@
             <!-- right info -->
             <div class="col-span-12 md:col-span-8 space-y-2">
               <div class="font-bold text-others-gray7">
-                {{ sec.departureAirportName }}{{ sec.departureTerminal ? ' ' + sec.departureTerminal : '' }}
+                {{ sec.departureAirportCode }}{{ sec.departureAirportName }}{{ sec.departureTerminal }}{{  sec.departureCityName }}
               </div>
               <div class="flex items-center gap-2 text-others-gray1">
                 <img
@@ -185,7 +185,7 @@
                 <span class="text-others-gray1">{{ sec.craft?.craftName ? ' ' + sec.craft.craftName : '' }}</span>
               </div>
               <div class="font-bold text-others-gray7">
-                {{ sec.arrivalAirportName }}{{ sec.arrivalTerminal ? ' ' + sec.arrivalTerminal : '' }}
+                {{ sec.arrivalAirportCode }}{{ sec.arrivalAirportName }}{{ sec.arrivalTerminal }}{{ sec.arrivalCityName }}
               </div>
             </div>
           </div>
@@ -259,7 +259,7 @@ import { formatDateToChinese, formatPrice, noteIcon, toDuration } from '@/utils'
 // Icons
 import AirlineTwo from '@/assets/imgs/airlines/airline-two.svg'
 import AirlineDefault from '@/assets/imgs/airlines/airline-default.svg'
-import type { Craft, FareIconType, FareNoteType, FareOption, Sector } from '@/utils/types'
+import type { FareIconType, FareNoteType, FareOption, Sector } from '@/utils/types'
 
 const props = defineProps<{
   tripType: string
@@ -422,6 +422,10 @@ function goReturn() {
 }
 function goBooking(fare: FareOption) {
   emit('purchase', { fare, refNumber: props.refNumber })
+}
+function handleExpanded1() {
+  expanded1.value = !expanded1.value;
+  console.log({...props})
 }
 </script>
 
