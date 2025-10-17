@@ -83,6 +83,7 @@ function handleRoundSearch(payload: any) {
   console.log('handleRoundSearch:', payload)
   flightSearchStore.fetchFlightSearch(payload)
   airlineStore.fetchAirlineAlliance()
+  flightSearchStore.addSearchP(payload)
   
   updateValue?.({ isSearch: true })
 }

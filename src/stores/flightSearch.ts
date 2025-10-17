@@ -1,10 +1,14 @@
-import { flightSearch } from '@/api'
+import { flightSearch, getFareRule } from '@/api'
 import type { CardRow } from '@/utils/types'
 import { defineStore } from 'pinia'
 
 export const useFlightSearchStore = defineStore('flightSearch', {
     state: () => ({
-        data: [],
+        data: [] as Array<any>,
+        searchP: [] as Array<any>,
+        selectedAirlines: [] as Array<any>,
+        tripType: 0,
+        fareRule: null,
         loading: 'default',
         error: null,
     }),
@@ -21,6 +25,24 @@ export const useFlightSearchStore = defineStore('flightSearch', {
                 console.log(err)
             }
             this.loading = 'success'
+        },
+        async fetchFareRule(req: any) {
+            try {
+                const res = await getFareRule(req)
+                this.fareRule = res.data.data
+            } catch (err: any) {
+                this.error = err.response?.data?.message || 'FareRule Loading failed.'
+                console.log(err)
+            }
+        },
+        addAirlines(airline: any) {
+            this.selectedAirlines.push(airline)
+        },
+        addSearchP(p: any) {
+            this.searchP.push(p)
+        },
+        setTripType(type: any) {
+            this.tripType = type
         }
     }
 })

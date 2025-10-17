@@ -150,8 +150,6 @@
               :tax-mode="taxMode"
               :round-trip-included="true"
               currency="TWD"
-              @update:leg="outboundOrReturn = $event"
-              @select="handleSelect"
               @purchase="onPurchase"
             />
           </TransitionGroup>
@@ -168,8 +166,6 @@
               :tax-mode="taxMode"
               :round-trip-included="true"
               currency="TWD"
-              @update:leg="outboundOrReturn = $event"
-              @select="handleSelect"
               @purchase="onPurchase"
             />
           </TransitionGroup>
@@ -200,8 +196,10 @@ import FlightResultCard from '@/components/search/FlightResultCard.vue'
 import FilterSideBar from '@/components/search/FilterSideBar.vue'
 import SorryNoData from '@/components/ui/SorryNoData.vue'
 import { useAirlineStore } from '@/stores/airline'
+import { useFlightSearchStore } from '@/stores/flightSearch'
 
 const airlineStore = useAirlineStore()
+const flightSearchStore = useFlightSearchStore()
 
 // ---------- Props ----------
 const props = defineProps<{
@@ -227,7 +225,10 @@ const destination = computed(() => ({
 
 const tripType = computed(() => props.tripType);
 
-const outboundOrReturn = ref<'outbound' | 'return'>('outbound')
+const outboundOrReturn = computed(() => { 
+  if (flightSearchStore.searchP.length == 1) return 'outbound'
+  else return 'return'
+})
 
 // ---------- Sidebar data (derived from props.data) ----------
 type OptionItem = { id: string; name: string; price: number }
@@ -292,9 +293,6 @@ const router = useRouter()
 function onPurchase(payload: any) {
   console.log('purchase', payload)
   router.push('/booking')
-}
-const handleSelect = (payload: any) => {
-  console.log('HandleSelect:', payload)
 }
 
 // ---------- Filters (from sidebar) ----------

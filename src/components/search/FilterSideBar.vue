@@ -1,5 +1,5 @@
 <template>
-  <aside class="rounded-[10px] bg-white py-6 px-2 drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] md:p-7 w-full">
+  <aside class="rounded-[10px] bg-white py-6 px-4 drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] w-full">
     <!-- row: title + clear -->
     <div class="flex items-center justify-between">
       <h3 class="tracking-wide text-primary-gold font-bold">自訂篩選</h3>

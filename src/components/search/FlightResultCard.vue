@@ -259,11 +259,15 @@ import { formatDateToChinese, formatPrice, noteIcon, toDuration } from '@/utils'
 // Icons
 import AirlineTwo from '@/assets/imgs/airlines/airline-two.svg'
 import AirlineDefault from '@/assets/imgs/airlines/airline-default.svg'
-import type { FareIconType, FareNoteType, FareOption, Sector } from '@/utils/types'
+import type { FareIconType, FareNoteType, FareOption, FareSegment, FlightRequest, Sector } from '@/utils/types'
+import { useAirlineStore } from '@/stores/airline'
+import { useFlightSearchStore } from '@/stores/flightSearch'
+import { flightSearch } from '@/api'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   tripType: string
-  leg: 'outbound' | 'return'
+  leg: string
   // New-shape (v-bind="it")
   refNumber?: number
   price?: number
@@ -323,8 +327,9 @@ const emit = defineEmits<{
     }
   }): void
   (e: 'purchase', payload: { fare: FareOption; refNumber?: number }): void
-  (e: 'update:leg', v: 'outbound' | 'return'): void
 }>()
+
+const router = useRouter()
 
 /** -------------------- State -------------------- */
 const expanded = ref(!!props.defaultOpen)
@@ -399,33 +404,51 @@ function onMouseEnter(e: MouseEvent) {
 }
 function onMouseLeave() { showTooltip.value = false }
 
+const airlineStore = useAirlineStore()
+const flightSearchStore = useFlightSearchStore()
+
 /** -------------------- Emits -------------------- */
 function goReturn() {
-  emit('select', {
-    refNumber: props.refNumber,
-    sectors: sectors.value,
-    totalMinutes: totalMinutes.value,
-    stopsCount: stopsCount.value,
-    totalPrice: priceTotal.value,
-    currency: currencyDisplay.value,
-    roundTripIncluded: props.roundTripIncluded,
-    header: {
-      departureTime: departureTime.value,
-      arrivalTime: arrivalTime.value,
-      departureAirportCode: departureAirportCode.value,
-      arrivalAirportCode: arrivalAirportCode.value,
-      departureTerminal: departureTerminal.value,
-      arrivalTerminal: arrivalTerminal.value,
-    },
+  const searchP = flightSearchStore.searchP[flightSearchStore.searchP.length - 1]
+  searchP.selectedRefNumbers.push(props.refNumber)
+  flightSearchStore.fetchFlightSearch(searchP)
+  sectors.value.forEach((sector) => {
+    flightSearchStore.addAirlines(sector)
   })
-  emit('update:leg', 'return')
+  flightSearchStore.addSearchP(searchP)
 }
 function goBooking(fare: FareOption) {
   emit('purchase', { fare, refNumber: props.refNumber })
 }
+function mapSectorsToSegments(sectors: any): FareSegment[] {
+  return sectors.map((sector: any) => ({
+    marketingCarrier: sector.marketingAirlineCode,
+    operatingCarrier: sector.operatingAirlineCode,
+    flightNumber: sector.flightNo.replace(sector.operatingAirlineCode, ''),
+    fromAirport: sector.departureAirportCode,
+    toAirport: sector.arrivalAirportCode,
+    departureDateLocal: sector.departureDate,
+    departureTimeLocal: sector.departureTime,
+    rbd: sector.bookingClass
+  }));
+}
 function handleExpanded1() {
   expanded1.value = !expanded1.value;
-  console.log({...props})
+  sectors.value.forEach((sector) => {
+    flightSearchStore.addAirlines(sector)
+  })
+  console.log(flightSearchStore.selectedAirlines)
+  const fareRequest: FlightRequest = {
+    segments: mapSectorsToSegments(flightSearchStore.selectedAirlines),
+    pax: {
+      adt: flightSearchStore.searchP[0]['adultCount'],
+      cnn:flightSearchStore.searchP[0]['childCount'],
+      inf: 0,
+    }
+  }
+  console.log(fareRequest)
+  flightSearchStore.fetchFareRule(fareRequest)
+  router.push('/booking')
 }
 </script>
 

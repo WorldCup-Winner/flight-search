@@ -23,3 +23,7 @@ export function sendSMS(req: any) {
 export function getAirlineAlliance() {
     return axios.get('https://galilee-flight-backend.pamis.dev/api/airline-alliance/airlines')
 }
+
+export function getFareRule(req: any) {
+    return axios.post('https://galilee-flight-backend.pamis.dev/api/fare-rule', req)
+}

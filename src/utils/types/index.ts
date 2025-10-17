@@ -126,3 +126,31 @@ export interface AirlineAlliance {
   nameEn: string,
   airlines: Array<Airline>
 }
+
+export interface FareSegment {
+  marketingCarrier: string;
+  operatingCarrier: string;
+  flightNumber: string;
+  fromAirport: string;
+  toAirport: string;
+  departureDateLocal: string; // Format: YYYY-MM-DD
+  departureTimeLocal: string; // Format: HH:MM (24-hour)
+  rbd: string;
+}
+
+export interface NamedPassenger {
+  ptc: 'ADT' | 'CNN' | 'INF';
+  age: number;
+}
+
+export interface Pax {
+  adt: number;
+  cnn: number;
+  inf: number;
+  named?: NamedPassenger[];
+}
+
+export interface FlightRequest {
+  segments: FareSegment[];
+  pax: Pax;
+}

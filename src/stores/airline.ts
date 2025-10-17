@@ -1,4 +1,4 @@
-import { getAirlineAlliance, getAirlines } from '@/api'
+import { getAirlineAlliance, getAirlines, getFareRule } from '@/api'
 import type { Airline } from '@/utils/types'
 import { defineStore } from 'pinia'
 
