@@ -1,20 +1,29 @@
-<template>
+    <template>
     <div class="max-w-6xl w-full">
         <div class="bg-white my-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-8 w-full">
             <h2 class="text-others-gray1 text-[26px]">訂單查詢</h2>
             <div class="bg-white mt-6 rounded-[10px] border-[2px] px-8 py-4 w-full">
                 <h2 class="font-semibold text-primary-gold">訂單狀況</h2>
-                <div class="space-x-4 mt-4">
-                    <span class="text-green-600 text-[22px] font-bold">付款完成</span>
-                    <span class="text-others-gray7">感謝您的訂購，客服人員將為您開票，並於開票完成後寄送電子機票email給您。</span>
+                <div v-if="orderResult.msg_code == null" class="text-others-gra">
+                    加载中
                 </div>
-                <div class="space-x-4 mt-2">
-                    <span class="text-others-gray7">應付金額</span>
-                    <span class="text-others-gray7 text-[18px] font-bold">{{ formatPrice(total) }}</span>
-                </div>
-                <div class="space-x-4 mt-2">
-                    <span class="text-others-gray7">訂單編號</span>
-                    <span class="text-others-gray7 text-[18px] font-bold">{{ 'ORD0026597365' }}</span>
+                <div v-else>
+                    <div v-if="orderResult.msg_code == '10'" class="space-x-4 mt-4">
+                        <span class="text-green-600 text-[22px] font-bold">{{ '付款完成' }}</span>
+                        <span class="text-others-gray7">感謝您的訂購，客服人員將為您開票，並於開票完成後寄送電子機票email給您。</span>
+                    </div>
+                    <div v-else class="space-x-4 mt-4">
+                        <span class="text-red-600 text-[22px] font-bold">{{ '待付款' }}</span>
+                        <span class="text-others-gray7">為保留機位及票價，請於付款期限內完成付款，逾期訂單將自動取消並釋出機位。</span>
+                    </div>
+                    <div class="space-x-4 mt-2">
+                        <span class="text-others-gray7">應付金額</span>
+                        <span class="text-others-gray7 text-[18px] font-bold">{{ formatPrice(total) }}</span>
+                    </div>
+                    <div class="space-x-4 mt-2">
+                        <span class="text-others-gray7">訂單編號</span>
+                        <span class="text-others-gray7 text-[18px] font-bold">{{ orderResult.RET01 }}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -232,28 +241,15 @@
     </div>
 </template>
 <script setup lang="ts">
-import { reactive, computed, ref } from "vue";
+import { reactive, computed, ref, onMounted } from "vue";
 import { formatPrice } from "@/utils";
+import { useFlightSearchStore } from "@/stores/flightSearch";
+import { storeToRefs } from "pinia";
+import type { Flight, Item } from "@/utils/types";
 
-type Flight = {
-  departTime: string;
-  departAirport: string;
-  arriveTime: string;
-  arriveAirport: string;
-  flight: string;
-  cabin: string;
-  status: string;
-};
+const flightSearchStore = useFlightSearchStore()
 
-type Item = {
-  checked: boolean;
-  name: string;
-  productName: string;
-  fare: number; // base/with-tax amount (first line)
-  tax: number;  // second line amount
-  paid: number;
-  deadline: string;
-};
+const { orderResult } = storeToRefs(flightSearchStore)
 
 type Contact = {
     name: string;
@@ -355,6 +351,13 @@ const total = computed(() =>
     .filter((i) => i.checked)
     .reduce((sum, i) => sum + i.fare + i.tax - i.paid, 0)
 );
+
+onMounted(() => {
+    flightSearchStore.fetchOrderResult({
+        "PAR01": "F2509301144",
+        "PAR02": "0990925925"
+    })
+})
 
 window.scrollTo({
   top: 0,

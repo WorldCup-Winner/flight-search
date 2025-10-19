@@ -1,5 +1,5 @@
 
-import type { CardRow, FareIconType, FareNoteType } from '@/utils/types'
+import type { CardRow, FareIconType, FareNoteType, Sector } from '@/utils/types'
 
 export const minutesToText = (min: number) => {
   const h = Math.floor(min / 60)
@@ -145,4 +145,27 @@ export function formatDateToChinese(dateStr: string) {
   const day = date.getDate();
 
   return `${month}月${day}日`;
+}
+
+
+export function airlineLogoFor(sec: Sector) {
+  const code = sec.marketingAirlineCode || sec.operatingAirlineCode
+  return resolveAirlineLogo(code)
+}
+
+export function airlineLogoForWithCode(code: string) {
+  return resolveAirlineLogo(code)
+}
+
+import AirlineDefault from '@/assets/imgs/airlines/airline-default.svg'
+
+export function resolveAirlineLogo(code?: string) {
+  if (!code) return AirlineDefault;
+  const url = `imgs/airlines/${code}.png`;
+  return url ? url : AirlineDefault;  // Return default if URL is not valid
+}
+
+export function onImageError(event: Event) {
+  const target = event.target as HTMLImageElement;
+  target.src = AirlineDefault;  // Fallback to default logo when image fails to load
 }

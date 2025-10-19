@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-4">
       <h2 class="font-semibold text-primary-gold">機票商品資料</h2>
-      <p href="#" class="text-others-original font-semibold whitespace-nowrap"><span class="text-others-gray7">訂單編號</span>&nbsp;&nbsp;ORD0026597365</p>
+      <p href="#" class="text-others-original font-semibold whitespace-nowrap"><span class="text-others-gray7">訂單編號</span>&nbsp;&nbsp;{{ bookingResponse.orderNumber }}</p>
     </div>
 
     <!-- Flight table -->
@@ -18,6 +18,23 @@
           </tr>
         </thead>
         <tbody class="divide-y">
+          <!-- <tr v-for="(f, i) in flights" :key="i" class="bg-white border-2 border-t-none">
+            <td class="px-4 py-3 align-top">
+              <div class="font-medium text-others-gray1">{{ f.departTime }}</div>
+              <div class="text-others-gray1">{{ f.departAirport }}</div>
+            </td>
+            <td class="px-4 py-3 align-top">
+              <div class="font-medium text-others-gray1">{{ f.arriveTime }}</div>
+              <div class="text-others-gray1">{{ f.arriveAirport }}</div>
+            </td>
+            <td class="px-4 py-3 align-top">
+              <div class="font-medium text-others-gray1">{{ f.flight }}</div>
+              <div class="text-others-gray1">{{ f.cabin }}</div>
+            </td>
+            <td class="px-4 py-3">
+              <span class="text-others-gray1">{{ f.status }}</span>
+            </td>
+          </tr> -->
           <tr v-for="(f, i) in flights" :key="i" class="bg-white border-2 border-t-none">
             <td class="px-4 py-3 align-top">
               <div class="font-medium text-others-gray1">{{ f.departTime }}</div>
@@ -113,49 +130,38 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed } from "vue";
+import { reactive, computed, ref } from "vue";
 import { formatPrice } from "@/utils";
+import type { Sector, Flight, Item } from '@/utils/types'
 
-type Flight = {
-  departTime: string;
-  departAirport: string;
-  arriveTime: string;
-  arriveAirport: string;
-  flight: string;
-  cabin: string;
-  status: string;
-};
+const props = defineProps({
+  bookingResponse: { type: Object, default: null },
+  bookingData: { type: Object, default: null}
+})
 
-type Item = {
-  checked: boolean;
-  name: string;
-  productName: string;
-  fare: number; // base/with-tax amount (first line)
-  tax: number;  // second line amount
-  paid: number;
-  deadline: string;
-};
+function convertSectorsToFlights(sectorGroups: Sector[][]): Flight[] {
+  const flights: Flight[] = [];
 
-const flights = reactive<Flight[]>([
-  {
-    departTime: "2025/09/09 12:10",
-    departAirport: "桃園國際機場",
-    arriveTime: "2025/09/09 16:30",
-    arriveAirport: "成田機場",
-    flight: "泰國獅子航空SL394",
-    cabin: "經濟艙O",
-    status: "處理中",
-  },
-  {
-    departTime: "2025/09/25 17:30",
-    departAirport: "成田機場",
-    arriveTime: "2025/09/25 20:20",
-    arriveAirport: "桃園國際機場",
-    flight: "泰國獅子航空SL395",
-    cabin: "經濟艙O",
-    status: "處理中",
-  },
-]);
+  for (const sectorGroup of sectorGroups) {
+    for (const sector of sectorGroup) {
+      const flight: Flight = {
+        departTime: sector.departureTime,
+        departAirport: `${sector.departureAirportName} (${sector.departureAirportCode})`,
+        arriveTime: sector.arrivalTime,
+        arriveAirport: `${sector.arrivalAirportName} (${sector.arrivalAirportCode})`,
+        flight: `${sector.marketingAirlineCode}${sector.flightNo}`,
+        cabin: sector.cabinDesc + sector.bookingClass,
+        status: '處理中' // Or dynamically from another source
+      };
+
+      flights.push(flight);
+    }
+  }
+
+  return flights;
+}
+
+const flights: Flight[] = convertSectorsToFlights(props.bookingData.sectors)
 
 const items = reactive<Item[]>([
   {

@@ -345,10 +345,10 @@ const airlineStore = useAirlineStore()
 const locationStore = useLocationStore()
 
 // Location (Departure and Arrival)
-const selectedDepartureLocation = ref(locationStore.locations[0])
-const selectedDepartureCity = ref(locationStore.locations[0]?.["airports"][0])
-const selectedArrivalLocation = ref(locationStore.locations[0])
-const selectedArrivalCity = ref(locationStore.locations[0]?.["airports"][0])
+const selectedDepartureLocation = ref('')
+const selectedDepartureCity = ref('')
+const selectedArrivalLocation = ref('')
+const selectedArrivalCity = ref('')
 
 // Date Range
 const startDate = ref('')
@@ -487,8 +487,8 @@ function onSearch() {
     flightSegments: [
       {
         order: 1,
-        departureLocation: selectedDepartureCity.value.iataCode || 'TPE',
-        arrivalLocation: selectedArrivalCity.value.iataCode || '',
+        departureLocation: selectedDepartureCity.value?.iataCode || 'TPE',
+        arrivalLocation: selectedArrivalCity.value?.iataCode || '',
         departureDate: startDate.value ? startDate.value.toISOString().slice(0, 10) : null,
         returnDate: null
       }

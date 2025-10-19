@@ -154,3 +154,94 @@ export interface FlightRequest {
   segments: FareSegment[];
   pax: Pax;
 }
+export interface Passenger {
+  id: string
+  type: string
+  lastName: string
+  firstName: string
+  gender: string
+  birthDate: Date
+  birthDateText: string
+  nationality: string
+}
+export interface Contact {
+  name: string
+  code: string
+  phone: string
+  email: string
+}
+export interface ReceiptInfo {
+  isNeedReceipt: boolean
+  receiptTitle: string
+  uniformNumber: string
+  isNeedFlightList: boolean
+}
+export interface AssistanceInfo {
+  isNeedAssistance: boolean
+  description: string
+}
+
+export interface ItinerarySector {
+  order: number;
+  departureAirportCode: string;
+  arrivalAirportCode: string;
+  departureDate: string;
+  departureTime: string;
+  arrivalDate: string;
+  arrivalTime: string;
+  marketingAirlineCode: string;
+  flightNo: string;
+  bookingClass: string;
+}
+
+export interface Itinerary {
+  order: number;
+  departureAirportCode: string;
+  arrivalAirportCode: string;
+  sectors: ItinerarySector[];
+}
+
+export interface PassengerDetail {
+  passengerSequence: string;
+  passengerName: string;
+  pnrSequence: string;
+  amountWithTax: number;
+  tax: number;
+  paymentDeadline: string;
+}
+
+export interface Order {
+  pnrCode: string;
+  totalAmount: number;
+  orderNumber: string;
+  orderUniqId: string;
+  details: PassengerDetail[];
+}
+
+export interface Flight {
+  departTime: string
+  departAirport: string
+  arriveTime: string
+  arriveAirport: string
+  flight: string
+  cabin: string
+  status: string
+};
+
+export interface Item {
+  checked: boolean
+  name: string
+  productName: string
+  fare: number
+  tax: number
+  paid: number
+  deadline: string
+};
+
+export interface OrderResult {
+  msg_code: string
+  msg: string
+  RET01: string
+  RET02: string
+  RET03: string
+}

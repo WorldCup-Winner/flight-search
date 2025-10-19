@@ -27,3 +27,11 @@ export function getAirlineAlliance() {
 export function getFareRule(req: any) {
     return axios.post('https://galilee-flight-backend.pamis.dev/api/fare-rule', req)
 }
+
+export function booking(req: any) {
+    return axios.post('https://galilee-flight-backend.pamis.dev/api/booking', req)
+}
+
+export function LiyiFP04(req: any) {
+    return axios.post('https://galilee-flight-backend.pamis.dev/api/Liyi/FP04', req)
+}

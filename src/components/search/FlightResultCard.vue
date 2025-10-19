@@ -12,7 +12,7 @@
       >
         <img
           v-if="airlines.length <= 1"
-          :src="airlines[0].logo"
+          :src="airlineLogoForWithCode(airlines[0].code)"
           :alt="airlines[0]?.name || 'airline'"
           class="w-10 h-10 object-contain"
           @error="onImageError"
@@ -52,7 +52,7 @@
                     <img 
                       v-if="a.logo"
                       class="w-6 h-6 object-contain rounded-sm" 
-                      :src="'src/assets/imgs/airlines/' + a.code + '.png'"
+                      :src="airlineLogoForWithCode(a.code)"
                       :alt="a.name"
                       @error="onImageError"
                     />
@@ -118,7 +118,7 @@
           </div>
 
           <button
-            v-if="leg === 'outbound'"
+            v-if="leg === 'outbound' && tripType === 'roundtrip'"
             class="min-w-[98px] px-6 py-3 rounded-[15px] text-white bg-primary-gold font-bold hover:bg-primary-gold1"
             @click="goReturn"
             type="button"
@@ -126,7 +126,7 @@
             <p>選擇</p>
           </button>
           <button
-            v-if="leg === 'return'"
+            v-else-if="leg === 'return' || tripType === 'oneway'"
             class="flex items-center gap-2 min-w-[98px] px-6 py-3 rounded-[15px] text-white font-bold"
             :class="expanded1 ? 'bg-others-gray3 hover:bg-others-gray5' : 'bg-primary-gold hover:bg-primary-gold3'"
             @click="handleExpanded1"
@@ -254,15 +254,13 @@
 
 <script setup lang="ts">
 import { inject, computed, ref } from 'vue'
-import { formatDateToChinese, formatPrice, noteIcon, toDuration } from '@/utils'
+import { airlineLogoFor, airlineLogoForWithCode, formatDateToChinese, formatPrice, noteIcon, onImageError, resolveAirlineLogo, toDuration } from '@/utils'
 
 // Icons
 import AirlineTwo from '@/assets/imgs/airlines/airline-two.svg'
-import AirlineDefault from '@/assets/imgs/airlines/airline-default.svg'
 import type { FareIconType, FareNoteType, FareOption, FareSegment, FlightRequest, Sector } from '@/utils/types'
 import { useAirlineStore } from '@/stores/airline'
 import { useFlightSearchStore } from '@/stores/flightSearch'
-import { flightSearch } from '@/api'
 import { useRouter } from 'vue-router'
 
 const props = defineProps<{
@@ -309,23 +307,6 @@ const props = defineProps<{
 
 /** Emits (new-shape payload, richer)**/
 const emit = defineEmits<{
-  (e: 'select', payload: {
-    refNumber?: number
-    sectors: Sector[]
-    totalMinutes: number
-    stopsCount: number
-    totalPrice: number
-    currency: string
-    roundTripIncluded?: boolean
-    header: {
-      departureTime: string
-      arrivalTime: string
-      departureAirportCode: string
-      arrivalAirportCode: string
-      departureTerminal: string
-      arrivalTerminal: string
-    }
-  }): void
   (e: 'purchase', payload: { fare: FareOption; refNumber?: number }): void
 }>()
 
@@ -374,23 +355,6 @@ const priceTotal = computed(() => (props.priceFrom ?? 0))
 const taxMode = computed(() => props.taxMode ?? "來回含稅價")
 const visibleFares = computed(() => (props.fareOptions ?? []).slice(0, fareShow.value))
 
-function resolveAirlineLogo(code?: string) {
-  if (!code) return AirlineDefault;
-  const url = `src/assets/imgs/airlines/${code}.png`;
-  return url ? url : AirlineDefault;  // Return default if URL is not valid
-}
-
-/** -------------------- Image error handler -------------------- */
-const onImageError = (event: Event) => {
-  const target = event.target as HTMLImageElement;
-  target.src = AirlineDefault;  // Fallback to default logo when image fails to load
-}
-
-function airlineLogoFor(sec: Sector) {
-  const code = sec.marketingAirlineCode || sec.operatingAirlineCode
-  return resolveAirlineLogo(code)
-}
-
 /** -------------------- Shared actions -------------------- */
 interface SharedData { isOpenBaggageInfoAndFeeRule?: boolean; isSearch?: boolean }
 const updateValue = inject<(val: SharedData) => void>('updateValue')
@@ -404,7 +368,6 @@ function onMouseEnter(e: MouseEvent) {
 }
 function onMouseLeave() { showTooltip.value = false }
 
-const airlineStore = useAirlineStore()
 const flightSearchStore = useFlightSearchStore()
 
 /** -------------------- Emits -------------------- */
@@ -412,31 +375,29 @@ function goReturn() {
   const searchP = flightSearchStore.searchP[flightSearchStore.searchP.length - 1]
   searchP.selectedRefNumbers.push(props.refNumber)
   flightSearchStore.fetchFlightSearch(searchP)
-  sectors.value.forEach((sector) => {
-    flightSearchStore.addAirlines(sector)
-  })
+  flightSearchStore.addAirlines(sectors.value)
   flightSearchStore.addSearchP(searchP)
 }
 function goBooking(fare: FareOption) {
   emit('purchase', { fare, refNumber: props.refNumber })
 }
 function mapSectorsToSegments(sectors: any): FareSegment[] {
-  return sectors.map((sector: any) => ({
-    marketingCarrier: sector.marketingAirlineCode,
-    operatingCarrier: sector.operatingAirlineCode,
-    flightNumber: sector.flightNo.replace(sector.operatingAirlineCode, ''),
-    fromAirport: sector.departureAirportCode,
-    toAirport: sector.arrivalAirportCode,
-    departureDateLocal: sector.departureDate,
-    departureTimeLocal: sector.departureTime,
-    rbd: sector.bookingClass
-  }));
+  return sectors.flatMap((group: Sector[]) =>
+    group.map((sector: Sector) => ({
+      marketingCarrier: sector.marketingAirlineCode,
+      // operatingCarrier: sector.operatingAirlineCode,
+      flightNumber: sector.flightNo.replace(sector.marketingAirlineCode, ''),
+      fromAirport: sector.departureAirportCode,
+      toAirport: sector.arrivalAirportCode,
+      departureDateLocal: sector.departureDate,
+      departureTimeLocal: sector.departureTime,
+      rbd: sector.cabinType
+    }))
+  );
 }
-function handleExpanded1() {
+async function handleExpanded1() {
   expanded1.value = !expanded1.value;
-  sectors.value.forEach((sector) => {
-    flightSearchStore.addAirlines(sector)
-  })
+  flightSearchStore.addAirlines(sectors.value)
   console.log(flightSearchStore.selectedAirlines)
   const fareRequest: FlightRequest = {
     segments: mapSectorsToSegments(flightSearchStore.selectedAirlines),
@@ -447,7 +408,19 @@ function handleExpanded1() {
     }
   }
   console.log(fareRequest)
-  flightSearchStore.fetchFareRule(fareRequest)
+  await flightSearchStore.fetchFareRule(fareRequest)
+  console.log(flightSearchStore.fareRule)
+  const bookingData: { tripType: string, sectors: Array<any>, fareRule: Object, pax: Object } = {
+    tripType: props.tripType,
+    sectors: flightSearchStore.selectedAirlines,
+    fareRule: flightSearchStore.fareRule,
+    pax: {
+      adt: flightSearchStore.searchP[0]['adultCount'],
+      cnn:flightSearchStore.searchP[0]['childCount'],
+      inf: 0,
+    }
+  }
+  localStorage.setItem("BOOKING_DATA", JSON.stringify(bookingData))
   router.push('/booking')
 }
 </script>

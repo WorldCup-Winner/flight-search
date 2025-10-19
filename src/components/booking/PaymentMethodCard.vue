@@ -246,14 +246,14 @@
             <button
                 v-if="paymentMethod === 1"
                 class="px-4 py-1 w-[60%] h-[60px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition"
-                @click="emit('update:step', 4)"
+                @click="handleClick"
                 >
                 使用信用卡付款
             </button>
             <button
                 v-if="paymentMethod === 2"
                 class="px-4 py-1 w-[60%] h-[60px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition"
-                @click="emit('update:step', 4)"
+                @click="handleClick"
                 >
                 使用 LINE Pay 付款
             </button>
@@ -273,5 +273,9 @@ const cardType1 = ref(1)
 const emit = defineEmits<{
     (e: 'update:step', v: number): void
 }>()
+
+function handleClick() {
+    emit('update:step', 4)
+}
 
 </script>

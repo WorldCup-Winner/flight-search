@@ -1,15 +1,17 @@
-import { flightSearch, getFareRule } from '@/api'
-import type { CardRow } from '@/utils/types'
+import { booking, flightSearch, getFareRule, LiyiFP04 } from '@/api'
+import type { CardRow, Order, OrderResult, Sector } from '@/utils/types'
 import { defineStore } from 'pinia'
 
 export const useFlightSearchStore = defineStore('flightSearch', {
     state: () => ({
         data: [] as Array<any>,
         searchP: [] as Array<any>,
-        selectedAirlines: [] as Array<any>,
+        selectedAirlines: [] as Array<Sector>,
         tripType: 0,
-        fareRule: null,
+        fareRule: {} as Object,
         loading: 'default',
+        bookingResponse: {} as Order,
+        orderResult: {} as OrderResult,
         error: null,
     }),
     getters: {
@@ -32,6 +34,24 @@ export const useFlightSearchStore = defineStore('flightSearch', {
                 this.fareRule = res.data.data
             } catch (err: any) {
                 this.error = err.response?.data?.message || 'FareRule Loading failed.'
+                console.log(err)
+            }
+        },
+        async fetchOrder(req: any) {
+            try {
+                const res = await booking(req)
+                this.bookingResponse = res.data.data
+            } catch (err: any) {
+                this.error = err.response?.data?.message || 'Booking Loading failed.'
+                console.log(err)
+            }
+        },
+        async fetchOrderResult(req: any) {
+            try {
+                const res = await LiyiFP04(req)
+                this.orderResult = res.data
+            } catch (err: any) {
+                this.error = err.response?.data?.message || 'LiyiFP04 Loading failed.'
                 console.log(err)
             }
         },

@@ -3,108 +3,156 @@
         <div class="grid grid-cols-12 gap-3">
             <div class="col-span-12 md:col-span-9 w-full items-center justify-between">
                 <div class="relative mt-[0px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] w-full">
-                    <div class="w-ful flex items-center gap-2 bg-white text-others-gray7 text-[17px] rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-4 font-bold">
-                        <span>台北</span>
-                        <img src="@/assets/imgs/arrow-both.svg" />
-                        <span>東京</span>
+                    <div v-if="!loading">
+                        <div v-if="bookingData.tripType == 'roundtrip'" class="w-ful flex items-center gap-2 bg-white text-others-gray7 text-[17px] rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-4 font-bold">
+                            <span>{{ bookingData.sectors[0][0]['departureCityName'] }}</span>
+                            <img src="@/assets/imgs/arrow-both.svg" />
+                            <span>{{ bookingData.sectors[0][bookingData.sectors[0].length - 1]['arrivalCityName'] }}</span>
+                        </div>
+                        <div v-else-if="bookingData.tripType == 'oneway'" class="w-ful flex items-center gap-2 bg-white text-others-gray7 text-[17px] rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-4 font-bold">
+                            <span>{{ bookingData.sectors[0][0]['departureCityName'] }}</span>
+                            <img src="@/assets/imgs/arrow-right.svg" />
+                            <span>{{ bookingData.sectors[0][bookingData.sectors[0].length - 1]['arrivalCityName'] }}</span>
+                        </div>
+                    </div>
+                    <div v-else>
+                        Loading...
                     </div>
                     <div class="px-20 py-10">
-                        <div class="relative w-full mb-10">
-                            <div class="space-x-10 mb-10">
+                        <div class="relative w-full">
+                            <div class="space-x-10">
                                 <span class="px-5 py-3 rounded-[15px] rounded-br-none text-white bg-others-original">去程</span>
-                                <span class="text-others-gray7 text-[15px]">8月27日 週三 飛行時間 3h20m</span>
+                                <span class="text-others-gray7 text-[15px]">{{ formatDateToChinese(bookingData.sectors[0]?.[0]?.departureDate) }} 週三 飛行時間 {{ toDuration(bookingData.sectors[0]?.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}</span>
                             </div>
-                            <div class="ml-[130px]">
-                                <div v-for="(seg, i) in departure.segments" :key="i">
-                                    <div class="grid grid-cols-12 gap-4">
-                                        <!-- left dates/times -->
-                                        <div class="flex items-center flex-col justify-between col-span-12 md:col-span-2">
-                                            <div class="flex flex-row items-center justify-between gap-6">
-                                                <div class="font-bold text-others-gray7">{{ seg.dep.time }}</div>
-                                            </div>
-                                            <div class="flex items-center justify-between gap-6">
-                                                <div class="font-bold text-others-gray7">{{ seg.arr.time }}</div>
-                                            </div>
-                                        </div>
-                                        <!-- vertical line w/ dots (hidden on mobile) -->
-                                        <div class="hidden relative md:block">
-                                            <span class="absolute -left-[6px] top-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
-                                            <div class="w-[3px] h-full bg-others-gray3"></div>
-                                            <span class="absolute -left-[6px] bottom-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
-                                        </div>
-
-                                        <!-- right info -->
-                                        <div class="col-span-12 md:col-span-9 space-y-2">
-                                            <div class="font-bold text-others-gray7">
-                                                {{ seg.dep.airportName }}{{ seg.dep.terminal ? ' ' + seg.dep.terminal : '' }}
-                                            </div>
-                                            <div class="flex items-center gap-2 text-others-gray1">
-                                                <img v-if="seg.carrier?.logo" :src="seg.carrier.logo" :alt="seg.carrier?.name"
-                                                    class="w-5 h-5 object-contain" />
-                                                <span class="font-semibold">
-                                                    {{ seg.flightNo ? seg.flightNo : seg.carrier?.code }}
-                                                </span>
-                                                <span class="text-others-gray1"> {{ seg.carrier?.name }} </span>
-                                                <span class="text-others-gray1"> {{ seg.equipment ? ' ' + seg.equipment : '' }}</span>
-                                            </div>
-                                            <div class="font-bold text-others-gray7">
-                                                {{ seg.arr.airportName }}{{ seg.arr.terminal ? ' ' + seg.arr.terminal : '' }}
-                                            </div>
-                                        </div>
+                            <div v-for="(sec, i) in bookingData.sectors[0]" :key="i" class="ml-12">
+                            <div class="grid grid-cols-12 gap-4 py-8 px-8">
+                                <!-- left dates/times -->
+                                <div class="flex items-center flex-col justify-between col-span-12 md:col-span-3">
+                                    <div class="flex flex-row items-center justify-between gap-6">
+                                        <div class="text-others-gray1">{{ formatDateToChinese(sec.departureDate) }}</div>
+                                        <div class="font-bold text-others-gray7">{{ sec.departureTime }}</div>
+                                    </div>
+                                    <div class="text-others-gray1">{{ toDuration(sec.durationMinutes) }}</div>
+                                    <div class="flex items-center justify-between gap-6">
+                                        <div class="text-others-gray1">{{ formatDateToChinese(sec.arrivalDate) }}</div>
+                                        <div class="font-bold text-others-gray7">{{ sec.arrivalTime }}</div>
                                     </div>
                                 </div>
+
+                                <!-- vertical line w/ dots (hidden on mobile) -->
+                                <div class="relative mx-6">
+                                    <span class="absolute -left-[6px] top-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
+                                    <div class="w-[3px] h-full bg-others-gray3"></div>
+                                    <span class="absolute -left-[6px] bottom-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
+                                </div>
+
+                                <!-- right info -->
+                                <div class="col-span-12 md:col-span-8 space-y-2">
+                                <div class="font-bold text-others-gray7">
+                                    {{ sec.departureAirportCode }}{{ sec.departureAirportName }}{{ sec.departureTerminal }}{{  sec.departureCityName }}
+                                </div>
+                                <div class="flex items-center gap-2 text-others-gray1">
+                                    <img
+                                        v-if="airlineLogoFor(sec)"
+                                        :src="airlineLogoFor(sec)"
+                                        :alt="sec.marketingAirlineName || sec.operatingAirlineName"
+                                        class="w-5 h-5 object-contain"
+                                        @error="onImageError"
+                                    />
+                                    <span class="font-semibold">{{ sec.flightNo || sec.operatingFlightNo }}</span>
+                                    <span class="text-others-gray1">{{ sec.marketingAirlineName || sec.operatingAirlineName }}</span>
+                                    <span class="text-others-gray1">{{ sec.craft?.craftName ? ' ' + sec.craft.craftName : '' }}</span>
+                                </div>
+                                <div class="font-bold text-others-gray7">
+                                    {{ sec.arrivalAirportCode }}{{ sec.arrivalAirportName }}{{ sec.arrivalTerminal }}{{ sec.arrivalCityName }}
+                                </div>
+                                </div>
+                            </div>
+
+                            <!-- transfer chips (between legs) -->
+                            <div v-if="i < bookingData.sectors[0].length - 1 && sec.transfer" class="mx-10 my-2 text-others-gray1">
+                                <div class="inline-flex items-center gap-2 bg-tb-body rounded-[10px] px-6 py-2">
+                                <span>於{{ sec.transfer.transferCity }}轉機</span>
+                                <span class="text-others-gray3">|</span>
+                                <span class="text-others-original">{{ toDuration(sec.transfer.transferStayMinutes) }}</span>
+                                <span class="text-others-gray3" v-if="sec.transfer.isChangeTerminal">|</span>
+                                <span v-if="sec.transfer.isChangeTerminal" class="text-others-original">不同航廈</span>
+                                <span class="text-others-gray3" v-if="sec.transfer.isChangeAirport">|</span>
+                                <span v-if="sec.transfer.isChangeAirport" class="text-others-original">不同機場</span>
+                                <span v-if="sec.baggageStraight > 0">｜ 行李直掛</span>
+                                </div>
+                            </div>
                             </div>
                         </div>
-                        <div class="relative w-full">
-                            <div class="space-x-10 mb-10">
+                        <div v-if="bookingData.tripType != 'oneway'" class="relative w-full mt-10">
+                            <div class="space-x-10">
                                 <span class="px-5 py-3 rounded-[15px] rounded-br-none text-white bg-others-original">回程</span>
-                                <span class="text-others-gray7 text-[15px]">8月27日 週三 飛行時間 3h20m</span>
+                                <span class="text-others-gray7 text-[15px]">{{ formatDateToChinese(bookingData.sectors[1]?.[bookingData.sectors[1].length - 1]?.arrivalDate) }} 週三 飛行時間 {{ toDuration(bookingData.sectors[1]?.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}</span>
                             </div>
-                            <div class="ml-[130px]">
-                                <div v-for="(seg, i) in departure.segments" :key="i">
-                                    <div class="grid grid-cols-12 gap-4">
-                                        <!-- left dates/times -->
-                                        <div class="flex items-center flex-col justify-between col-span-12 md:col-span-2">
-                                            <div class="flex flex-row items-center justify-between gap-6">
-                                                <div class="font-bold text-others-gray7">{{ seg.dep.time }}</div>
-                                            </div>
-                                            <div class="flex items-center justify-between gap-6">
-                                                <div class="font-bold text-others-gray7">{{ seg.arr.time }}</div>
-                                            </div>
-                                        </div>
-                                        <!-- vertical line w/ dots (hidden on mobile) -->
-                                        <div class="hidden relative md:block">
-                                            <span class="absolute -left-[6px] top-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
-                                            <div class="w-[3px] h-full bg-others-gray3"></div>
-                                            <span class="absolute -left-[6px] bottom-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
-                                        </div>
-
-                                        <!-- right info -->
-                                        <div class="col-span-12 md:col-span-9 space-y-2">
-                                            <div class="font-bold text-others-gray7">
-                                                {{ seg.dep.airportName }}{{ seg.dep.terminal ? ' ' + seg.dep.terminal : '' }}
-                                            </div>
-                                            <div class="flex items-center gap-2 text-others-gray1">
-                                                <img v-if="seg.carrier?.logo" :src="seg.carrier.logo" :alt="seg.carrier?.name"
-                                                    class="w-5 h-5 object-contain" />
-                                                <span class="font-semibold">
-                                                    {{ seg.flightNo ? seg.flightNo : seg.carrier?.code }}
-                                                </span>
-                                                <span class="text-others-gray1"> {{ seg.carrier?.name }} </span>
-                                                <span class="text-others-gray1"> {{ seg.equipment ? ' ' + seg.equipment : '' }}</span>
-                                            </div>
-                                            <div class="font-bold text-others-gray7">
-                                                {{ seg.arr.airportName }}{{ seg.arr.terminal ? ' ' + seg.arr.terminal : '' }}
-                                            </div>
-                                        </div>
+                            <div v-for="(sec, i) in bookingData.sectors[1]" :key="i" class="ml-12">
+                            <div class="grid grid-cols-12 gap-4 py-8 px-8">
+                                <!-- left dates/times -->
+                                <div class="flex items-center flex-col justify-between col-span-12 md:col-span-3">
+                                    <div class="flex flex-row items-center justify-between gap-6">
+                                        <div class="text-others-gray1">{{ formatDateToChinese(sec.departureDate) }}</div>
+                                        <div class="font-bold text-others-gray7">{{ sec.departureTime }}</div>
+                                    </div>
+                                    <div class="text-others-gray1">{{ toDuration(sec.durationMinutes) }}</div>
+                                    <div class="flex items-center justify-between gap-6">
+                                        <div class="text-others-gray1">{{ formatDateToChinese(sec.arrivalDate) }}</div>
+                                        <div class="font-bold text-others-gray7">{{ sec.arrivalTime }}</div>
                                     </div>
                                 </div>
+
+                                <!-- vertical line w/ dots (hidden on mobile) -->
+                                <div class="relative mx-6">
+                                    <span class="absolute -left-[6px] top-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
+                                    <div class="w-[3px] h-full bg-others-gray3"></div>
+                                    <span class="absolute -left-[6px] bottom-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
+                                </div>
+
+                                <!-- right info -->
+                                <div class="col-span-12 md:col-span-8 space-y-2">
+                                <div class="font-bold text-others-gray7">
+                                    {{ sec.departureAirportCode }}{{ sec.departureAirportName }}{{ sec.departureTerminal }}{{  sec.departureCityName }}
+                                </div>
+                                <div class="flex items-center gap-2 text-others-gray1">
+                                    <img
+                                    v-if="airlineLogoFor(sec)"
+                                    :src="airlineLogoFor(sec)"
+                                    :alt="sec.marketingAirlineName || sec.operatingAirlineName"
+                                    class="w-5 h-5 object-contain"
+                                    @error="onImageError"
+                                    />
+                                    <span class="font-semibold">{{ sec.flightNo || sec.operatingFlightNo }}</span>
+                                    <span class="text-others-gray1">{{ sec.marketingAirlineName || sec.operatingAirlineName }}</span>
+                                    <span class="text-others-gray1">{{ sec.craft?.craftName ? ' ' + sec.craft.craftName : '' }}</span>
+                                </div>
+                                <div class="font-bold text-others-gray7">
+                                    {{ sec.arrivalAirportCode }}{{ sec.arrivalAirportName }}{{ sec.arrivalTerminal }}{{ sec.arrivalCityName }}
+                                </div>
+                                </div>
+                            </div>
+
+                            <!-- transfer chips (between legs) -->
+                            <div v-if="i < bookingData.sectors[0].length - 1 && sec.transfer" class="mx-10 my-2 text-others-gray1">
+                                <div class="inline-flex items-center gap-2 bg-tb-body rounded-[10px] px-6 py-2">
+                                <span>於{{ sec.transfer.transferCity }}轉機</span>
+                                <span class="text-others-gray3">|</span>
+                                <span class="text-others-original">{{ toDuration(sec.transfer.transferStayMinutes) }}</span>
+                                <span class="text-others-gray3" v-if="sec.transfer.isChangeTerminal">|</span>
+                                <span v-if="sec.transfer.isChangeTerminal" class="text-others-original">不同航廈</span>
+                                <span class="text-others-gray3" v-if="sec.transfer.isChangeAirport">|</span>
+                                <span v-if="sec.transfer.isChangeAirport" class="text-others-original">不同機場</span>
+                                <span v-if="sec.baggageStraight > 0">｜ 行李直掛</span>
+                                </div>
+                            </div>
                             </div>
                         </div>
                     </div>
                     <div
                         v-if="departure.fareOptions != undefined"
-                        class="relative grid grid-cols-12 gap-4 p-5 border-b last:border-b-0 border-others-gray3 bg-others-gray2">
+                        class="relative grid grid-cols-12 gap-4 p-5 border-b last:border-b-0 border-others-gray3 bg-tb-body">
                         <div class="col-span-12 md:col-span-3 text-others-gray1 font-bold flex items-center justify-center">
                             {{ departure.fareOptions[0].cabin }}
                         </div>
@@ -183,22 +231,21 @@
                                         class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none"
                                         @focus="toggleDatePicker($event, p, 'birthDate')"
                                         />
-
                                         <transition name="fade-scale">
                                             <teleport to="body">
                                                 <div
-                                                v-if="isDatePickerOpen"
-                                                ref="datePopoverRef"
-                                                class="fixed z-[10000]"
-                                                :style="popoverStyle"
-                                                @click.stop
-                                                >
-                                                <DatePicker
-                                                    :modelValue="activeDateField?.passenger ? activeDateField.passenger.birthDate : startDate"
-                                                    :min="new Date()"
-                                                    @update:modelValue="handleSingleDateApply"
-                                                    @apply="handleSingleDateApply"
-                                                />
+                                                    v-if="isDatePickerOpen"
+                                                    ref="datePopoverRef"
+                                                    class="fixed z-[10000] left-[-100px]"
+                                                    :style="popoverStyle"
+                                                    @click.stop
+                                                    >
+                                                    <DatePicker
+                                                        :modelValue="activeDateField?.passenger ? activeDateField.passenger.birthDate : startDate"
+                                                        :min="new Date()"
+                                                        @update:modelValue="handleSingleDateApply"
+                                                        @apply="handleSingleDateApply"
+                                                    />
                                                 </div>
                                             </teleport>
                                         </transition>
@@ -220,19 +267,21 @@
                     <div class="grid grid-cols-12 justify-between gap-x-5 items-center text-others-gray1 pt-8">
                         <div class="relative grid-cols-12 md:col-span-4 mb-4">
                             <label class="block mb-1 text-others-gray1">聯絡人姓名</label>
-                            <input 
+                            <input
+                                v-model= "contact.name "
                                 type="text" 
                                 placeholder="必填"
                                 class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                         </div>
                         <div class="relative grid-cols-12 md:col-span-4 mb-4">
                             <label class="block mb-1 text-others-gray1">聯絡手機</label>
-                            <PhoneField v-model="phoneNumber" :countryCode="code" :show-eye="false" />
+                            <PhoneField v-model="contact.phone" v-model:countryCode="contact.code" :show-eye="false" />
                         </div>
                         <div class="relative grid-cols-12 md:col-span-4 mb-4">
                             <label class="block mb-1 text-others-gray1">聯絡email</label>
                             <input 
                                 type="text" 
+                                v-model= "contact.email"
                                 placeholder="必填"
                                 class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                         </div>
@@ -252,7 +301,7 @@
                                     type="radio"
                                     name="receipt"
                                     :value="false"
-                                    v-model="isReceipt"
+                                    v-model="receiptInfo.isNeedReceipt"
                                     />
                                 <label
                                     for="receipt-no"
@@ -270,7 +319,7 @@
                                     type="radio"
                                     name="receipt"
                                     :value="true"
-                                    v-model="isReceipt"
+                                    v-model="receiptInfo.isNeedReceipt"
                                     />
                                 <label
                                     for="receipt-yes"
@@ -283,12 +332,13 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="isReceipt">
+                    <div v-if="receiptInfo.isNeedReceipt">
                         <div class="grid grid-cols-12 justify-between gap-x-5 items-center text-others-gray1 pt-4">
                             <div class="relative grid-cols-12 md:col-span-6 mb-4">
                                 <label class="block mb-1 text-others-gray1">公司名稱</label>
                                 <input 
                                     type="text" 
+                                    v-model="receiptInfo.receiptTitle"
                                     placeholder="請填公司全名"
                                     class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                             </div>
@@ -296,6 +346,7 @@
                                 <label class="block mb-1 text-others-gray1">統一編號</label>
                                 <input 
                                     type="text" 
+                                    v-model="receiptInfo.uniformNumber"
                                     placeholder="請填統一編號"
                                     class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                             </div>
@@ -310,7 +361,7 @@
                                         type="radio"
                                         name="summary"
                                         :value="false"
-                                        v-model="isSummary"
+                                        v-model="receiptInfo.isNeedFlightList"
                                         />
                                     <label
                                         for="summary-no"
@@ -328,7 +379,7 @@
                                         type="radio"
                                         name="summary"
                                         :value="true"
-                                        v-model="isSummary"
+                                        v-model="receiptInfo.isNeedFlightList"
                                         />
                                     <label
                                         for="summary-yes"
@@ -356,7 +407,7 @@
                                     type="radio"
                                     name="special-need"
                                     :value="false"
-                                    v-model="isSpecialNeed"
+                                    v-model="assistanceInfo.isNeedAssistance"
                                     />
                                 <label
                                     for="special-need-no"
@@ -374,7 +425,7 @@
                                     type="radio"
                                     name="special-need"
                                     :value="true"
-                                    v-model="isSpecialNeed"
+                                    v-model="assistanceInfo.isNeedAssistance"
                                     />
                                 <label
                                     for="special-need-yes"
@@ -387,9 +438,10 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="isSpecialNeed">
+                    <div v-if="assistanceInfo.isNeedAssistance">
                         <textarea  
                             placeholder="需求內容"
+                            v-model="assistanceInfo.description"
                             class="w-full h-[80px] mt-4 px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                     </div>
                 </div>
@@ -433,7 +485,7 @@
                     <label class="flex mt-[3px] items-center cursor-pointer relative">
                     <input type="checkbox" checked
                         class="peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-primary-gold"
-                        id="check" v-model="agreed" />
+                        id="check" v-model="isAgreedToTheTerms" />
                         <span
                             class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none bg-primary-gold">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"
@@ -453,8 +505,8 @@
                 <!-- Submit button -->
                 <button
                     class="mt-6 w-full rounded-[10px] bg-others-original py-3 font-semibold text-white hover:bg-others-hover disabled:opacity-30 disabled:cursor-not-allowed"
-                    :disabled="!agreed"
-                    @click="emitSubmit"
+                    :disabled="!isAgreedToTheTerms"
+                    @click="isWakeUp = true"
                     >
                     送出訂單
                 </button>
@@ -472,7 +524,7 @@
         </transition>
     </div>
     <Transition name="fade">
-        <WakeUp v-if="isOpenWakeUp" v-model:step="step" />
+        <WakeUp v-if="isWakeUp" @button-clicked="handleSendButtonClick" />
     </Transition>
     <Transition name="fade">
         <BookingInstruction :open="isOpenBookingInstruction" @close="isOpenBookingInstruction = false" />
@@ -482,8 +534,8 @@
     </Transition>
 </template>
 <script setup lang="ts">
-import { provide, inject, computed, onBeforeUnmount, ref } from 'vue'
-import { formatDate, formatPrice, makeDirect, noteIcon, noteTextClass, toDuration } from '@/utils'
+import { provide, computed, onBeforeUnmount, ref, onMounted, watch } from 'vue'
+import { airlineLogoFor, formatDate, formatDateToChinese, formatPrice, makeDirect, noteIcon, onImageError, toDuration } from '@/utils'
 
 import Airline_1 from '@/assets/imgs/airlines/TK.png'
 
@@ -493,9 +545,13 @@ import WakeUp from "@/components/ui/WakeUp.vue"
 import BookingInstruction from '@/components/ui/BookingInstruction.vue'
 import BaggageInfoAndFeeRule from '@/components/ui/BaggageInfoAndFeeRule.vue'
 
-import type { CardRow } from '@/utils/types'
 import PhoneField from '../ui/PhoneField.vue'
 import DatePicker from '../ui/DatePicker.vue'
+import { useAuthStore } from '@/stores/auth'
+import { storeToRefs } from 'pinia'
+import type { AssistanceInfo, Contact, Itinerary, ItinerarySector, Passenger, ReceiptInfo, Sector } from '@/utils/types'
+import { useFlightSearchStore } from '@/stores/flightSearch'
+import { flightSearch } from '@/api'
 
 // Same type as grandparent
 interface SharedData {
@@ -518,15 +574,9 @@ const isDatePickerOpen = ref(false)
 const startDate = ref<any>(new Date())
 const activeInputEl = ref<HTMLElement | null>(null)
 const activeDateField = ref<{ passenger?: any; field: string } | null>(null)
-const dateInputRef = ref<HTMLElement | null>(null)
 const popoverStyle = ref<Record<string, string>>({})
 
-const outboundDateText = computed(() => (startDate.value ? formatDate(startDate.value) : ''))
 
-const passengers = ref([
-  { id: '', type: 'adult', lastName: '', firstName: '', gender: '', birthDate: new Date(), birthDateText: '', nationality: '' },
-  { id: '', type: 'child', lastName: '', firstName: '', gender: '', birthDate: new Date(), birthDateText: '', nationality: '' },
-])
 
 function toggleDatePicker(event: FocusEvent, passenger?: any, field: string = 'outbound') {
   activeInputEl.value = event.target as HTMLElement
@@ -583,6 +633,7 @@ type Line = {
 }
 
 const props = defineProps({
+    data: { type: Object, default: null },
     currency: { type: String, default: 'TWD' },
     locale: { type: String, default: 'zh-TW' },
     titleLabel: { type: String, default: '成人機票總額' },
@@ -597,19 +648,15 @@ const props = defineProps({
     },
 })
 
+const authStore = useAuthStore()
+const flightSearchStore = useFlightSearchStore()
 const step = defineModel<number>('step')
 
+const { bookingData } = storeToRefs(authStore)
 const activeDialog = ref(null)
-const isReceipt = ref(false)
-const isSummary = ref(false)
-const isSpecialNeed = ref(false)
-const isOpenWakeUp = ref(false)
+
 const isOpenBookingInstruction = ref(false)
 
-const gender = ref('male')
-
-const code  = ref('+886')
-const phoneNumber  = ref('')
 
 const departure = ref<any>(
     makeDirect('JAL', '加加航空', Airline_1, '06:45', '11:00', 195, 5799, { fare: true }),
@@ -626,17 +673,180 @@ const emit = defineEmits<{
     }): void
 }>()
 
-const agreed = ref(false)
+const isAgreedToTheTerms = ref(false)
+const isWakeUp = ref(false)
+
 const total:any = computed(() => {
     return props.lines.reduce((sum: number, l: Line) => sum + (Number(l.amount) * (Number(l.qty ?? 1))), 0)
 })
 const currency = computed(() => props.currency ?? 'TWD')
-
-function emitSubmit () {
-    // emit('submit', { total: total.value, currency: props.currency, lines: props.lines })
-    // step.value = 3
-    isOpenWakeUp.value = true
+function createPassenger(type:string): Passenger {
+  return {
+    id: '',
+    type,
+    lastName: '',
+    firstName: '',
+    gender: '',
+    birthDate: new Date(),
+    birthDateText: '',
+    nationality: ''
+  }
 }
+
+const passengers = ref<Passenger[]>([])
+
+const contact = ref<Contact>({
+    name: '',
+    code:'+886',
+    phone: '',
+    email: ''
+})
+
+const receiptInfo = ref<ReceiptInfo>({
+  isNeedReceipt: false,
+  receiptTitle: '',
+  uniformNumber: '',
+  isNeedFlightList: false
+})
+const assistanceInfo = ref<AssistanceInfo>({
+  isNeedAssistance: false,
+  description: ''
+})
+
+const loading = ref(true)
+onMounted(async () => {
+    await authStore.getBookingData()
+    loading.value = false
+    
+    
+})
+function convertToItineraries(sectorGroups: Array<Array<Sector>>): Array<Itinerary> {
+  return sectorGroups.map((sectors, itineraryIndex) => {
+    const itinerarySectors: ItinerarySector[] = sectors.map((sector, sectorIndex) => ({
+      order: sectorIndex + 1,
+      departureAirportCode: sector.departureAirportCode,
+      arrivalAirportCode: sector.arrivalAirportCode,
+      departureDate: sector.departureDate,
+      departureTime: sector.departureTime,
+      arrivalDate: sector.arrivalDate,
+      arrivalTime: sector.arrivalTime,
+      marketingAirlineCode: sector.marketingAirlineCode,
+      flightNo: sector.flightNo,
+      bookingClass: sector.bookingClass,
+    }));
+
+    return {
+      order: itineraryIndex + 1,
+      departureAirportCode: sectors[0].departureAirportCode,
+      arrivalAirportCode: sectors[sectors.length - 1].arrivalAirportCode,
+      sectors: itinerarySectors,
+    };
+  });
+}
+
+function handleSendButtonClick(payload: boolean) {
+    console.log('Button clicked in child! Payload:', bookingData.value);
+    console.log(convertToItineraries(bookingData.value.sectors));
+    console.log( passengers.value);
+    console.log( contact.value);
+    console.log( receiptInfo.value);
+    
+    console.log(assistanceInfo.value);
+    const sampleData = {
+    "itineraries": [
+        {
+            "order": 1,
+            "departureAirportCode": "TPE",
+            "arrivalAirportCode": "HKG",
+            "sectors": [
+                {
+                    "order": 1,
+                    "departureAirportCode": "TPE",
+                    "arrivalAirportCode": "HKG",
+                    "departureDate": "2025-12-10",
+                    "departureTime": "07:15",
+                    "arrivalDate": "2025-12-10",
+                    "arrivalTime": "09:15",
+                    "marketingAirlineCode": "CI",
+                    "flightNo": "CI601",
+                    "bookingClass": "M"
+                }
+            ]
+        }
+    ],
+    "passengers": [
+        {
+            "firstName": "Reyeaa",
+            "lastName": "Farroww",
+            "gender": 0,
+            "dateOfBirth": "1985-05-01",
+            "nationality": "TW",
+            "passengerType": 0,
+            "documentType": 0,
+            "documentNumber": "EJ1234567",
+            "documentExpiryDate": "2028-05-01",
+            "mobileNumberCountryCode": "+886",
+            "mobileNumber": "2222222222",
+            "email": "reyes@example.com",
+            "isTheOrderer": true,
+            "mainlandTravelPermitNumber": "11111111",
+            "mainlandTravelPermitExpiryDate": "2028-12-01",
+            "mealPreference": "",
+            "frequentFlyerNumber": "",
+            "frequentFlyerAirline": "",
+            "specialStatus": ""
+        }
+    ],
+    "contactInfo": {
+        "firstNameOfContactPerson": "Reyeaa",
+        "lastNameOfContactPerson": "Farroww",
+        "genderOfContactPerson": 0,
+        "mobileNumberCountryCode": "+886",
+        "contactMobileNumber": "2222222222",
+        "contactEmail": "reyes@example.com",
+        "orderMethod": 0,
+        "registrationIdType": 0,
+        "registrationIdNumber": "Z123556767",
+        "registrationPassword": "",
+        "mobileVerificationId": "",
+        "memberId": "",
+        "lineId": "",
+        "preferredContactMethod": 1,
+        "assignedLocationCode": "",
+        "assignedConsultantId": ""
+    },
+    "receiptInfo": {
+        "isNeedReceipt": false,
+        "receiptTitle": "",
+        "uniformNumber": "",
+        "isNeedFlightList": false
+    },
+    "assistanceInfo": {
+        "isNeedAssistance": false,
+        "description": ""
+    },
+    "isAgreedToTheTerms": true
+}
+    flightSearchStore.fetchOrder(sampleData)
+    step.value = 3
+}
+watch(
+  bookingData,
+  (newVal, oldVal) => {
+   passengers.value = [
+    ...Array(newVal.pax.adt || 0).fill(0).map(() => createPassenger('adult')),
+    ...Array(newVal.pax.cnn || 0).fill(0).map(() => createPassenger('child'))
+    ]
+  },
+  { deep: true }
+)
+watch(
+  assistanceInfo ,
+  (newVal, oldVal) => {
+   console.log(newVal)
+  },
+  { deep: true }
+)
 
 window.scrollTo({
   top: 0,

@@ -154,7 +154,7 @@
             />
           </TransitionGroup>
           <TransitionGroup
-              v-else
+              v-if="outboundOrReturn === 'return'"
               appear>
             <FlightResultCard
               v-for="(it, i) in shownFlights" :key="it.refNumber"

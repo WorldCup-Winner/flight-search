@@ -88,7 +88,9 @@ const codes: Code[] = props.codes ?? [
 
 const code = ref(props.countryCode ?? '+886')
 
-watch(code, v => emit('update:countryCode', v))
+watch(code, v => {
+  emit('update:countryCode', v)
+})
 
 const placeholder = props.placeholder ?? '請輸手機號碼'
 

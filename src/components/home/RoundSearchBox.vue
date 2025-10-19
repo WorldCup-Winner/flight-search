@@ -348,10 +348,10 @@ const airlineStore = useAirlineStore()
 const locationStore = useLocationStore()
 
 // Location (Departure and Arrival)
-const selectedDepartureLocation = ref(locationStore.locations[0])
-const selectedDepartureCity = ref(locationStore.locations[0]?.["airports"][0])
-const selectedArrivalLocation = ref(locationStore.locations[0])
-const selectedArrivalCity = ref(locationStore.locations[0]?.["airports"][0])
+const selectedDepartureLocation = ref('')
+const selectedDepartureCity = ref('')
+const selectedArrivalLocation = ref('')
+const selectedArrivalCity = ref('')
 
 // Date Range
 const startDate = ref('')

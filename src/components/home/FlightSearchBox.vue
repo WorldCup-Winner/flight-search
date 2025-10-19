@@ -23,13 +23,13 @@
           </div>
         </div>
         <div v-if="activeTab == 'roundtrip'">
-          <RoundSearchBox @search="handleRoundSearch" />
+          <RoundSearchBox @search="handleSearchFlight" />
         </div>
         <div v-else-if="activeTab === 'oneway'">
-          <SingleSearchBox @search="handleSingleSearch" />
+          <SingleSearchBox @search="handleSearchFlight" />
         </div>
         <div v-else-if="activeTab === 'multi'">
-          <MultiSearchBox @search="handleMultiSearch" />
+          <MultiSearchBox @search="handleSearchFlight" />
         </div>
       </div>
     </div>
@@ -79,8 +79,8 @@ interface SharedData {
 const sharedValue = inject<{ isOpenBaggageInfoAndFeeRule: boolean; isSearch: boolean }>('sharedValue')
 const updateValue = inject<(val: SharedData) => void>('updateValue')
 
-function handleRoundSearch(payload: any) {
-  console.log('handleRoundSearch:', payload)
+function handleSearchFlight(payload: any) {
+  console.log('handleSearchFlight:', payload)
   flightSearchStore.fetchFlightSearch(payload)
   airlineStore.fetchAirlineAlliance()
   flightSearchStore.addSearchP(payload)
@@ -88,21 +88,6 @@ function handleRoundSearch(payload: any) {
   updateValue?.({ isSearch: true })
 }
 
-function handleSingleSearch(payload: any) {
-  console.log('handleSingleSearch:', payload)
-  flightSearchStore.fetchFlightSearch(payload)
-  airlineStore.fetchAirlineAlliance()
-
-  updateValue?.({ isSearch: true })
-}
-
-function handleMultiSearch(payload: any) {
-  console.log('handleMultiSearch:', payload)
-  flightSearchStore.fetchFlightSearch(payload)
-  airlineStore.fetchAirlineAlliance()
-
-  updateValue?.({ isSearch: true })
-}
 </script>
 <style scoped>
 /* subtle entrance for the small modal */
