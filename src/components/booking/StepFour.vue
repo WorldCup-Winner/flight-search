@@ -271,19 +271,19 @@ type SpecialCooperation = {
 
 const flights = reactive<Flight[]>([
   {
-    departTime: "2025/09/09 12:10",
-    departAirport: "桃園國際機場",
-    arriveTime: "2025/09/09 16:30",
-    arriveAirport: "成田機場",
+    departureTime: "2025/09/09 12:10",
+    departureAirportName: "桃園國際機場",
+    arrivalTime: "2025/09/09 16:30",
+    arrivalAirportName: "成田機場",
     flight: "泰國獅子航空SL394",
     cabin: "經濟艙O",
     status: "處理中",
   },
   {
-    departTime: "2025/09/25 17:30",
-    departAirport: "成田機場",
-    arriveTime: "2025/09/25 20:20",
-    arriveAirport: "桃園國際機場",
+    departureTime: "2025/09/25 17:30",
+    departureAirportName: "成田機場",
+    arrivalTime: "2025/09/25 20:20",
+    arrivalAirportName: "桃園國際機場",
     flight: "泰國獅子航空SL395",
     cabin: "經濟艙O",
     status: "處理中",
