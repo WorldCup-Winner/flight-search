@@ -258,7 +258,6 @@
 import { reactive, computed, ref, onMounted } from "vue";
 import { formatPrice } from "@/utils";
 import { useFlightSearchStore } from "@/stores/flightSearch";
-import type { Flight, Item } from "@/utils/types";
 import { storeToRefs } from "pinia";
 
 const flightSearchStore = useFlightSearchStore()
@@ -283,7 +282,7 @@ type SpecialCooperation = {
     detail: string;
 }
 
-const flights = reactive<Flight[]>([
+const flights = reactive<any[]>([
   {
     departureTime: "2025/09/09 12:10",
     departureAirportName: "桃園國際機場",
@@ -304,7 +303,7 @@ const flights = reactive<Flight[]>([
   },
 ]);
 
-const items = reactive<Item[]>([
+const items = reactive<any[]>([
   {
     checked: true,
     name: "LEE WEIEN - -, MR.",
@@ -334,7 +333,7 @@ const items = reactive<Item[]>([
   },
 ]);
 
-const contacts = reactive<Contact[]>([
+const contacts = reactive<any[]>([
     {
         name: "王大同",
         number: "0933555222",
@@ -342,7 +341,7 @@ const contacts = reactive<Contact[]>([
     }
 ])
 
-const receipts = reactive<Receipt[]>([
+const receipts = reactive<any[]>([
     {
         type: "是",
         name: "中國鋼鐵股份有限公司",
@@ -351,7 +350,7 @@ const receipts = reactive<Receipt[]>([
     }
 ])
 
-const specialCooperations = reactive<SpecialCooperation[]>([
+const specialCooperations = reactive<any[]>([
     {
         type: "是",
         detail: "內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字，內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字"
