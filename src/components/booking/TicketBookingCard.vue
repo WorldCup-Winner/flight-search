@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-4">
       <h2 class="font-semibold text-primary-gold">機票商品資料</h2>
-      <p href="#" class="text-others-original font-semibold whitespace-nowrap"><span class="text-others-gray7">訂單編號</span>&nbsp;&nbsp;{{ bookingResponse.orderNumber }}</p>
+      <p v-if="orderNumber" href="#" class="text-others-original font-semibold whitespace-nowrap"><span class="text-others-gray7">訂單編號</span>&nbsp;&nbsp;{{ orderNumber }}</p>
     </div>
 
     <!-- Flight table -->
@@ -18,31 +18,14 @@
           </tr>
         </thead>
         <tbody class="divide-y">
-          <!-- <tr v-for="(f, i) in flights" :key="i" class="bg-white border-2 border-t-none">
-            <td class="px-4 py-3 align-top">
-              <div class="font-medium text-others-gray1">{{ f.departTime }}</div>
-              <div class="text-others-gray1">{{ f.departAirport }}</div>
-            </td>
-            <td class="px-4 py-3 align-top">
-              <div class="font-medium text-others-gray1">{{ f.arriveTime }}</div>
-              <div class="text-others-gray1">{{ f.arriveAirport }}</div>
-            </td>
-            <td class="px-4 py-3 align-top">
-              <div class="font-medium text-others-gray1">{{ f.flight }}</div>
-              <div class="text-others-gray1">{{ f.cabin }}</div>
-            </td>
-            <td class="px-4 py-3">
-              <span class="text-others-gray1">{{ f.status }}</span>
-            </td>
-          </tr> -->
           <tr v-for="(f, i) in flights" :key="i" class="bg-white border-2 border-t-none">
             <td class="px-4 py-3 align-top">
-              <div class="font-medium text-others-gray1">{{ f.departTime }}</div>
-              <div class="text-others-gray1">{{ f.departAirport }}</div>
+              <div class="font-medium text-others-gray1">{{ f.departureTime }}</div>
+              <div class="text-others-gray1">{{ f.departureAirportName }}</div>
             </td>
             <td class="px-4 py-3 align-top">
-              <div class="font-medium text-others-gray1">{{ f.arriveTime }}</div>
-              <div class="text-others-gray1">{{ f.arriveAirport }}</div>
+              <div class="font-medium text-others-gray1">{{ f.arrivalTime }}</div>
+              <div class="text-others-gray1">{{ f.arrivalAirportName }}</div>
             </td>
             <td class="px-4 py-3 align-top">
               <div class="font-medium text-others-gray1">{{ f.flight }}</div>
@@ -133,70 +116,122 @@
 import { reactive, computed, ref } from "vue";
 import { formatPrice } from "@/utils";
 import type { Sector, Flight, Item } from '@/utils/types'
+import { useBookingStore } from "@/stores/booking";
 
-const props = defineProps({
-  bookingResponse: { type: Object, default: null },
-  bookingData: { type: Object, default: null}
-})
+const bookingStore = useBookingStore();
 
-function convertSectorsToFlights(sectorGroups: Sector[][]): Flight[] {
-  const flights: Flight[] = [];
+const orderNumber = computed(() => {
+    return bookingStore.bookingResult?.bookingData?.orderNumber || null
+});
 
-  for (const sectorGroup of sectorGroups) {
-    for (const sector of sectorGroup) {
-      const flight: Flight = {
-        departTime: sector.departureTime,
-        departAirport: `${sector.departureAirportName} (${sector.departureAirportCode})`,
-        arriveTime: sector.arrivalTime,
-        arriveAirport: `${sector.arrivalAirportName} (${sector.arrivalAirportCode})`,
-        flight: `${sector.marketingAirlineCode}${sector.flightNo}`,
-        cabin: sector.cabinDesc + sector.bookingClass,
-        status: '處理中' // Or dynamically from another source
-      };
-
-      flights.push(flight);
+const flights = computed<Flight[]>(() => {
+  console.log(bookingStore.bookingResult)
+    if (!bookingStore.bookingResult?.itineraries || bookingStore.bookingResult.itineraries.length === 0) {
+        const segments = []
+        if (bookingStore.outboundSegment) {
+            segments.push(...bookingStore.outboundSegment.sectors.map((sector: any) => ({
+                departureTime: `${sector.departureDate} ${sector.departureTime}`,
+                arrivalTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
+                departureAirportCode: sector.departureAirportCode,
+                departureAirportName: sector.departureAirportName,
+                arrivalAirportCode: sector.arrivalAirportCode,
+                arrivalAirportName: sector.arrivalAirportName,
+                flight: `${sector.marketingAirlineName} ${sector.flightNo}`,
+                cabin: sector.bookingClass || 'Y',
+                status: "處理中",
+            })))
+        }
+        if (bookingStore.returnSegment) {
+            segments.push(...bookingStore.returnSegment.sectors.map((sector: any) => ({
+                departureTime: `${sector.departureDate} ${sector.departureTime}`,
+                arrivalTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
+                departureAirportCode: sector.departureAirportCode,
+                departureAirportName: sector.departureAirportName,
+                arrivalAirportCode: sector.arrivalAirportCode,
+                arrivalAirportName: sector.arrivalAirportName,
+                flight: `${sector.marketingAirlineName} ${sector.flightNo}`,
+                cabin: sector.bookingClass || 'Y',
+                status: "處理中",
+            })))
+      }
+        return segments
     }
-  }
+    
+    return bookingStore.bookingResult.itineraries.flatMap(itinerary => 
+        itinerary.sectors.map((sector: any) => ({
+            departureTime: `${sector.departureDate} ${sector.departureTime}`,
+            arrivalTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
+            departureAirportCode: sector.departureAirportCode,
+            departureAirportName: sector.departureAirportName,
+            arrivalAirportCode: sector.arrivalAirportCode,
+            arrivalAirportName: sector.arrivalAirportName,
+            flight: `${sector.marketingAirlineName} ${sector.flightNo}`,
+            cabin: sector.bookingClass,
+            status: "處理中",
+        }))
+    );
+});
 
-  return flights;
-}
-
-const flights: Flight[] = convertSectorsToFlights(props.bookingData.sectors)
-
-const items = reactive<Item[]>([
-  {
-    checked: true,
-    name: "LEE WEIEN - -, MR.",
-    productName: "SL/台北/東京/台北/泰國獅子航空 - TPE/NRT NRT/TPE",
-    fare: 5278,
-    tax: 3485, // adjust to match your real data
-    paid: 0,
-    deadline: "2025/8/31 14:20",
-  },
-  {
-    checked: true,
-    name: "LEE WEIEN - -, MR.",
-    productName: "SL/台北/東京/台北/泰國獅子航空 - TPE/NRT NRT/TPE",
-    fare: 5278,
-    tax: 3316,
-    paid: 0,
-    deadline: "2025/8/31 14:20",
-  },
-  {
-    checked: true,
-    name: "LEE WEIEN - -, MR.",
-    productName: "SL/台北/東京/台北/泰國獅子航空 - TPE/NRT NRT/TPE",
-    fare: 5278,
-    tax: 3316,
-    paid: 0,
-    deadline: "2025/8/31 14:20",
-  },
-]);
+const items = computed<Item[]>(() => {
+    if (!bookingStore.bookingResult?.passengers || bookingStore.bookingResult.passengers.length === 0) {
+        // Fallback: Create items from fare rule data
+        const fareData = bookingStore.fareRuleData
+        const searchParams = bookingStore.searchParams
+        
+        if (!fareData || !searchParams) return []
+        
+        const items: Item[] = []
+        let itemIndex = 0
+        
+        // Create items for each passenger type
+        fareData.fareSummary.forEach((summary: any) => {
+            const passengerType = summary.passengerType
+            const count = passengerType === 'ADT' ? searchParams.adults :
+                         passengerType === 'CNN' ? searchParams.children :
+                         passengerType === 'INF' ? searchParams.infants : 0
+            
+            for (let i = 0; i < count; i++) {
+                const passengerLabel = passengerType === 'ADT' ? '成人' :
+                                     passengerType === 'CNN' ? '兒童' : '嬰兒'
+                
+                items.push({
+                    checked: true,
+                    name: `乘客 ${itemIndex + 1} (${passengerLabel})`,
+                    productName: `${searchParams.departureCityCode}/${searchParams.arrivalCityCode}`,
+                    fare: summary.price,
+                    tax: summary.taxAmount,
+                    paid: 0,
+                    deadline: "2025/12/31 23:59",
+                })
+                itemIndex++
+            }
+        })
+        
+        return items
+    }
+    
+    return bookingStore.bookingResult.passengers.map((passenger, index) => {
+        const detail = bookingStore.bookingResult?.bookingData?.details?.[index]
+        const itinerary = bookingStore.bookingResult?.itineraries?.[0]
+        
+        return {
+            checked: true,
+            name: `${passenger.lastName} ${passenger.firstName}, ${passenger.gender === 0 ? 'MR.' : 'MRS.'}`,
+            productName: itinerary 
+                ? `${itinerary.departureAirportCode}/${itinerary.arrivalAirportCode}`
+                : `${bookingStore.searchParams?.departureCityCode || ''}/${bookingStore.searchParams?.arrivalCityCode || ''}`,
+            fare: detail?.amountWithTax || 0,
+            tax: detail?.tax || 0,
+            paid: 0,
+            deadline: detail?.paymentDeadline?.split('T')[0] || "2025/12/31",
+        }
+    });
+});
 
 const total = computed(() =>
-  items
+  items.value
     .filter((i) => i.checked)
-    .reduce((sum, i) => sum + i.fare + i.tax - i.paid, 0)
+    .reduce((sum, i) => sum + i.fare - i.paid, 0)
 );
 </script>
 

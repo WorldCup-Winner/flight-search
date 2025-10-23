@@ -129,13 +129,13 @@ export interface AirlineAlliance {
 
 export interface FareSegment {
   marketingCarrier: string;
-  operatingCarrier: string;
+  operatingCarrier?: string;
   flightNumber: string;
   fromAirport: string;
   toAirport: string;
   departureDateLocal: string; // Format: YYYY-MM-DD
   departureTimeLocal: string; // Format: HH:MM (24-hour)
-  rbd: string;
+  rbd?: string;
 }
 
 export interface NamedPassenger {
@@ -154,31 +154,36 @@ export interface FlightRequest {
   segments: FareSegment[];
   pax: Pax;
 }
-export interface Passenger {
-  id: string
-  type: string
-  lastName: string
-  firstName: string
-  gender: string
-  birthDate: Date
-  birthDateText: string
-  nationality: string
+
+export interface ContactInfo {
+  firstNameOfContactPerson: string
+  lastNameOfContactPerson: string
+  genderOfContactPerson: number
+  mobileNumberCountryCode: string
+  contactMobileNumber: string
+  contactEmail: string
+  orderMethod?: number
+  registrationIdType?: number
+  registrationIdNumber?: string
+  registrationPassword?: string
+  mobileVerificationId?: string
+  memberId?: string
+  lineId?: string
+  preferredContactMethod?: number
+  assignedLocationCode?: string
+  assignedConsultantId?: string
 }
-export interface Contact {
-  name: string
-  code: string
-  phone: string
-  email: string
-}
+
 export interface ReceiptInfo {
   isNeedReceipt: boolean
-  receiptTitle: string
-  uniformNumber: string
+  receiptTitle?: string
+  uniformNumber?: string
   isNeedFlightList: boolean
 }
+
 export interface AssistanceInfo {
   isNeedAssistance: boolean
-  description: string
+  description?: string
 }
 
 export interface ItinerarySector {
@@ -219,10 +224,12 @@ export interface Order {
 }
 
 export interface Flight {
-  departTime: string
-  departAirport: string
-  arriveTime: string
-  arriveAirport: string
+  departureTime: string
+  departureAirportCode: string
+  departureAirportName: string
+  arrivalTime: string
+  arrivalAirportCode: string
+  arrivalAirportName: string
   flight: string
   cabin: string
   status: string
@@ -244,4 +251,142 @@ export interface OrderResult {
   RET01: string
   RET02: string
   RET03: string
+}
+
+export interface FareRuleRequest {
+  segments: FareSegment[]
+  pax: Pax
+}
+
+export interface FareRuleResponse {
+  head: {
+    code: number
+    message: string
+  }
+  data: {
+    fareRuleTable: FareRuleTable[]
+    baggage: FareRuleBaggageData[]
+    fareSummary: FareRuleSummaryData[]
+  }
+}
+
+export interface FareRuleTable {
+  type: string
+  before: number | null
+  after: number | null
+  currency: string
+  passengerType: string
+  passengerTypeDisplay: string
+}
+
+export interface FareRuleBaggageData {
+  order: number
+  departureCityCode: string
+  departureCityName: string
+  arrivalCityCode: string
+  arrivalCityName: string
+  passengers: FareRuleBaggagePassengerData[]
+}
+
+export interface FareRuleBaggagePassengerData {
+  passengerType: string
+  carryOnData: FareRuleBaggageDetailData
+  checkInData: FareRuleBaggageDetailData
+}
+
+export interface FareRuleBaggageDetailData {
+  weight: number
+  unit: string | null
+  piece: number
+  size: string | null
+  text: string
+}
+
+export interface FareRuleSummaryData {
+  passengerType: string
+  price: number
+  taxAmount: number
+}
+
+
+export interface BookingRequestViewModel {
+  itineraries: BookingItinerary[]
+  passengers: PassengerInfo[]
+  contactInfo: ContactInfo
+  receiptInfo?: ReceiptInfo | null
+  assistanceInfo?: AssistanceInfo | null
+  isAgreedToTheTerms: boolean
+}
+
+export interface BookingItinerary {
+  order: number
+  departureAirportCode: string
+  arrivalAirportCode: string
+  sectors: BookingSector[]
+}
+
+export interface BookingSector {
+  order: number
+  departureAirportCode: string
+  arrivalAirportCode: string
+  departureDate: string
+  departureTime: string
+  arrivalDate: string
+  arrivalTime: string
+  marketingAirlineCode: string
+  flightNo: string
+  bookingClass: string
+}
+
+export interface PassengerInfo {
+  firstName: string
+  lastName: string
+  gender: number // 0 = female, 1 = male
+  dateOfBirth: string
+  nationality: string
+  passengerType: number // 0 = adult, 1 = child/infant
+  documentType: number // 0 = passport, 1 = ID card
+  documentNumber: string
+  documentExpiryDate: string
+  mobileNumberCountryCode?: string
+  mobileNumber?: string
+  email?: string
+  isTheOrderer: boolean
+  mainlandTravelPermitNumber?: string | null
+  mainlandTravelPermitExpiryDate?: string | null
+  mealPreference?: string
+  frequentFlyerNumber?: string
+  frequentFlyerAirline?: string
+  specialStatus?: string | null
+}
+
+export interface ContactInfo {
+  firstNameOfContactPerson: string
+  lastNameOfContactPerson: string
+  genderOfContactPerson: number
+  mobileNumberCountryCode: string
+  contactMobileNumber: string
+  contactEmail: string
+  orderMethod?: number
+  registrationIdType?: number
+  registrationIdNumber?: string
+  registrationPassword?: string
+  mobileVerificationId?: string
+  memberId?: string
+  lineId?: string
+  preferredContactMethod?: number
+  assignedLocationCode?: string
+  assignedConsultantId?: string
+}
+
+export interface ReceiptInfo {
+  isNeedReceipt: boolean
+  receiptTitle?: string
+  uniformNumber?: string
+  isNeedFlightList: boolean
+}
+
+export interface AssistanceInfo {
+  isNeedAssistance: boolean
+  description?: string
 }

@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
 import { sendSMS, signIn } from '@/api'
 import { useToast } from 'vue-toastification'
 import type { Pax, Sector } from '@/utils/types'
@@ -7,7 +6,6 @@ import type { Pax, Sector } from '@/utils/types'
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         name: localStorage.getItem('name') || null,
-        bookingData: { tripType: '', sectors: [] as Array<Array<Sector>>, fareRule: {}, pax: { adt: 0, cnn: 0, inf: 0 } as Pax },
         loading: false,
         error: null,
     }),
@@ -55,15 +53,6 @@ export const useAuthStore = defineStore('auth', {
         logout() {
             this.name = null
             localStorage.removeItem('name')
-        },
-        getBookingData() {
-            const stored = localStorage.getItem('BOOKING_DATA')
-            if (stored) {
-                this.bookingData = JSON.parse(stored)
-            }
-        },
-        removeBookingData() {
-            localStorage.removeItem('BOOKING_DATA')
         }
     },
 })

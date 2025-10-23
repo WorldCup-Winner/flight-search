@@ -118,7 +118,7 @@
           </div>
 
           <button
-            v-if="leg === 'outbound' && tripType === 'roundtrip'"
+            v-if="leg === 'outbound'"
             class="min-w-[98px] px-6 py-3 rounded-[15px] text-white bg-primary-gold font-bold hover:bg-primary-gold1"
             @click="goReturn"
             type="button"
@@ -126,7 +126,7 @@
             <p>選擇</p>
           </button>
           <button
-            v-else-if="leg === 'return' || tripType === 'oneway'"
+            v-if="leg === 'return'"
             class="flex items-center gap-2 min-w-[98px] px-6 py-3 rounded-[15px] text-white font-bold"
             :class="expanded1 ? 'bg-others-gray3 hover:bg-others-gray5' : 'bg-primary-gold hover:bg-primary-gold3'"
             @click="handleExpanded1"
@@ -209,9 +209,51 @@
 
     <!-- BODY (expanded1) -->
     <Transition name="fade">
-      <div v-if="expanded1" class="bg-[#E5E5E5]">
-        <!-- Fare options (optional) -->
-        <div v-if="fareOptions?.length" class="mt-4 bg-white rounded-b-[10px] overflow-hidden">
+      <div v-if="expanded1" class="bg-[#E5E5E5] rounded-b-[10px]">
+        <!-- Loading state with skeleton -->
+        <div v-if="fareRuleLoading" class="bg-white rounded-b-[10px] overflow-hidden">
+          <!-- Skeleton fare options (show 2-3 placeholder rows) -->
+          <div v-for="n in 1" :key="`skeleton-${n}`" class="relative grid grid-cols-12 gap-4 p-5 border-b border-others-gray3">
+            <!-- Cabin skeleton -->
+            <div class="col-span-12 md:col-span-2 flex items-center justify-center">
+              <div class="skel h-6 w-20 rounded"></div>
+            </div>
+            
+            <!-- Notes skeleton -->
+            <div class="col-span-12 md:col-span-6 space-y-3">
+              <div class="flex items-center gap-2">
+                <div class="skel h-4 w-4 rounded-full"></div>
+                <div class="skel h-4 w-48 rounded"></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="skel h-4 w-4 rounded-full"></div>
+                <div class="skel h-4 w-56 rounded"></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="skel h-4 w-4 rounded-full"></div>
+                <div class="skel h-4 w-40 rounded"></div>
+              </div>
+              <div class="skel h-4 w-32 rounded"></div>
+            </div>
+            
+            <!-- Price and button skeleton -->
+            <div class="col-span-12 md:col-span-4 flex items-center justify-between md:justify-end gap-4">
+              <div class="text-right space-y-2">
+                <div class="skel h-8 w-32 rounded"></div>
+                <div class="skel h-3 w-24 rounded"></div>
+              </div>
+              <div class="skel h-12 w-24 rounded-[10px]"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error state -->
+        <div v-else-if="fareRuleError" class="p-8 text-center text-text-error">
+          {{ fareRuleError }}
+        </div>
+
+        <!-- Fare options -->
+        <div v-else-if="visibleFares.length > 0" class="bg-white rounded-b-[10px] overflow-hidden">
           <div v-for="(fare, idx) in visibleFares" :key="idx" class="relative grid grid-cols-12 gap-4 p-5 border-others-gray3">
             <div v-if="idx >= 1" class="absolute mx-[2%] w-[96%] h-[1px] bg-others-gray3"></div>
             <div class="col-span-12 md:col-span-2 text-others-gray1 font-bold flex items-center justify-center">
@@ -228,7 +270,7 @@
               <div class="text-right">
                 <div class="flex items-end font-bold">
                   <div class="text-[12px] text-others-original">{{ currencyDisplay }}</div>
-                  <div class="text-[28px] text-others-original leading-none">{{ formatPrice(fare.price) }}</div>
+                  <div class="text-[28px] text-others-original leading-none">{{ formatPrice(roundTripIncluded ? priceTotal : fare.price) }}</div>
                 </div>
                 <div class="text-[12px] pt-2 text-others-gray1">{{ roundTripIncluded ? '來回含稅價' : '含稅價' }}</div>
               </div>
@@ -238,14 +280,19 @@
             </div>
           </div>
 
-          <div v-if="fareOptions.length > fareShow" class="p-4 flex justify-end">
-            <button class="flex items-center w-fit text-others-original hover:opacity-80" @click="fareShow = fareOptions.length">
+          <div v-if="(dynamicFareOptions.length > 0 ? dynamicFareOptions.length : (fareOptions?.length ?? 0)) > fareShow" class="p-4 flex justify-end">
+            <button class="flex items-center w-fit text-others-original hover:opacity-80" @click="fareShow = (dynamicFareOptions.length > 0 ? dynamicFareOptions.length : (fareOptions?.length ?? 0))">
               <span>顯示更多</span>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 10l-6 6-6-6" />
               </svg>
             </button>
           </div>
+        </div>
+
+        <!-- No data state -->
+        <div v-else class="p-8 text-center text-others-gray1">
+          暫無票價資訊
         </div>
       </div>
     </Transition>
@@ -258,14 +305,12 @@ import { airlineLogoFor, airlineLogoForWithCode, formatDateToChinese, formatPric
 
 // Icons
 import AirlineTwo from '@/assets/imgs/airlines/airline-two.svg'
-import type { FareIconType, FareNoteType, FareOption, FareSegment, FlightRequest, Sector } from '@/utils/types'
-import { useAirlineStore } from '@/stores/airline'
-import { useFlightSearchStore } from '@/stores/flightSearch'
-import { useRouter } from 'vue-router'
+import type { CardRow, FareIconType, FareNoteType, FareOption, FareRuleRequest, FareRuleResponse, FareSegment, Pax, Sector } from '@/utils/types'
+import { fareRule } from '@/api'
 
 const props = defineProps<{
   tripType: string
-  leg: string
+  leg: 'outbound' | 'return'
   // New-shape (v-bind="it")
   refNumber?: number
   price?: number
@@ -303,14 +348,15 @@ const props = defineProps<{
   airlineLogos?: Record<string, string>
   /** Optional: custom resolver if you need dynamic mapping */
   getAirlineLogo?: (code: string) => string | undefined
+  
+  /** For multi-segment search */
+  adultCount?: number
+  childCount?: number
+  babyCount?: number
+  
+  /** Previously selected segments (for fare-rule API) */
+  previousSegments?: CardRow[]
 }>()
-
-/** Emits (new-shape payload, richer)**/
-const emit = defineEmits<{
-  (e: 'purchase', payload: { fare: FareOption; refNumber?: number }): void
-}>()
-
-const router = useRouter()
 
 /** -------------------- State -------------------- */
 const expanded = ref(!!props.defaultOpen)
@@ -353,12 +399,28 @@ const stopsCount = computed(() => Math.max(0, sectors.value.length - 1))
 const currencyDisplay = computed(() => props.currency ?? 'TWD')
 const priceTotal = computed(() => (props.priceFrom ?? 0))
 const taxMode = computed(() => props.taxMode ?? "來回含稅價")
-const visibleFares = computed(() => (props.fareOptions ?? []).slice(0, fareShow.value))
+const fareRuleData = ref<FareRuleResponse['data'] | null>(null)
+const fareRuleLoading = ref(false)
+const fareRuleError = ref<string | null>(null)
+const dynamicFareOptions = ref<FareOption[]>([])
+const visibleFares = computed(() => {
+  const options = dynamicFareOptions.value.length > 0 ? dynamicFareOptions.value : (props.fareOptions ?? [])
+  return options.slice(0, fareShow.value)
+})
 
 /** -------------------- Shared actions -------------------- */
-interface SharedData { isOpenBaggageInfoAndFeeRule?: boolean; isSearch?: boolean }
+interface SharedData {
+  isOpenBaggageInfoAndFeeRule?: boolean;
+  isSearch?: boolean;
+  fareRuleData?: any;
+}
 const updateValue = inject<(val: SharedData) => void>('updateValue')
-function openBaggageInfoAndFeeRule() { updateValue?.({ isOpenBaggageInfoAndFeeRule: true }) }
+function openBaggageInfoAndFeeRule() {
+  updateValue?.({
+    isOpenBaggageInfoAndFeeRule: true,
+    fareRuleData: fareRuleData.value 
+  })
+}
 
 /** -------------------- UI handlers -------------------- */
 function onMouseEnter(e: MouseEvent) {
@@ -368,66 +430,257 @@ function onMouseEnter(e: MouseEvent) {
 }
 function onMouseLeave() { showTooltip.value = false }
 
-const flightSearchStore = useFlightSearchStore()
-
 /** -------------------- Emits -------------------- */
+const emit = defineEmits<{
+  (e: 'select', payload: {
+    refNumber?: number
+    sectors: Sector[]
+    totalMinutes: number
+    stopsCount: number
+    totalPrice: number
+    currency: string
+    roundTripIncluded?: boolean
+    header: {
+      departureTime: string
+      arrivalTime: string
+      departureAirportCode: string
+      arrivalAirportCode: string
+      departureTerminal: string
+      arrivalTerminal: string
+    }
+  }): void
+  (e: 'purchase', payload: { 
+    fare: FareOption; 
+    refNumber?: number;
+    fareRuleData?: any;
+  }): void
+}>()
+
 function goReturn() {
-  const searchP = flightSearchStore.searchP[flightSearchStore.searchP.length - 1]
-  searchP.selectedRefNumbers.push(props.refNumber)
-  flightSearchStore.fetchFlightSearch(searchP)
-  flightSearchStore.addAirlines(sectors.value)
-  flightSearchStore.addSearchP(searchP)
+  emit('select', {
+    refNumber: props.refNumber,
+    sectors: sectors.value,
+    totalMinutes: totalMinutes.value,
+    stopsCount: stopsCount.value,
+    totalPrice: priceTotal.value,
+    currency: currencyDisplay.value,
+    roundTripIncluded: props.roundTripIncluded,
+    header: {
+      departureTime: departureTime.value,
+      arrivalTime: arrivalTime.value,
+      departureAirportCode: departureAirportCode.value,
+      arrivalAirportCode: arrivalAirportCode.value,
+      departureTerminal: departureTerminal.value,
+      arrivalTerminal: arrivalTerminal.value,
+    },
+  })
 }
 function goBooking(fare: FareOption) {
-  emit('purchase', { fare, refNumber: props.refNumber })
+  emit('purchase', { 
+    fare, 
+    refNumber: props.refNumber,
+    fareRuleData: fareRuleData.value 
+  })
 }
-function mapSectorsToSegments(sectors: any): FareSegment[] {
-  return sectors.flatMap((group: Sector[]) =>
-    group.map((sector: Sector) => ({
-      marketingCarrier: sector.marketingAirlineCode,
-      // operatingCarrier: sector.operatingAirlineCode,
-      flightNumber: sector.flightNo.replace(sector.marketingAirlineCode, ''),
-      fromAirport: sector.departureAirportCode,
-      toAirport: sector.arrivalAirportCode,
-      departureDateLocal: sector.departureDate,
-      departureTimeLocal: sector.departureTime,
-      rbd: sector.cabinType
-    }))
-  );
-}
+
 async function handleExpanded1() {
-  expanded1.value = !expanded1.value;
-  flightSearchStore.addAirlines(sectors.value)
-  console.log(flightSearchStore.selectedAirlines)
-  const fareRequest: FlightRequest = {
-    segments: mapSectorsToSegments(flightSearchStore.selectedAirlines),
-    pax: {
-      adt: flightSearchStore.searchP[0]['adultCount'],
-      cnn:flightSearchStore.searchP[0]['childCount'],
-      inf: 0,
+  console.log('handleExpanded1 called, current expanded1:', expanded1.value)
+  console.log('leg:', props.leg)
+  console.log('fareRuleData:', fareRuleData.value)
+
+  if (!expanded1.value) {
+    // Expanding - first expand immediately to show skeleton
+    expanded1.value = true
+    
+    // Then fetch fare-rule API if we haven't loaded data yet
+    if (!fareRuleData.value && !fareRuleLoading.value) {
+      console.log('Fetching fare rule...')
+      await fetchFareRule()
+    }
+  } else {
+    // Collapsing
+    expanded1.value = false
+  }
+}
+
+async function fetchFareRule() {
+  if (!props.sectors || props.sectors.length === 0) {
+    console.error('No sectors available for fare rule query')
+    return
+  }
+
+  console.log('Starting fetchFareRule...')
+  console.log('Current flight sectors:', props.sectors)
+  console.log('Previous segments:', props.previousSegments)
+  
+  fareRuleLoading.value = true
+  fareRuleError.value = null
+
+  try {
+    // Combine previous segments with current flight sectors
+    const allSectors = [
+      ...(props.previousSegments?.flatMap(seg => seg.sectors) ?? []),
+      ...props.sectors
+    ]
+    console.log('All sectors for fare-rule API:', allSectors)
+    
+    const segments: FareSegment[] = allSectors.map(sector => {
+      const airlineCode = sector.marketingAirlineCode || sector.operatingAirlineCode
+      let flightNumber = sector.flightNo
+      
+      if (airlineCode && flightNumber.startsWith(airlineCode)) {
+        flightNumber = flightNumber.substring(airlineCode.length)
+      } else {
+        flightNumber = flightNumber.replace(/^[A-Z]+/, '')
+      }
+      
+      return {
+        marketingCarrier: sector.marketingAirlineCode,
+        operatingCarrier: sector.operatingAirlineCode,
+        flightNumber: flightNumber,
+        fromAirport: sector.departureAirportCode,
+        toAirport: sector.arrivalAirportCode,
+        departureDateLocal: sector.departureDate,
+        departureTimeLocal: sector.departureTime,
+        rbd: sector.bookingClass
+      }
+    })
+
+    const pax: Pax = {
+      adt: props.adultCount ?? 1,
+      cnn: props.childCount ?? 0,
+      inf: props.babyCount ?? 0
+    }
+
+    const request: FareRuleRequest = { segments, pax }
+    
+    console.log('Fare rule request:', JSON.stringify(request, null, 2))
+    
+    const response = await fareRule(request)
+    
+    console.log('Fare rule response:', response)
+    
+    if (response.data.head.code === 0) {
+      fareRuleData.value = response.data.data
+      
+      console.log('Fare rule data received:', fareRuleData.value)
+      
+      // Transform fare rule data into fare options for display
+      dynamicFareOptions.value = transformFareRuleToOptions(response.data.data)
+      
+      console.log('Dynamic fare options generated:', dynamicFareOptions.value)
+    } else {
+      fareRuleError.value = response.data.head.message || 'Failed to fetch fare rules'
+      console.error('Fare rule API error:', fareRuleError.value)
+    }
+  } catch (error: any) {
+    fareRuleError.value = error.message || 'Error fetching fare rules'
+    console.error('Fare rule fetch error:', error)
+  } finally {
+    fareRuleLoading.value = false
+  }
+}
+
+function transformFareRuleToOptions(data: FareRuleResponse['data']): FareOption[] {
+  let baggageGroup = null;
+  if (Array.isArray(data.baggage)) {
+    if (props.leg === 'outbound') {
+      baggageGroup = data.baggage[0];
+    } else if (props.leg === 'return') {
+      baggageGroup = data.baggage.length > 1 ? data.baggage[1] : data.baggage[0];
+    } else {
+      baggageGroup = data.baggage[0];
     }
   }
-  console.log(fareRequest)
-  await flightSearchStore.fetchFareRule(fareRequest)
-  console.log(flightSearchStore.fareRule)
-  const bookingData: { tripType: string, sectors: Array<any>, fareRule: Object, pax: Object } = {
-    tripType: props.tripType,
-    sectors: flightSearchStore.selectedAirlines,
-    fareRule: flightSearchStore.fareRule,
-    pax: {
-      adt: flightSearchStore.searchP[0]['adultCount'],
-      cnn:flightSearchStore.searchP[0]['childCount'],
-      inf: 0,
+
+  const notes: { type: FareNoteType; icon: FareIconType; text: string }[] = [];
+  const passengerTypes = [...new Set(data.fareSummary.map(f => f.passengerType))];
+  for (const ptc of passengerTypes) {
+    const summary = data.fareSummary.find(s => s.passengerType === ptc);
+    const baggageInfo = baggageGroup?.passengers?.find(p => p.passengerType === ptc);
+    const rules = data.fareRuleTable.filter(r => r.passengerType === ptc);
+
+    // Baggage info
+    if (baggageInfo?.checkInData) {
+      const bag = baggageInfo.checkInData;
+      let baggageText = '';
+      if (bag.text) {
+        baggageText = `行李${summary?.passengerType === 'ADT' ? '每成人' : summary?.passengerType === 'CNN' ? '每兒童' : '每嬰兒'} ${bag.text}`;
+      } else if (bag.piece > 0) {
+        baggageText = `行李${summary?.passengerType === 'ADT' ? '每成人' : summary?.passengerType === 'CNN' ? '每兒童' : '每嬰兒'} ${bag.piece}*${bag.weight}KG`;
+      }
+      if (baggageText) {
+        notes.push({ type: 'allowed', icon: 'suitcase', text: baggageText });
+      }
+    }
+
+    // 顯示所有規則（退票、去程改期、回程改期...）
+    for (const rule of rules.slice(0, rules.length / 2)) {
+      let label = rule.type;
+      if (rule.type.includes('去程')) label = '去程改期費';
+      if (rule.type.includes('回程')) label = '回程改期費';
+      if (rule.type.includes('退票')) label = '退票費';
+      const fee = rule.before !== null ? rule.before : 0;
+      notes.push({
+        type: fee === 0 ? 'allowed' : 'permitted',
+        icon: rule.type.includes('退票') ? 'ticket' : 'calendar',
+        text: `${label}${rule.currency} ${fee.toLocaleString()}起${rule.passengerTypeDisplay ? '（' + rule.passengerTypeDisplay + '）' : ''}`
+      });
     }
   }
-  localStorage.setItem("BOOKING_DATA", JSON.stringify(bookingData))
-  router.push('/booking')
+
+  notes.push(
+    {
+      type: 'allowed',
+      icon: 'clock',
+      text: '付款後48小時出票'
+    },
+    {
+      type: 'allowed',
+      icon: 'info',
+      text: '由2至多張機票組成'
+    },
+    {
+      type: 'allowed',
+      icon: 'info',
+      text: '由海外供應商提供'
+    }
+  )
+  console.log("NOTES:", notes)
+  // 只顯示一個艙等
+  const cabinDesc = sectors.value[0]?.cabinDesc || '經濟艙';
+  // 票價以第一個 fareSummary 為主（或可加總/平均，依需求）
+  const price = data.fareSummary[0]?.price ?? 0;
+  return [{
+    id: `fare-0`,
+    cabin: cabinDesc,
+    price,
+    notes
+  }];
 }
 </script>
 
 <style scoped>
-/* .fade-scale-enter-active,
-.fade-scale-leave-active { transition: all 0.18s ease; }
-.fade-scale-enter-from,
-.fade-scale-leave-to { transform: translateY(4px) scale(0.95); } */
+/* Skeleton loading animation */
+.skel {
+  position: relative;
+  overflow: hidden;
+  background: #F5F5F5;
+}
+.skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
 </style>

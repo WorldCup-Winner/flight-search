@@ -1,4 +1,4 @@
-import { booking, flightSearch, getFareRule, LiyiFP04 } from '@/api'
+import { booking, fareRule, flightSearch, LiyiFP04 } from '@/api'
 import type { CardRow, Order, OrderResult, Sector } from '@/utils/types'
 import { defineStore } from 'pinia'
 
@@ -30,7 +30,7 @@ export const useFlightSearchStore = defineStore('flightSearch', {
         },
         async fetchFareRule(req: any) {
             try {
-                const res = await getFareRule(req)
+                const res = await fareRule(req)
                 this.fareRule = res.data.data
             } catch (err: any) {
                 this.error = err.response?.data?.message || 'FareRule Loading failed.'

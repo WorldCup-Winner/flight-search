@@ -148,6 +148,18 @@ export function formatDateToChinese(dateStr: string) {
 }
 
 
+export function formatDateWithYYYYMMDD(input: string): string {
+  if (!input) return '';
+  const digits = input.replace(/[^\d]/g, '');
+  if (digits.length === 8) {
+    return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(input)) return input;
+  if (/^\d{4}\/\d{2}\/\d{2}$/.test(input)) return input.replace(/\//g, '-');
+  return input;
+}
+
+
 export function airlineLogoFor(sec: Sector) {
   const code = sec.marketingAirlineCode || sec.operatingAirlineCode
   return resolveAirlineLogo(code)

@@ -31,10 +31,13 @@
                     <!-- Submit -->
                     <button
                         type="submit"
-                        class="w-[150px] mx-auto mt-4 bg-others-original text-white py-2 rounded-md hover:bg-others-hover transition"
-                        @click="handleSearch"
+                        :disabled="isSearching || !form.bookingId || !form.phoneNumber"
+                        class="w-[150px] mx-auto mt-4 py-2 rounded-md transition"
+                        :class="isSearching || !form.bookingId || !form.phoneNumber 
+                          ? 'bg-others-gray4 text-others-gray1 cursor-not-allowed' 
+                          : 'bg-others-original text-white hover:bg-others-hover'"
                         >
-                        查詢
+                        {{ isSearching ? '查詢中...' : '查詢' }}
                     </button>
                     <!-- Footer text -->
                     <p class="mt-8 text-xs text-others-gray1 leading-relaxed">
@@ -48,10 +51,13 @@
 <script setup lang="ts">
 import { ref, defineProps, defineEmits } from "vue";
 import { useRouter } from "vue-router"
+import { useToast } from "vue-toastification"
 
 import PhoneField from '@/components/ui/PhoneField.vue'
+import { LiyiFP02, LiyiFP04 } from "@/api";
 
 const router = useRouter()
+const toast = useToast()
 
 const props = defineProps<{
   open: boolean;
@@ -72,10 +78,70 @@ const form = ref({
     phoneNumber: ''
 })
 
-const handleSearch = () => {
-  console.log('Search with:', form.value)
-  // Your login logic here
-  close()
-  router.push('/booking-search-result')
+const isSearching = ref(false)
+const searchError = ref('')
+
+const handleSearch = async () => {
+  try {
+    isSearching.value = true
+    searchError.value = ''
+    
+    console.log('Searching order with:', form.value)
+    
+    const fp04Response = await LiyiFP04({
+        PAR01: form.value.bookingId,
+        PAR02: form.value.phoneNumber,
+        from_ip: '',
+        from_url: window.location.href
+    })
+    
+    console.log('FP04 Response:', fp04Response.data)
+    
+    if (fp04Response.data.status != 1) {
+      searchError.value = fp04Response.data.msg || '查無此訂單或手機號碼不符'
+      toast.error(searchError.value)
+      return
+    }
+    
+    // 取得 UNIQ_ID
+    const { RET01: orderNumber, RET02: uniqId, RET03: passengerSeq } = fp04Response.data
+    
+    console.log('Order found:', { orderNumber, uniqId, passengerSeq })
+    
+    // 第二步：呼叫 FP02 取得訂單詳細內容
+    const fp02Response = await LiyiFP02({
+        PAR01: orderNumber,
+        PAR02: uniqId,
+        PAR03: passengerSeq || '',
+        from_ip: '',
+        from_url: window.location.href
+    })
+    
+    console.log('FP02 Response:', fp02Response.data)
+    
+    if (fp02Response.data.status != 1) {
+      searchError.value = fp02Response.data.msg || '無法取得訂單詳細資料'
+      toast.error(searchError.value)
+      return
+    }
+    
+    // 關閉彈窗
+    close()
+    
+    // 導向訂單查詢結果頁面，並傳遞訂單資料
+    router.push({
+      name: 'booking-search-result',
+      state: {
+        orderData: fp02Response.data
+      }
+    })
+    
+  } catch (error: any) {
+    console.error('Search order error:', error)
+    searchError.value = error.response?.data?.msg || '查詢失敗，請稍後再試'
+    toast.error(searchError.value)
+  } finally {
+    isSearching.value = false
+  }
 }
 </script>

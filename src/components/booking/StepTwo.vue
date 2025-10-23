@@ -4,27 +4,23 @@
             <div class="col-span-12 md:col-span-9 w-full items-center justify-between">
                 <div class="relative mt-[0px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] w-full">
                     <div v-if="!loading">
-                        <div v-if="bookingData.tripType == 'roundtrip'" class="w-ful flex items-center gap-2 bg-white text-others-gray7 text-[17px] rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-4 font-bold">
-                            <span>{{ bookingData.sectors[0][0]['departureCityName'] }}</span>
-                            <img src="@/assets/imgs/arrow-both.svg" />
-                            <span>{{ bookingData.sectors[0][bookingData.sectors[0].length - 1]['arrivalCityName'] }}</span>
-                        </div>
-                        <div v-else-if="bookingData.tripType == 'oneway'" class="w-ful flex items-center gap-2 bg-white text-others-gray7 text-[17px] rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-4 font-bold">
-                            <span>{{ bookingData.sectors[0][0]['departureCityName'] }}</span>
-                            <img src="@/assets/imgs/arrow-right.svg" />
-                            <span>{{ bookingData.sectors[0][bookingData.sectors[0].length - 1]['arrivalCityName'] }}</span>
+                        <div class="w-ful flex items-center gap-2 bg-white text-others-gray7 text-[17px] rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-4 font-bold">
+                            <span>{{ bookingStore.searchParams?.departureCity || '出發地' }}</span>
+                            <img v-if="bookingStore.isRoundTrip" src="@/assets/imgs/arrow-both.svg" />
+                            <img v-else src="@/assets/imgs/arrow-right.svg" />
+                            <span>{{ bookingStore.searchParams?.arrivalCity || '目的地' }}</span>
                         </div>
                     </div>
                     <div v-else>
                         Loading...
                     </div>
                     <div class="px-20 py-10">
-                        <div class="relative w-full">
+                        <div v-if="bookingStore.outboundSegment" class="relative w-full mb-10">
                             <div class="space-x-10">
                                 <span class="px-5 py-3 rounded-[15px] rounded-br-none text-white bg-others-original">去程</span>
-                                <span class="text-others-gray7 text-[15px]">{{ formatDateToChinese(bookingData.sectors[0]?.[0]?.departureDate) }} 週三 飛行時間 {{ toDuration(bookingData.sectors[0]?.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}</span>
+                                <span class="text-others-gray7 text-[15px]">{{ formatDateToChinese(bookingStore.outboundSegment.sectors[0]?.departureDate) }} 週三 飛行時間 {{ toDuration(bookingStore.outboundSegment.sectors.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}</span>
                             </div>
-                            <div v-for="(sec, i) in bookingData.sectors[0]" :key="i" class="ml-12">
+                            <div v-for="(sec, i) in bookingStore.outboundSegment.sectors" :key="i" class="ml-12">
                             <div class="grid grid-cols-12 gap-4 py-8 px-8">
                                 <!-- left dates/times -->
                                 <div class="flex items-center flex-col justify-between col-span-12 md:col-span-3">
@@ -70,7 +66,7 @@
                             </div>
 
                             <!-- transfer chips (between legs) -->
-                            <div v-if="i < bookingData.sectors[0].length - 1 && sec.transfer" class="mx-10 my-2 text-others-gray1">
+                            <div v-if="i < bookingStore.outboundSegment.sectors.length - 1 && sec.transfer" class="mx-10 my-2 text-others-gray1">
                                 <div class="inline-flex items-center gap-2 bg-tb-body rounded-[10px] px-6 py-2">
                                 <span>於{{ sec.transfer.transferCity }}轉機</span>
                                 <span class="text-others-gray3">|</span>
@@ -84,12 +80,12 @@
                             </div>
                             </div>
                         </div>
-                        <div v-if="bookingData.tripType != 'oneway'" class="relative w-full mt-10">
+                        <div v-if="bookingStore.returnSegment" class="relative w-full mb-10">
                             <div class="space-x-10">
-                                <span class="px-5 py-3 rounded-[15px] rounded-br-none text-white bg-others-original">回程</span>
-                                <span class="text-others-gray7 text-[15px]">{{ formatDateToChinese(bookingData.sectors[1]?.[bookingData.sectors[1].length - 1]?.arrivalDate) }} 週三 飛行時間 {{ toDuration(bookingData.sectors[1]?.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}</span>
+                                <span class="px-5 py-3 rounded-[15px] rounded-br-none text-white bg-others-original">去程</span>
+                                <span class="text-others-gray7 text-[15px]">{{ formatDateToChinese(bookingStore.returnSegment.sectors[0]?.departureDate) }} 週三 飛行時間 {{ toDuration(bookingStore.returnSegment.sectors.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}</span>
                             </div>
-                            <div v-for="(sec, i) in bookingData.sectors[1]" :key="i" class="ml-12">
+                            <div v-for="(sec, i) in bookingStore.returnSegment.sectors" :key="i" class="ml-12">
                             <div class="grid grid-cols-12 gap-4 py-8 px-8">
                                 <!-- left dates/times -->
                                 <div class="flex items-center flex-col justify-between col-span-12 md:col-span-3">
@@ -118,11 +114,11 @@
                                 </div>
                                 <div class="flex items-center gap-2 text-others-gray1">
                                     <img
-                                    v-if="airlineLogoFor(sec)"
-                                    :src="airlineLogoFor(sec)"
-                                    :alt="sec.marketingAirlineName || sec.operatingAirlineName"
-                                    class="w-5 h-5 object-contain"
-                                    @error="onImageError"
+                                        v-if="airlineLogoFor(sec)"
+                                        :src="airlineLogoFor(sec)"
+                                        :alt="sec.marketingAirlineName || sec.operatingAirlineName"
+                                        class="w-5 h-5 object-contain"
+                                        @error="onImageError"
                                     />
                                     <span class="font-semibold">{{ sec.flightNo || sec.operatingFlightNo }}</span>
                                     <span class="text-others-gray1">{{ sec.marketingAirlineName || sec.operatingAirlineName }}</span>
@@ -135,7 +131,7 @@
                             </div>
 
                             <!-- transfer chips (between legs) -->
-                            <div v-if="i < bookingData.sectors[0].length - 1 && sec.transfer" class="mx-10 my-2 text-others-gray1">
+                            <div v-if="i < bookingStore.returnSegment.sectors.length - 1 && sec.transfer" class="mx-10 my-2 text-others-gray1">
                                 <div class="inline-flex items-center gap-2 bg-tb-body rounded-[10px] px-6 py-2">
                                 <span>於{{ sec.transfer.transferCity }}轉機</span>
                                 <span class="text-others-gray3">|</span>
@@ -151,20 +147,20 @@
                         </div>
                     </div>
                     <div
-                        v-if="departure.fareOptions != undefined"
+                        v-if="bookingStore.selectedFare"
                         class="relative grid grid-cols-12 gap-4 p-5 border-b last:border-b-0 border-others-gray3 bg-tb-body">
                         <div class="col-span-12 md:col-span-3 text-others-gray1 font-bold flex items-center justify-center">
-                            {{ departure.fareOptions[0].cabin }}
+                            {{ bookingStore.selectedFare.cabin }}
                         </div>
                         <ul class="col-span-12 md:col-span-9 space-y-2">
-                            <li v-for="(n, i) in departure.fareOptions[0].notes" :key="i" class="flex items-center gap-2 text-others-gray1">
+                            <li v-for="(n, i) in bookingStore.selectedFare.notes" :key="i" class="flex items-center gap-2 text-others-gray1">
                                 <img :src="noteIcon(n.type, n.icon)" />
                                 <span class="text-[14px]">
                                 {{ n.text }}
                                 </span>
                             </li>
                         </ul>
-                        <button class="absolute top-[150px] right-[40px] w-[200px] h-[40px] text-white bg-others-original rounded-[10px] text-[14px] cursor-pointer" @click="openBaggageInfoAndFeeRule">行李資訊及票價規定</button>
+                        <button class="absolute top-[120px] right-[40px] w-[200px] h-[40px] text-white bg-others-original rounded-[10px] text-[14px] cursor-pointer" @click="openBaggageInfoAndFeeRule">行李資訊及票價規定</button>
                     </div>
                 </div>
                 <div class="relative mt-[20px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-16 py-8 w-full">
@@ -267,21 +263,21 @@
                     <div class="grid grid-cols-12 justify-between gap-x-5 items-center text-others-gray1 pt-8">
                         <div class="relative grid-cols-12 md:col-span-4 mb-4">
                             <label class="block mb-1 text-others-gray1">聯絡人姓名</label>
-                            <input
-                                v-model= "contact.name "
+                            <input 
+                                v-model="contactName"
                                 type="text" 
                                 placeholder="必填"
                                 class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                         </div>
                         <div class="relative grid-cols-12 md:col-span-4 mb-4">
                             <label class="block mb-1 text-others-gray1">聯絡手機</label>
-                            <PhoneField v-model="contact.phone" v-model:countryCode="contact.code" :show-eye="false" />
+                            <PhoneField v-model="phoneNumber" :countryCode="code" :show-eye="false" />
                         </div>
                         <div class="relative grid-cols-12 md:col-span-4 mb-4">
                             <label class="block mb-1 text-others-gray1">聯絡email</label>
                             <input 
+                                v-model="contactEmail"
                                 type="text" 
-                                v-model= "contact.email"
                                 placeholder="必填"
                                 class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                         </div>
@@ -301,7 +297,7 @@
                                     type="radio"
                                     name="receipt"
                                     :value="false"
-                                    v-model="receiptInfo.isNeedReceipt"
+                                    v-model="isReceipt"
                                     />
                                 <label
                                     for="receipt-no"
@@ -319,7 +315,7 @@
                                     type="radio"
                                     name="receipt"
                                     :value="true"
-                                    v-model="receiptInfo.isNeedReceipt"
+                                    v-model="isReceipt"
                                     />
                                 <label
                                     for="receipt-yes"
@@ -332,21 +328,21 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="receiptInfo.isNeedReceipt">
+                    <div v-if="isReceipt">
                         <div class="grid grid-cols-12 justify-between gap-x-5 items-center text-others-gray1 pt-4">
                             <div class="relative grid-cols-12 md:col-span-6 mb-4">
                                 <label class="block mb-1 text-others-gray1">公司名稱</label>
                                 <input 
+                                    v-model="companyName"
                                     type="text" 
-                                    v-model="receiptInfo.receiptTitle"
                                     placeholder="請填公司全名"
                                     class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                             </div>
                             <div class="relative grid-cols-12 md:col-span-6 mb-4">
                                 <label class="block mb-1 text-others-gray1">統一編號</label>
                                 <input 
+                                    v-model="taxId"
                                     type="text" 
-                                    v-model="receiptInfo.uniformNumber"
                                     placeholder="請填統一編號"
                                     class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                             </div>
@@ -361,7 +357,7 @@
                                         type="radio"
                                         name="summary"
                                         :value="false"
-                                        v-model="receiptInfo.isNeedFlightList"
+                                        v-model="isSummary"
                                         />
                                     <label
                                         for="summary-no"
@@ -369,7 +365,7 @@
                                                 bg-divider-soft text-primary-gold transition-color duration-200
                                                 before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
                                                 peer-checked:before:bg-others-original peer-checked:before:border-none">
-                                        列出航班資訊
+                                    列出航班資訊
                                     </label>
                                 </div>
                                 <div class="relative">
@@ -379,7 +375,7 @@
                                         type="radio"
                                         name="summary"
                                         :value="true"
-                                        v-model="receiptInfo.isNeedFlightList"
+                                        v-model="isSummary"
                                         />
                                     <label
                                         for="summary-yes"
@@ -387,7 +383,7 @@
                                                 bg-divider-soft text-primary-gold transition duration-200
                                                 before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
                                                 peer-checked:before:bg-others-original peer-checked:before:border-none">
-                                        僅開立「機票款」三個字
+                                    僅開立「機票款」三個字
                                     </label>
                                 </div>
                             </div>
@@ -407,7 +403,7 @@
                                     type="radio"
                                     name="special-need"
                                     :value="false"
-                                    v-model="assistanceInfo.isNeedAssistance"
+                                    v-model="isSpecialNeed"
                                     />
                                 <label
                                     for="special-need-no"
@@ -425,7 +421,7 @@
                                     type="radio"
                                     name="special-need"
                                     :value="true"
-                                    v-model="assistanceInfo.isNeedAssistance"
+                                    v-model="isSpecialNeed"
                                     />
                                 <label
                                     for="special-need-yes"
@@ -438,10 +434,10 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="assistanceInfo.isNeedAssistance">
+                    <div v-if="isSpecialNeed">
                         <textarea  
+                            v-model="specialNeedsText"
                             placeholder="需求內容"
-                            v-model="assistanceInfo.description"
                             class="w-full h-[80px] mt-4 px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                     </div>
                 </div>
@@ -452,12 +448,12 @@
                     <div class="flex items-baseline justify-between text-primary-gold font-semibold">
                         <span>{{ titleLabel }}</span>
                         <div class="flex items-end">
-                            {{ currency }} {{ formatPrice(total) }}
+                            {{ currency }} {{ formatPrice(effectiveTotal) }}
                         </div>
                     </div>
                     <!-- Line items -->
                     <div
-                        v-for="(line, idx) in lines"
+                        v-for="(line, idx) in effectiveLines"
                         :key="idx"
                         class="flex justify-between text-others-gray1"
                         >
@@ -475,7 +471,7 @@
                         <div class="flex items-end font-bold text-others-original">
                             <div class="text-[12px] pr-1">{{ currency }}</div>
                             <div class="text-[24px] leading-none">
-                                {{ formatPrice(total) }}
+                                {{ formatPrice(effectiveTotal) }}
                             </div>
                         </div>
                     </div>
@@ -506,7 +502,7 @@
                 <button
                     class="mt-6 w-full rounded-[10px] bg-others-original py-3 font-semibold text-white hover:bg-others-hover disabled:opacity-30 disabled:cursor-not-allowed"
                     :disabled="!isAgreedToTheTerms"
-                    @click="isWakeUp = true"
+                    @click="emitSubmitTest"
                     >
                     送出訂單
                 </button>
@@ -524,7 +520,7 @@
         </transition>
     </div>
     <Transition name="fade">
-        <WakeUp v-if="isWakeUp" @button-clicked="handleSendButtonClick" />
+        <WakeUp v-if="isWakeUp" v-model:step="step" />
     </Transition>
     <Transition name="fade">
         <BookingInstruction :open="isOpenBookingInstruction" @close="isOpenBookingInstruction = false" />
@@ -532,10 +528,25 @@
     <Transition name="fade">
         <BaggageInfoAndFeeRule :open="sharedValue.isOpenBaggageInfoAndFeeRule" @close="sharedValue.isOpenBaggageInfoAndFeeRule = false" />
     </Transition>
+    <Transition name="fade">
+        <div v-if="bookingError" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" @click.self="bookingError = null">
+            <div class="flex flex-col items-center justify-center w-[400px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-16 py-8">
+                <img src="@/assets/imgs/alert-price-change.png" class="w-20 h-20 mb-4" />
+                <h3 class="text-others-gray1 text-h3 md:text-h3-d mb-2">訂單提交失敗</h3>
+                <p class="text-others-gray1 text-center mb-6">{{ bookingError }}</p>
+                <button
+                  class="mt-6 px-4 py-1 w-[93px] h-[40px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition"
+                  @click="bookingError = null"
+                >
+                  確認
+                </button>
+            </div>
+        </div>
+    </Transition>
 </template>
 <script setup lang="ts">
 import { provide, computed, onBeforeUnmount, ref, onMounted, watch } from 'vue'
-import { airlineLogoFor, formatDate, formatDateToChinese, formatPrice, makeDirect, noteIcon, onImageError, toDuration } from '@/utils'
+import { airlineLogoFor, formatDate, formatDateToChinese, formatDateWithYYYYMMDD, formatPrice, makeDirect, noteIcon, onImageError, toDuration } from '@/utils'
 
 import Airline_1 from '@/assets/imgs/airlines/TK.png'
 
@@ -547,19 +558,21 @@ import BaggageInfoAndFeeRule from '@/components/ui/BaggageInfoAndFeeRule.vue'
 
 import PhoneField from '../ui/PhoneField.vue'
 import DatePicker from '../ui/DatePicker.vue'
-import { useAuthStore } from '@/stores/auth'
-import { storeToRefs } from 'pinia'
-import type { AssistanceInfo, Contact, Itinerary, ItinerarySector, Passenger, ReceiptInfo, Sector } from '@/utils/types'
+import type { BookingRequestViewModel, Sector } from '@/utils/types'
 import { useFlightSearchStore } from '@/stores/flightSearch'
-import { flightSearch } from '@/api'
+import { useBookingStore } from '@/stores/booking'
+import { booking } from '@/api'
 
-// Same type as grandparent
+const bookingStore = useBookingStore()
+
 interface SharedData {
-  isOpenBaggageInfoAndFeeRule: boolean
+  isOpenBaggageInfoAndFeeRule: boolean,
+  fareRuleData?: any
 }
 
 const sharedValue = ref<SharedData>({
-  isOpenBaggageInfoAndFeeRule: false
+  isOpenBaggageInfoAndFeeRule: false,
+  fareRuleData: bookingStore.fareRuleData || undefined,
 })
 
 function updateValue(val: SharedData) {
@@ -567,7 +580,10 @@ function updateValue(val: SharedData) {
 }
 
 function openBaggageInfoAndFeeRule() {
-  updateValue?.({ isOpenBaggageInfoAndFeeRule: true})
+    updateValue?.({
+        isOpenBaggageInfoAndFeeRule: true,
+        fareRuleData: bookingStore.fareRuleData
+    })
 }
 
 const isDatePickerOpen = ref(false)
@@ -575,8 +591,6 @@ const startDate = ref<any>(new Date())
 const activeInputEl = ref<HTMLElement | null>(null)
 const activeDateField = ref<{ passenger?: any; field: string } | null>(null)
 const popoverStyle = ref<Record<string, string>>({})
-
-
 
 function toggleDatePicker(event: FocusEvent, passenger?: any, field: string = 'outbound') {
   activeInputEl.value = event.target as HTMLElement
@@ -648,19 +662,29 @@ const props = defineProps({
     },
 })
 
-const authStore = useAuthStore()
-const flightSearchStore = useFlightSearchStore()
 const step = defineModel<number>('step')
 
-const { bookingData } = storeToRefs(authStore)
 const activeDialog = ref(null)
 
+const isReceipt = ref(false)
+const isSummary = ref(false)
+const isSpecialNeed = ref(false)
+const isOpenWakeUp = ref(false)
 const isOpenBookingInstruction = ref(false)
+const isAgreedToTheTerms = ref(false)
+const isWakeUp = ref(false)
+const bookingError = ref<string | null>(null)
 
+const code  = ref('+886')
+const phoneNumber  = ref('')
 
-const departure = ref<any>(
-    makeDirect('JAL', '加加航空', Airline_1, '06:45', '11:00', 195, 5799, { fare: true }),
-)
+const contactName = ref('')
+const contactEmail = ref('')
+
+const companyName = ref('')
+const taxId = ref('')
+
+const specialNeedsText = ref('')
 
 const openDialog = (type: any) => { activeDialog.value = type }
 const closeDialog = () => { activeDialog.value = null }
@@ -673,179 +697,442 @@ const emit = defineEmits<{
     }): void
 }>()
 
-const isAgreedToTheTerms = ref(false)
-const isWakeUp = ref(false)
-
 const total:any = computed(() => {
     return props.lines.reduce((sum: number, l: Line) => sum + (Number(l.amount) * (Number(l.qty ?? 1))), 0)
 })
 const currency = computed(() => props.currency ?? 'TWD')
-function createPassenger(type:string): Passenger {
-  return {
-    id: '',
-    type,
-    lastName: '',
-    firstName: '',
-    gender: '',
-    birthDate: new Date(),
-    birthDateText: '',
-    nationality: ''
-  }
-}
 
-const passengers = ref<Passenger[]>([])
-
-const contact = ref<Contact>({
-    name: '',
-    code:'+886',
-    phone: '',
-    email: ''
-})
-
-const receiptInfo = ref<ReceiptInfo>({
-  isNeedReceipt: false,
-  receiptTitle: '',
-  uniformNumber: '',
-  isNeedFlightList: false
-})
-const assistanceInfo = ref<AssistanceInfo>({
-  isNeedAssistance: false,
-  description: ''
-})
+const passengers = ref<any[]>([])
 
 const loading = ref(true)
 onMounted(async () => {
-    await authStore.getBookingData()
+    await bookingStore.getBookingData()
     loading.value = false
-    
-    
 })
-function convertToItineraries(sectorGroups: Array<Array<Sector>>): Array<Itinerary> {
-  return sectorGroups.map((sectors, itineraryIndex) => {
-    const itinerarySectors: ItinerarySector[] = sectors.map((sector, sectorIndex) => ({
-      order: sectorIndex + 1,
-      departureAirportCode: sector.departureAirportCode,
-      arrivalAirportCode: sector.arrivalAirportCode,
-      departureDate: sector.departureDate,
-      departureTime: sector.departureTime,
-      arrivalDate: sector.arrivalDate,
-      arrivalTime: sector.arrivalTime,
-      marketingAirlineCode: sector.marketingAirlineCode,
-      flightNo: sector.flightNo,
-      bookingClass: sector.bookingClass,
-    }));
 
-    return {
-      order: itineraryIndex + 1,
-      departureAirportCode: sectors[0].departureAirportCode,
-      arrivalAirportCode: sectors[sectors.length - 1].arrivalAirportCode,
-      sectors: itinerarySectors,
-    };
-  });
-}
-
-function handleSendButtonClick(payload: boolean) {
-    console.log('Button clicked in child! Payload:', bookingData.value);
-    console.log(convertToItineraries(bookingData.value.sectors));
-    console.log( passengers.value);
-    console.log( contact.value);
-    console.log( receiptInfo.value);
-    
-    console.log(assistanceInfo.value);
-    const sampleData = {
-    "itineraries": [
-        {
-            "order": 1,
-            "departureAirportCode": "TPE",
-            "arrivalAirportCode": "HKG",
-            "sectors": [
-                {
-                    "order": 1,
-                    "departureAirportCode": "TPE",
-                    "arrivalAirportCode": "HKG",
-                    "departureDate": "2025-12-10",
-                    "departureTime": "07:15",
-                    "arrivalDate": "2025-12-10",
-                    "arrivalTime": "09:15",
-                    "marketingAirlineCode": "CI",
-                    "flightNo": "CI601",
-                    "bookingClass": "M"
-                }
-            ]
-        }
-    ],
-    "passengers": [
-        {
-            "firstName": "Reyeaa",
-            "lastName": "Farroww",
-            "gender": 0,
-            "dateOfBirth": "1985-05-01",
-            "nationality": "TW",
-            "passengerType": 0,
-            "documentType": 0,
-            "documentNumber": "EJ1234567",
-            "documentExpiryDate": "2028-05-01",
-            "mobileNumberCountryCode": "+886",
-            "mobileNumber": "2222222222",
-            "email": "reyes@example.com",
-            "isTheOrderer": true,
-            "mainlandTravelPermitNumber": "11111111",
-            "mainlandTravelPermitExpiryDate": "2028-12-01",
-            "mealPreference": "",
-            "frequentFlyerNumber": "",
-            "frequentFlyerAirline": "",
-            "specialStatus": ""
-        }
-    ],
-    "contactInfo": {
-        "firstNameOfContactPerson": "Reyeaa",
-        "lastNameOfContactPerson": "Farroww",
-        "genderOfContactPerson": 0,
-        "mobileNumberCountryCode": "+886",
-        "contactMobileNumber": "2222222222",
-        "contactEmail": "reyes@example.com",
-        "orderMethod": 0,
-        "registrationIdType": 0,
-        "registrationIdNumber": "Z123556767",
-        "registrationPassword": "",
-        "mobileVerificationId": "",
-        "memberId": "",
-        "lineId": "",
-        "preferredContactMethod": 1,
-        "assignedLocationCode": "",
-        "assignedConsultantId": ""
-    },
-    "receiptInfo": {
-        "isNeedReceipt": false,
-        "receiptTitle": "",
-        "uniformNumber": "",
-        "isNeedFlightList": false
-    },
-    "assistanceInfo": {
-        "isNeedAssistance": false,
-        "description": ""
-    },
-    "isAgreedToTheTerms": true
-}
-    flightSearchStore.fetchOrder(sampleData)
-    step.value = 3
-}
-watch(
-  bookingData,
-  (newVal, oldVal) => {
-   passengers.value = [
-    ...Array(newVal.pax.adt || 0).fill(0).map(() => createPassenger('adult')),
-    ...Array(newVal.pax.cnn || 0).fill(0).map(() => createPassenger('child'))
+const realLines = computed(() => {
+  const fareSummary = bookingStore.fareRuleData?.fareSummary
+  if (!fareSummary || fareSummary.length === 0) {
+    return [
+      { label: '成人票價', amount: 0, qty: bookingStore.searchParams?.adults || 1 },
+      { label: '稅與費用', amount: 0, qty: 1 }
     ]
-  },
-  { deep: true }
-)
+  }
+
+  const lines: Line[] = []
+  fareSummary.forEach(summary => {
+    const passengerType = summary.passengerType
+    const qty = passengerType === 'ADT' ? (bookingStore.searchParams?.adults || 1) : 
+               passengerType === 'CNN' ? (bookingStore.searchParams?.children || 0) : 
+               passengerType === 'INF' ? (bookingStore.searchParams?.infants || 0) : 1
+
+    if (qty > 0) {
+      lines.push({
+        label: `${passengerType === 'ADT' ? '成人' : passengerType === 'CNN' ? '兒童' : '嬰兒'}票價`,
+        amount: summary.price,
+        qty: qty
+      })
+
+      if (summary.taxAmount > 0) {
+        lines.push({
+          label: `稅與費用`,
+          amount: summary.taxAmount,
+          qty: qty
+        })
+      }
+    }
+  })
+
+  return lines
+})
+
+const effectiveLines = computed(() => {
+  return realLines.value.length > 0 && realLines.value.some(line => line.amount > 0) ? realLines.value : props.lines
+})
+
+const effectiveTotal = computed(() => {
+  return effectiveLines.value.reduce((sum: number, l: Line) => sum + (Number(l.amount) * (Number(l.qty ?? 1))), 0)
+})
+
+
+function emitSubmitTest() {
+
+    const bookingData: BookingRequestViewModel = {
+        itineraries: [
+            {
+                order: 1,
+                departureAirportCode: "TPE",
+                arrivalAirportCode: "HKG",
+                sectors: [
+                    {
+                        order: 1,
+                        departureAirportCode: "TPE",
+                        arrivalAirportCode: "HKG",
+                        departureDate: "2025-12-10",
+                        departureTime: "07:15",
+                        arrivalDate: "2025-12-10",
+                        arrivalTime: "09:15",
+                        marketingAirlineCode: "CX",
+                        flightNo: "CX479",
+                        bookingClass: "M"
+                    }
+                ]
+            }
+        ],
+        passengers: [
+            {
+                firstName: "Reyeaa",
+                lastName: "Farroww",
+                gender: 0,
+                dateOfBirth: "1985-05-01",
+                nationality: "TW",
+                passengerType: 0,
+                documentType: 0,
+                documentNumber: "EJ1234567",
+                documentExpiryDate: "2028-05-01",
+                mobileNumberCountryCode: "+886",
+                mobileNumber: "2222222222",
+                email: "reyes@example.com",
+                isTheOrderer: true,
+                mainlandTravelPermitNumber: "11111111",
+                mainlandTravelPermitExpiryDate: "2028-12-01",
+                mealPreference: "",
+                frequentFlyerNumber: "",
+                frequentFlyerAirline: "",
+                specialStatus: ""
+            }
+        ],
+        contactInfo: {
+            firstNameOfContactPerson: "Reyeaa",
+            lastNameOfContactPerson: "Farroww",
+            genderOfContactPerson: 0,
+            mobileNumberCountryCode: "+886",
+            contactMobileNumber: "2222222222",
+            contactEmail: "reyes@example.com",
+            orderMethod: 0,
+            registrationIdType: 0,
+            registrationIdNumber: "Z123556767",
+            registrationPassword: "",
+            mobileVerificationId: "",
+            memberId: "",
+            lineId: "",
+            preferredContactMethod: 1,
+            assignedLocationCode: "",
+            assignedConsultantId: ""
+        },
+        receiptInfo: {
+            isNeedReceipt: false,
+            receiptTitle: "",
+            uniformNumber: "",
+            isNeedFlightList: false
+        },
+        assistanceInfo: {
+            isNeedAssistance: false,
+            description: ""
+        },
+        isAgreedToTheTerms: true
+    }
+
+  // 呼叫 booking API
+  booking(bookingData)
+    .then(response => {
+      if (response.data.head.code === 0) {
+        console.log('Booking successful:', response.data);
+        
+        bookingStore.setBookingResult({
+          bookingData: response.data.data,
+          itineraries: bookingData.itineraries,
+          passengers: bookingData.passengers
+        });
+        
+        step.value = 3; // Proceed to payment
+      } else {
+        console.error('Booking API error:', response.data.head.message);
+        bookingError.value = response.data.head.message || '訂單提交失敗，請檢查您的資料。';
+      }
+    })
+    .catch(error => {
+      console.error('Booking request failed:', error);
+      let errorMessage = '訂單提交失敗，請稍後再試';
+      if (error.response?.data?.head?.message) {
+        errorMessage = error.response.data.head.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      bookingError.value = errorMessage;
+    })
+}
+
+function emitSubmit() {
+    console.log("TermAgreement: ", isAgreedToTheTerms.value)
+    console.log("contactName: ", contactName.value, contactEmail.value, phoneNumber.value)
+    console.log("isReceipt", isReceipt.value, companyName.value, taxId.value)
+    console.log("isSpecialNeed", isSpecialNeed.value, specialNeedsText.value.trim())
+    console.log("Passenger: ", passengers.value)
+  if (!isAgreedToTheTerms.value) {
+    bookingError.value = '請先閱讀並同意訂購須知';
+    return
+    }
+  
+  if (!contactName.value || !contactEmail.value || !phoneNumber.value) {
+    bookingError.value = '請填寫完整的聯絡人資訊';
+    return
+    }
+  
+  if (isReceipt.value && (!companyName.value || !taxId.value)) {
+    bookingError.value = '請填寫完整的發票資訊';
+    return
+  }
+
+  if (isSpecialNeed.value && !specialNeedsText.value.trim()) {
+    bookingError.value = '請描述您的特殊需求';
+    return
+    }
+  
+  const incompletePassengers = passengers.value.filter(p => 
+    !p.lastName.trim() || 
+    !p.firstName.trim() || 
+    !p.birthDateText.trim() ||
+    !p.documentNumber.trim() ||
+    !p.documentExpiryDateText.trim()
+  )
+  if (incompletePassengers.length > 0) {
+    bookingError.value = '請填寫完整的乘客資訊，包含證件號碼與效期';
+    return
+  }
+
+    const bookingData: BookingRequestViewModel = {
+        itineraries: [] as any[],
+
+        passengers: passengers.value.map((p, index) => {
+            const birthDate = new Date(p.birthDate);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return {
+                order: index + 1,  // 乘客順序從 1 開始
+                firstName: p.firstName,
+                lastName: p.lastName,
+                gender: p.gender === 'male' ? 0 : 1, // 0 = male, 1 = female
+                dateOfBirth: formatDateWithYYYYMMDD(p.birthDateText),
+                nationality: p.nationality || 'TW',
+                passengerType: age >= 12 ? 0 : 1, // 0 for adult (12+), 1 for child
+                documentType: p.documentType,
+                documentNumber: p.documentNumber,
+                documentExpiryDate: formatDateWithYYYYMMDD(p.documentExpiryDateText),
+                mobileNumberCountryCode: code.value,
+                mobileNumber: phoneNumber.value,
+                email: contactEmail.value,
+                isTheOrderer: index === 0,
+                mainlandTravelPermitNumber: "11111111",
+                mainlandTravelPermitExpiryDate: "2028-12-01",
+                mealPreference: '',
+                frequentFlyerNumber: '',
+                frequentFlyerAirline: '',
+                specialStatus: p.passengerType === 'INF' ? 'INF' : null
+            }
+        }),
+
+        contactInfo: {
+            firstNameOfContactPerson: contactName.value.split(' ')[0] || contactName.value,
+            lastNameOfContactPerson: contactName.value.split(' ').slice(1).join(' ') || '',
+            genderOfContactPerson: 0, // 0 = male, 1 = female
+            mobileNumberCountryCode: code.value,
+            contactMobileNumber: phoneNumber.value,
+            contactEmail: contactEmail.value,
+            orderMethod: 0,
+            registrationIdType: 0,  // 0 = 護照
+            registrationIdNumber: "Z123556767",  // 參考 sample data
+            registrationPassword: '',
+            mobileVerificationId: '',
+            memberId: '',
+            lineId: '',
+            preferredContactMethod: 1,  // 1 = email
+            assignedLocationCode: '',
+            assignedConsultantId: ''
+        },
+
+        receiptInfo: isReceipt.value ? {
+            isNeedReceipt: true,
+            receiptTitle: companyName.value,
+            uniformNumber: taxId.value,
+            isNeedFlightList: isSummary.value
+        } : {
+            isNeedReceipt: false,
+            receiptTitle: '',
+            uniformNumber: '',
+            isNeedFlightList: false
+        },
+
+        assistanceInfo: isSpecialNeed.value ? {
+            isNeedAssistance: true,
+            description: specialNeedsText.value
+        } : {
+            isNeedAssistance: false,
+            description: ''
+        },
+
+        isAgreedToTheTerms: isAgreedToTheTerms.value
+  }
+
+  let itineraryOrder = 1
+
+  if (bookingStore.outboundSegment && bookingStore.outboundSegment.sectors && bookingStore.outboundSegment.sectors.length > 0) {
+    const outboundItinerary = {
+      order: itineraryOrder++,
+      departureAirportCode: bookingStore.outboundSegment.header.departureAirportCode,
+      arrivalAirportCode: bookingStore.outboundSegment.header.arrivalAirportCode,
+      sectors: bookingStore.outboundSegment.sectors.map((sector: any, index: number) => ({
+        order: index + 1,
+        departureAirportCode: sector.departureAirportCode,
+        arrivalAirportCode: sector.arrivalAirportCode,
+        departureDate: formatDateToChinese(sector.departureDate),
+        departureTime: sector.departureTime,
+        arrivalDate: formatDateToChinese(sector.arrivalDate),
+        arrivalTime: sector.arrivalTime,
+        marketingAirlineCode: sector.marketingAirlineCode,
+        flightNo: sector.flightNo,
+        bookingClass: sector.bookingClass || 'Y'
+      }))
+    }
+    bookingData.itineraries.push(outboundItinerary)
+  }
+
+  if (bookingStore.returnSegment && bookingStore.returnSegment.sectors && bookingStore.returnSegment.sectors.length > 0) {
+    const returnItinerary = {
+      order: itineraryOrder++,
+      departureAirportCode: bookingStore.returnSegment.header.departureAirportCode,
+      arrivalAirportCode: bookingStore.returnSegment.header.arrivalAirportCode,
+      sectors: bookingStore.returnSegment.sectors.map((sector: any, index: number) => ({
+        order: index + 1,
+        departureAirportCode: sector.departureAirportCode,
+        arrivalAirportCode: sector.arrivalAirportCode,
+        departureDate: formatDateToChinese(sector.departureDate),
+        departureTime: sector.departureTime,
+        arrivalDate: formatDateToChinese(sector.arrivalDate),
+        arrivalTime: sector.arrivalTime,
+        marketingAirlineCode: sector.marketingAirlineCode,
+        flightNo: sector.flightNo,
+        bookingClass: sector.bookingClass || 'Y'
+      }))
+    }
+    bookingData.itineraries.push(returnItinerary)
+  }
+
+  console.log('Submitting booking data:', bookingData)
+
+  // 呼叫 booking API
+  booking(bookingData)
+    .then(response => {
+      if (response.data.head.code === 0) {
+        console.log('Booking successful:', response.data);
+        
+        // 儲存訂票結果到 store
+        // response.data.data 包含: pnrCode, orderNumber, totalAmount, orderUniqId, details[]
+        bookingStore.setBookingResult({
+          bookingData: response.data.data,  // API 回應中的 data 欄位
+          itineraries: bookingData.itineraries,
+          passengers: bookingData.passengers
+        });
+        
+        step.value = 3; // Proceed to payment
+      } else {
+        console.error('Booking API error:', response.data.head.message);
+        bookingError.value = response.data.head.message || '訂單提交失敗，請檢查您的資料。';
+      }
+    })
+    .catch(error => {
+      console.error('Booking request failed:', error);
+      let errorMessage = '訂單提交失敗，請稍後再試';
+      if (error.response?.data?.head?.message) {
+        errorMessage = error.response.data.head.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      bookingError.value = errorMessage;
+    })
+}
+
 watch(
-  assistanceInfo ,
-  (newVal, oldVal) => {
-   console.log(newVal)
+  () => bookingStore.searchParams,
+  (params) => {
+    const list: any[] = []
+    
+    if (!params || (params.adults === 0 && params.children === 0 && params.infants === 0)) {
+      passengers.value = [
+        { 
+          id: '1', type: 'adult', passengerType: 'ADT', lastName: '', firstName: '', gender: 'male', birthDate: null, birthDateText: '', nationality: 'TW'
+        , documentType: 0, documentNumber: '22222222', documentExpiryDate: '2035-12-31', documentExpiryDateText: '2035-12-31' 
+      }
+      ]
+      return
+    }
+    
+    let id = 1
+    
+    // 成人 (ADT)
+    for (let i = 0; i < (params.adults || 0); i++) {
+      list.push({
+        id: String(id++),
+        type: 'adult',
+        passengerType: 'ADT',
+        lastName: '',
+        firstName: '',
+        gender: 'male',
+        birthDate: null,
+        birthDateText: '',
+        nationality: 'TW',
+        documentType: 0,
+        documentNumber: '22222222',
+        documentExpiryDate: '2035-12-31',
+        documentExpiryDateText: '2035-12-31'
+      })
+    }
+    
+    // 兒童 (CHD)
+    for (let i = 0; i < (params.children || 0); i++) {
+      list.push({
+        id: String(id++),
+        type: 'child',
+        passengerType: 'CHD',
+        lastName: '',
+        firstName: '',
+        gender: 'male',
+        birthDate: null,
+        birthDateText: '',
+        nationality: 'TW',
+        documentType: 0,
+        documentNumber: '22222222',
+        documentExpiryDate: '2035-12-31',
+        documentExpiryDateText: '2035-12-31'
+      })
+    }
+    
+    // 嬰兒 (INF)
+    for (let i = 0; i < (params.infants || 0); i++) {
+      list.push({
+        id: String(id++),
+        type: 'infant',
+        passengerType: 'INF',
+        lastName: '',
+        firstName: '',
+        gender: 'male',
+        birthDate: null,
+        birthDateText: '',
+        nationality: 'TW',
+        documentType: 0,
+        documentNumber: '22222222',
+        documentExpiryDate: '2035-12-31',
+        documentExpiryDateText: '2035-12-31'
+      })
+    }
+    
+    passengers.value = list
   },
-  { deep: true }
+  { immediate: true, deep: true }
 )
 
 window.scrollTo({

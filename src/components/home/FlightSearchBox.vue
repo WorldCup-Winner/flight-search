@@ -39,7 +39,15 @@
         <RecommendedTrips />
       </div>
       <SearchResultLoading v-else-if="flightSearchStore.loading === 'loading'" v-model="state" :rows="11" :speed="1300" />
-      <ResultsMain v-else-if="flightSearchStore.loading === 'success'" :data="flightSearchStore.data" :tripType="activeTab" />
+      <ResultsMain 
+        v-else-if="flightSearchStore.loading === 'success'" 
+        :data="flightSearchStore.data" 
+        :tripType="activeTab"
+        :searchRequest="currentSearchRequest"
+        :currentSegmentIndex="currentSegmentIndex"
+        :selectedSegments="selectedSegments"
+        @searchNextSegment="handleSearchNextSegment"
+      />
     </div>
     
     <Transition name="fade">
@@ -66,28 +74,56 @@ import { useAirlineStore } from '@/stores/airline'
 // Store
 const flightSearchStore = useFlightSearchStore()
 const airlineStore = useAirlineStore()
-
 const activeTab = ref('roundtrip')
-
 const state = ref('default') // "default" | "loading" | "result"
+const currentSearchRequest = ref<any>(null)
+const currentSegmentIndex = ref(0)
+const selectedSegments = ref<any[]>([])
 
 interface SharedData {
   isOpenBaggageInfoAndFeeRule?: boolean,
-  isSearch?: boolean
+  isSearch?: boolean,
+  fareRuleData?: any,
 }
 
-const sharedValue = inject<{ isOpenBaggageInfoAndFeeRule: boolean; isSearch: boolean }>('sharedValue')
+const sharedValue = inject<{ isOpenBaggageInfoAndFeeRule: boolean; isSearch: boolean; fareRuleData?: any }>('sharedValue')
 const updateValue = inject<(val: SharedData) => void>('updateValue')
 
 function handleSearchFlight(payload: any) {
   console.log('handleSearchFlight:', payload)
+  currentSearchRequest.value = payload
+  currentSegmentIndex.value = 0 // Reset to first segment
+  selectedSegments.value = [] // Clear selected segments for new search
   flightSearchStore.fetchFlightSearch(payload)
   airlineStore.fetchAirlineAlliance()
-  flightSearchStore.addSearchP(payload)
   
   updateValue?.({ isSearch: true })
 }
 
+function handleSearchNextSegment(payload: { selectedRefNumbers: number[]; selectedSegments?: any[] }) {
+  console.log('handleSearchNextSegment:', payload)
+  
+  // Store selected segments if provided
+  if (payload.selectedSegments && payload.selectedSegments.length > 0) {
+    selectedSegments.value = payload.selectedSegments
+    console.log('Selected segments stored in FlightSearchBox:', selectedSegments.value)
+  }
+  
+  if (currentSearchRequest.value) {
+    // Update the search request with selectedRefNumbers
+    const updatedRequest = {
+      ...currentSearchRequest.value,
+      selectedRefNumbers: payload.selectedRefNumbers
+    }
+    
+    // Increment segment index
+    currentSegmentIndex.value += 1
+    
+    console.log('Fetching next segment with:', updatedRequest)
+    console.log('Current segment index:', currentSegmentIndex.value)
+    flightSearchStore.fetchFlightSearch(updatedRequest)
+  }
+}
 </script>
 <style scoped>
 /* subtle entrance for the small modal */

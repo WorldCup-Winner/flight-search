@@ -13,13 +13,13 @@ import BookingProcessBar from '@/components/booking/BookingProcessBar.vue'
 import StepTwo from '@/components/booking/StepTwo.vue'
 import StepThree from '@/components/booking/StepThree.vue'
 import StepFour from '@/components/booking/StepFour.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useBookingStore } from '@/stores/booking'
 
 const step = ref(2)
-const authStore = useAuthStore()
+const bookingStore = useBookingStore()
 
 onUnmounted(() => {
-  authStore.removeBookingData() 
+  bookingStore.clearBookingData() 
 })
 
 // With options for smooth scrolling

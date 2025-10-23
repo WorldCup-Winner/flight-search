@@ -1,5 +1,4 @@
-import { getAirlineAlliance, getAirlines, getFareRule } from '@/api'
-import type { Airline } from '@/utils/types'
+import { getAirlineAlliance, getAirlines } from '@/api'
 import { defineStore } from 'pinia'
 
 export const useAirlineStore = defineStore('airline', {

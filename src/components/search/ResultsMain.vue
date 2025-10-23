@@ -17,10 +17,10 @@
       <section class="col-span-12 md:col-span-9">
         <!-- HEADER STRIP -->
         <div class="mb-4 bg-none">
-          <div class="relative rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] mb-4" :class="[ outboundOrReturn === 'outbound' ? 'bg-primary-gold2' : 'bg-others-gray4' ]">
+          <div class="relative rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] mb-4" :class="[ currentLeg === 'outbound' ? 'bg-primary-gold2' : 'bg-others-gray4' ]">
             <!-- Left orange tab -->
             <div class="absolute inset-y-0 left-0 w-28 bg-others-original text-white grid place-items-center rounded-l-[10px]">
-              <span class="text-[22px]">{{ outboundOrReturn === 'outbound' ? '去程' : '回程' }}</span>
+              <span class="text-[22px]">{{ segmentTitle }}</span>
             </div>
 
             <div class="pl-48 pr-6 py-5 text-white">
@@ -137,35 +137,22 @@
         
         <!-- RESULTS LIST -->
         <div v-if="shownFlights.length >= 1" class="space-y-4 relative isolate">
-          <TransitionGroup 
-              v-if="outboundOrReturn === 'outbound'"
-              appear>
+          <TransitionGroup appear>
             <FlightResultCard
               v-for="(it, i) in shownFlights" :key="it.refNumber"
               v-bind="it"
               :style="{ transitionDelay: i * 100 + 'ms' }"
-              :leg="outboundOrReturn"
+              :leg="currentLeg"
               :trip-type="tripType"
               :price-from="displayPrice(it)"
               :tax-mode="taxMode"
-              :round-trip-included="true"
+              :round-trip-included="tripType === 'roundtrip'"
+              :adult-count="searchRequest?.adultCount ?? 1"
+              :child-count="searchRequest?.childCount ?? 0"
+              :baby-count="searchRequest?.babyCount ?? 0"
+              :previous-segments="props.selectedSegments"
               currency="TWD"
-              @purchase="onPurchase"
-            />
-          </TransitionGroup>
-          <TransitionGroup
-              v-if="outboundOrReturn === 'return'"
-              appear>
-            <FlightResultCard
-              v-for="(it, i) in shownFlights" :key="it.refNumber"
-              v-bind="it"
-              :style="{ transitionDelay: i * 100 + 'ms' }"
-              :leg="outboundOrReturn"
-              :trip-type="tripType"
-              :price-from="displayPrice(it)"
-              :tax-mode="taxMode"
-              :round-trip-included="true"
-              currency="TWD"
+              @select="handleSelect"
               @purchase="onPurchase"
             />
           </TransitionGroup>
@@ -197,14 +184,17 @@ import FilterSideBar from '@/components/search/FilterSideBar.vue'
 import SorryNoData from '@/components/ui/SorryNoData.vue'
 import { useAirlineStore } from '@/stores/airline'
 import { useFlightSearchStore } from '@/stores/flightSearch'
+import { useBookingStore } from '@/stores/booking'
 
 const airlineStore = useAirlineStore()
-const flightSearchStore = useFlightSearchStore()
 
 // ---------- Props ----------
 const props = defineProps<{
   data: CardRow[],
-  tripType: string
+  tripType: string,
+  searchRequest?: any,
+  currentSegmentIndex?: number,
+  selectedSegments?: any[]
 }>()
 
 // ---------- Header context (derived from props.data) ----------
@@ -225,10 +215,38 @@ const destination = computed(() => ({
 
 const tripType = computed(() => props.tripType);
 
-const outboundOrReturn = computed(() => { 
-  if (flightSearchStore.searchP.length == 1) return 'outbound'
-  else return 'return'
+const currentLeg = computed<'outbound' | 'return'>(() => {
+  const segmentIndex = props.currentSegmentIndex ?? 0
+  
+  if (props.tripType === 'roundtrip') {
+    return segmentIndex === 0 ? 'outbound' : 'return'
+  } else if (props.tripType === 'multi') {
+    const totalSegments = props.searchRequest?.flightSegments?.length ?? 1
+    return segmentIndex < totalSegments - 1 ? 'outbound' : 'return'
+  } else {
+    return 'return'
+  }
 })
+
+// Generate segment title
+const segmentTitle = computed(() => {
+  const segmentIndex = props.currentSegmentIndex ?? 0
+  
+  if (props.tripType === 'roundtrip') {
+    return segmentIndex === 0 ? '去程' : '回程'
+  } else if (props.tripType === 'multi') {
+    return `行程${segmentIndex + 1}`
+  } else {
+    return '去程'
+  }
+})
+
+const selectedRefNumbers = ref<number[]>([])
+const accumulatedSegments = ref<any[]>([...(props.selectedSegments ?? [])])
+
+const emit = defineEmits<{
+  (e: 'searchNextSegment', payload: { selectedRefNumbers: number[]; selectedSegments: any[] }): void
+}>()
 
 // ---------- Sidebar data (derived from props.data) ----------
 type OptionItem = { id: string; name: string; price: number }
@@ -290,10 +308,7 @@ const stopsPricing = computed(() => {
 
 // ---------- Router / handlers ----------
 const router = useRouter()
-function onPurchase(payload: any) {
-  console.log('purchase', payload)
-  router.push('/booking')
-}
+const bookingStore = useBookingStore()
 
 // ---------- Filters (from sidebar) ----------
 const filters = reactive<{
@@ -315,6 +330,108 @@ const filters = reactive<{
   departTime: [0, 1439],
   arriveTime: [0, 1439]
 })
+
+const handleSelect = (payload: any) => {
+  console.log('HandleSelect:', payload)
+  
+  // Step 1: For non-final segments (outbound in round trip, or non-last in multi-trip)
+  // Add the selected refNumber and trigger next search
+  if (payload.refNumber !== undefined) {
+    selectedRefNumbers.value.push(payload.refNumber)
+    
+    // Store the selected flight segments for later use in fare-rule API
+    if (payload.sectors && payload.sectors.length > 0) {
+      accumulatedSegments.value.push(payload)
+      console.log('Selected segments accumulated:', accumulatedSegments.value)
+    }
+    
+    // Emit to parent to trigger next flight search with updated selectedRefNumbers and segments
+    emit('searchNextSegment', { 
+      selectedRefNumbers: selectedRefNumbers.value,
+      selectedSegments: accumulatedSegments.value
+    })
+  }
+}
+
+
+function onPurchase(payload: any) {
+  console.log('purchase', payload)
+  
+  const { fare, refNumber, fareRuleData } = payload
+  
+  const currentFlight = props.data.find(flight => flight.refNumber === refNumber)
+  if (!currentFlight) {
+    console.error('Flight not found:', refNumber)
+    return
+  }
+  
+  const stopsCount = (currentFlight.sectors?.length || 1) - 1
+  
+  const currentSegment = {
+    refNumber: refNumber,
+    sectors: currentFlight.sectors || [],
+    totalMinutes: currentFlight.sectors?.reduce((sum, s) => sum + (s.durationMinutes || 0), 0) || currentFlight.durationMinutes || 0,
+    stopsCount: stopsCount,
+    totalPrice: currentFlight.price || 0,
+    currency: 'TWD',
+    roundTripIncluded: tripType.value === 'roundtrip',
+    header: {
+      departureTime: currentFlight.departureTime || '',
+      arrivalTime: currentFlight.arrivalTime || '',
+      departureAirportCode: currentFlight.departureAirportCode || currentFlight.sectors?.[0]?.departureCityCode || '',
+      arrivalAirportCode: currentFlight.arrivalAirportCode || currentFlight.sectors?.slice(-1)?.[0]?.arrivalCityCode || '',
+      departureTerminal: currentFlight.departureTerminal || currentFlight.sectors?.[0]?.departureTerminal,
+      arrivalTerminal: currentFlight.arrivalTerminal || currentFlight.sectors?.slice(-1)?.[0]?.arrivalTerminal,
+    },
+  }
+  
+  const segmentIndex = props.currentSegmentIndex ?? 0
+  const isReturnSegment = tripType.value === 'roundtrip' && segmentIndex === 1
+  
+  // 設定航段資訊
+  if (isReturnSegment) {
+    bookingStore.setReturnSegment(currentSegment)
+    if (props.selectedSegments && props.selectedSegments.length > 0) {
+      const outboundData = props.selectedSegments[0]
+      bookingStore.setOutboundSegment({
+        refNumber: outboundData.refNumber,
+        sectors: outboundData.sectors || [],
+        totalMinutes: outboundData.sectors?.reduce((sum: number, s: Sector) => sum + (s.durationMinutes || 0), 0) || outboundData.totalMinutes || 0,
+        stopsCount: outboundData.stopsCount || 0,
+        totalPrice: outboundData.totalPrice || 0,
+        currency: outboundData.currency || 'TWD',
+        roundTripIncluded: outboundData.roundTripIncluded || false,
+        header: outboundData.header || {},
+      })
+    }
+  } else {
+    bookingStore.setOutboundSegment(currentSegment)
+  }
+  
+  bookingStore.setSelectedFare(fare)
+  
+  if (fareRuleData) {
+    bookingStore.setFareRuleData(fareRuleData)
+  }
+  
+  if (props.searchRequest) {
+    bookingStore.setSearchParams({
+      tripType: tripType.value as any,
+      departureCity: origin.value.name,
+      arrivalCity: destination.value.name,
+      departureCityCode: origin.value.code,
+      arrivalCityCode: destination.value.code,
+      departureDate: props.searchRequest.departureDate || props.searchRequest.slices?.[0]?.departureDate || dateText.value,
+      returnDate: props.searchRequest.flightSegments?.[0]?.returnDate || props.searchRequest.returnDate || props.searchRequest.slices?.[1]?.departureDate || undefined,
+      adults: props.searchRequest.adults || props.searchRequest.adultCount || props.searchRequest.passengers?.ADT || 1,
+      children: props.searchRequest.children || props.searchRequest.childCount || props.searchRequest.passengers?.CHD || 0,
+      infants: props.searchRequest.infants || props.searchRequest.babyCount || props.searchRequest.passengers?.INF || 0,
+    })
+  }
+  
+  localStorage.setItem("BOOKING_DATA", JSON.stringify(bookingStore))
+  router.push('/booking')
+}
 
 function onFiltersChange(v: any) { Object.assign(filters, v) }
 
