@@ -415,7 +415,7 @@ function onPurchase(payload: any) {
     })
   }
   
-  localStorage.setItem("BOOKING_DATA", JSON.stringify(bookingStore))
+  localStorage.setItem("BOOKING_DATA", JSON.stringify(bookingStore.$state))
   router.push('/booking')
 }
 
