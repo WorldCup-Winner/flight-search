@@ -5,37 +5,30 @@
             <h2 class="text-others-gray1 text-[26px]">訂單查詢</h2>
             <div class="bg-white mt-6 rounded-[10px] border-[2px] px-8 py-4 w-full">
                 <h2 class="font-semibold text-primary-gold">訂單狀況</h2>
-                <div v-if="orderResult.msg_code == null" class="text-others-gra">
-                    加载中
+                <div class="space-x-4 mt-4">
+                    <span class="text-green-600 text-[22px] font-bold">付款完成</span>
+                    <span class="text-others-gray7">感謝您的訂購，客服人員將為您開票，並於開票完成後寄送電子機票email給您。</span>
+                    <!-- <span class="text-text-error text-[22px] font-bold">待付款</span> -->
+                    <!-- <span class="text-others-gray7">為保留機位及票價，請於付款期限內完成付款，逾期訂單將自動取消並釋出機位。</span> -->
                 </div>
-                <div v-else>
-                    <div v-if="orderResult.msg_code == '10'" class="space-x-4 mt-4">
-                        <span class="text-green-600 text-[22px] font-bold">{{ '付款完成' }}</span>
-                        <span class="text-others-gray7">感謝您的訂購，客服人員將為您開票，並於開票完成後寄送電子機票email給您。</span>
-                    </div>
-                    <div v-else class="space-x-4 mt-4">
-                        <span class="text-red-600 text-[22px] font-bold">{{ '待付款' }}</span>
-                        <span class="text-others-gray7">為保留機位及票價，請於付款期限內完成付款，逾期訂單將自動取消並釋出機位。</span>
-                    </div>
-                    
-                    <div class="flex flex-row items-center justify-between">
-                        <div>
-                            <div class="space-x-4 mt-2">
-                                <span class="text-others-gray7">應付金額</span>
-                                <span class="text-others-gray7 text-[18px] font-bold">{{ formatPrice(total) }}</span>
-                            </div>
-                            <div class="space-x-4 mt-2">
-                                <span class="text-others-gray7">訂單編號</span>
-                                <span class="text-others-gray7 text-[18px] font-bold">{{ orderResult.RET01 }}</span>
-                            </div>
+                <div class="flex flex-row items-center justify-between">
+                    <div>
+                        <div class="space-x-4 mt-2">
+                            <span class="text-others-gray7">應付金額</span>
+                            <span class="text-others-gray7 text-[18px] font-bold">{{ formatPrice(total) }}</span>
                         </div>
-                        <div>
-                            <button
-                                class="px-4 py-1 w-[200px] h-[60px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition"
-                                >
-                                立即付款
-                            </button>
+                        <div class="space-x-4 mt-2">
+                            <span class="text-others-gray7">訂單編號</span>
+                            <span class="text-others-gray7 text-[18px] font-bold">{{ orderData?.FPA01 }}</span>
                         </div>
+                    </div>
+                    <div>
+                        <button
+                            class="px-4 py-1 w-[200px] h-[60px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition"
+                            @click="showPaymentDialog = true"
+                            >
+                            立即付款
+                        </button>
                     </div>
                 </div>
             </div>
@@ -55,23 +48,23 @@
                     </tr>
                     </thead>
                     <tbody class="divide-y">
-                    <tr v-for="(f, i) in flights" :key="i" class="bg-white border-2 border-t-none">
-                        <td class="px-4 py-3 align-top">
-                        <div class="font-medium text-others-gray1">{{ f.departTime }}</div>
-                        <div class="text-others-gray1">{{ f.departAirport }}</div>
-                        </td>
-                        <td class="px-4 py-3 align-top">
-                        <div class="font-medium text-others-gray1">{{ f.arriveTime }}</div>
-                        <div class="text-others-gray1">{{ f.arriveAirport }}</div>
-                        </td>
-                        <td class="px-4 py-3 align-top">
-                        <div class="font-medium text-others-gray1">{{ f.flight }}</div>
-                        <div class="text-others-gray1">{{ f.cabin }}</div>
-                        </td>
-                        <td class="px-4 py-3">
-                        <span class="text-others-gray1">{{ f.status }}</span>
-                        </td>
-                    </tr>
+                        <tr v-for="(f, i) in flights" :key="i" class="bg-white border-2 border-t-none">
+                            <td class="px-4 py-3 align-top">
+                            <div class="font-medium text-others-gray1">{{ f.departureTime }}</div>
+                            <div class="text-others-gray1">{{ f.departureAirportName }}</div>
+                            </td>
+                            <td class="px-4 py-3 align-top">
+                            <div class="font-medium text-others-gray1">{{ f.arrivalTime }}</div>
+                            <div class="text-others-gray1">{{ f.arrivalAirportName }}</div>
+                            </td>
+                            <td class="px-4 py-3 align-top">
+                            <div class="font-medium text-others-gray1">{{ f.flight }}</div>
+                            <div class="text-others-gray1">{{ f.cabin }}</div>
+                            </td>
+                            <td class="px-4 py-3">
+                            <span class="text-others-gray1">{{ f.status }}</span>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
                 <div class="p-4 text-xs text-others-original border-2 rounded-[10px] rounded-t-none">
@@ -148,7 +141,7 @@
                             {{ formatPrice(it.paid) }}
                         </td>
                         <td class="px-4 py-3 text-center tabular-nums text-others-gray1 font-bold border-t-2 border-b-2">
-                            {{ formatPrice(Math.max(it.fare + it.tax - it.paid, 0)) }}
+                            {{ formatPrice(Math.max(it.fare - it.paid, 0)) }}
                         </td>
                         <td class="px-4 py-3 text-center text-others-original whitespace-nowrap border-t-2 border-b-2">
                             {{ it.deadline }}
@@ -252,125 +245,171 @@
             </div>
         </div>
     </div>
+    <!-- 付款對話框 -->
+    <div v-if="showPaymentDialog" 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+         @click.self="showPaymentDialog = false">
+      <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+        <!-- 關閉按鈕 -->
+        <button
+          @click="showPaymentDialog = false"
+          class="absolute top-4 right-4 text-others-gray7 hover:text-others-gray1 text-2xl font-bold z-10"
+          aria-label="關閉">
+          ×
+        </button>
+        
+        <!-- PaymentMethodCard 組件 -->
+        <PaymentMethodCard
+          :orderNumber="orderData?.FPA01"
+          :orderUniqId="orderData?.FPA02"
+          :totalAmount="total"
+          @payment-completed="handlePaymentCompleted"
+          @close="showPaymentDialog = false" />
+      </div>
+    </div>
   </main>
 </template>
 <script setup lang="ts">
 import { reactive, computed, ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { formatPrice } from "@/utils";
-import { useFlightSearchStore } from "@/stores/flightSearch";
-import { storeToRefs } from "pinia";
+import type { Contact, Flight, Item, Receipt, SpecialCooperation } from "@/utils/types";
+import PaymentMethodCard from "@/components/booking/PaymentMethodCard.vue";
 
-const flightSearchStore = useFlightSearchStore()
+const router = useRouter()
 
-const { orderResult } = storeToRefs(flightSearchStore)
-
-type Contact = {
-    name: string;
-    number: string;
-    mail: string;
-}
-
-type Receipt = {
-    type: string;
-    name: string;
-    number: string;
-    summary: string;
-}
-
-type SpecialCooperation = {
-    type: string;
-    detail: string;
-}
-
-const flights = reactive<any[]>([
-  {
-    departureTime: "2025/09/09 12:10",
-    departureAirportName: "桃園國際機場",
-    arrivalTime: "2025/09/09 16:30",
-    arrivalAirportName: "成田機場",
-    flight: "泰國獅子航空SL394",
-    cabin: "經濟艙O",
-    status: "處理中",
-  },
-  {
-    departureTime: "2025/09/25 17:30",
-    departureAirportName: "成田機場",
-    arrivalTime: "2025/09/25 20:20",
-    arrivalAirportName: "桃園國際機場",
-    flight: "泰國獅子航空SL395",
-    cabin: "經濟艙O",
-    status: "處理中",
-  },
-]);
-
-const items = reactive<any[]>([
-  {
-    checked: true,
-    name: "LEE WEIEN - -, MR.",
-    productName: "SL/台北/東京/台北/泰國獅子航空 - TPE/NRT NRT/TPE",
-    fare: 5278,
-    tax: 3485, // adjust to match your real data
-    paid: 0,
-    deadline: "2025/8/31 14:20",
-  },
-  {
-    checked: true,
-    name: "LEE WEIEN - -, MR.",
-    productName: "SL/台北/東京/台北/泰國獅子航空 - TPE/NRT NRT/TPE",
-    fare: 5278,
-    tax: 3316,
-    paid: 0,
-    deadline: "2025/8/31 14:20",
-  },
-  {
-    checked: true,
-    name: "LEE WEIEN - -, MR.",
-    productName: "SL/台北/東京/台北/泰國獅子航空 - TPE/NRT NRT/TPE",
-    fare: 5278,
-    tax: 3316,
-    paid: 0,
-    deadline: "2025/8/31 14:20",
-  },
-]);
-
-const contacts = reactive<any[]>([
-    {
-        name: "王大同",
-        number: "0933555222",
-        mail: "wong@gmail.com"
-    }
-])
-
-const receipts = reactive<any[]>([
-    {
-        type: "是",
-        name: "中國鋼鐵股份有限公司",
-        number: "12345678",
-        summary: "僅開立「機票款」三個字"
-    }
-])
-
-const specialCooperations = reactive<any[]>([
-    {
-        type: "是",
-        detail: "內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字，內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字"
-    }
-])
-
+const showPaymentDialog = ref(false)
+const orderData = ref<any>(null)
+const flights = reactive<Flight[]>([])
+const items = reactive<Item[]>([])
+const contacts = reactive<Contact[]>([])
+const receipts = reactive<Receipt[]>([])
+const specialCooperations = reactive<SpecialCooperation[]>([])
 const passengerInfoAllChecked = ref(true)
+
+onMounted(() => {
+  const state = history.state as any
+  if (state && state.orderData) {
+    orderData.value = state.orderData
+    console.log('Order data loaded:', orderData.value)
+    processOrderData()
+  } else {
+    console.warn('No order data found in router state')
+  }
+})
+
+const processOrderData = () => {
+  if (!orderData.value) return
+  
+  flights.length = 0
+  if (orderData.value.fly_list) {
+    orderData.value.fly_list.forEach((fly: any) => {
+      flights.push({
+        departureTime: `${fly.FPD05A || ''} ${fly.FPD05B || ''}`.trim(),
+        departureAirportCode: fly.FPD07 || '',
+        departureAirportName: fly.FPD07S || '',
+        arrivalTime: `${fly.FPD06A || ''} ${fly.FPD06B || ''}`.trim(),
+        arrivalAirportCode: fly.FPD08 || '',
+        arrivalAirportName: fly.FPD08S || '',
+        flight: fly.FPD04 || '',
+        cabin: fly.FPD11S || fly.FPD11 || '',
+        status: fly.FPD15S || '處理中'
+      })
+    })
+  }
+  
+  items.length = 0
+  if (orderData.value.cust_list) {
+    orderData.value.cust_list.forEach((cust: any) => {
+      items.push({
+        checked: true,
+        name: cust.FPC05 || '',
+        productName: cust.FPC51 || '',
+        fare: parseInt(cust.FPC52) || 0,
+        tax: 0,
+        paid: parseInt(cust.FPC53) || 0,
+        deadline: formatDateTime(orderData.value.FPA55) || '2025/12/31 23:59'
+      })
+    })
+  }
+  
+  contacts.length = 0
+  if (orderData.value.FPA05S) {
+    contacts.push({
+      name: orderData.value.FPA05S,
+      number: orderData.value.FPA08 || orderData.value.FPA09 || '',
+      mail: orderData.value.FPA10 || ''
+    })
+  }
+  
+  // 處理收據資訊
+  receipts.length = 0
+  receipts.push({
+    type: orderData.value.FPA31 === 'Y' ? '是' : '否',
+    name: orderData.value.FPA33 || '',
+    number: orderData.value.FPA32 || '',
+    summary: orderData.value.FPA34 === 'A' ? '列出航班資訊' : '僅開立「機票款」三個字'
+  })
+  
+  // 處理特殊協力事項（如果有的話）
+  specialCooperations.length = 0
+  if (orderData.value.FPA41) {
+    specialCooperations.push({
+      type: '是',
+      detail: orderData.value.FPA41
+    })
+  } else {
+    specialCooperations.push({
+      type: '否',
+      detail: ''
+    })
+  }
+}
+
+// 格式化日期時間
+const formatDateTime = (dateStr: string) => {
+  if (!dateStr) return ''
+  try {
+    const date = new Date(dateStr)
+    return date.toLocaleString('zh-TW', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).replace(/\//g, '/')
+  } catch {
+    return dateStr
+  }
+}
 
 const total = computed(() =>
   items
     .filter((i) => i.checked)
-    .reduce((sum, i) => sum + i.fare + i.tax - i.paid, 0)
+    .reduce((sum, i) => sum + i.fare - i.paid, 0)
 );
 
-onMounted(() => {
-    flightSearchStore.fetchOrderResult({
-        "PAR01": "F2509301144",
-        "PAR02": "0990925925"
-    })
-})
+// 處理付款完成
+const handlePaymentCompleted = async () => {
+  // 關閉對話框
+  showPaymentDialog.value = false
+  
+  // 重新載入訂單資料
+  if (orderData.value?.FPA01 && orderData.value?.FPA02) {
+    try {
+      // 這裡可以呼叫 FP02 API 重新取得訂單資料
+      // 暫時先重新整理頁面，或顯示成功訊息
+      alert('付款處理中，請稍後查詢訂單狀態')
+      
+      // 可選：導向訂單查詢頁面或重新載入當前頁面
+      // 未來可以使用 router.push({ name: 'booking-search' }) 導向
+      console.log('Router available for future redirect:', router)
+    } catch (error) {
+      console.error('Failed to refresh order data:', error)
+    }
+  }
+}
+
 // With options for smooth scrolling
 window.scrollTo({
   top: 0,

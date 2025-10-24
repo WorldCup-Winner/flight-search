@@ -131,7 +131,7 @@
                     <transition name="fade-scale">
                         <div v-if="isDatePickerOpen" ref="datePopoverRef"
                             class="absolute left-[-24rem] top-3/4 mt-2 z-50" @click.stop>
-                            <RangeDatePicker :start="startDate" :end="endDate" :min="new Date()"
+                            <RangeDatePicker :start="startDate" :end="endDate" :min="new Date()" :max="getMaxDate()"
                                 @update:start="startDate = $event" @update:end="endDate = $event"
                                 @apply="handleDateApply" />
                         </div>
@@ -341,7 +341,7 @@ import { useAirlineStore } from '@/stores/airline'
 import { useLocationStore } from '@/stores/location'
 
 import RangeDatePicker from '@/components/ui/RangeDatePicker.vue'
-import { formatDate } from '@/utils'
+import { formatDate, getMaxDate } from '@/utils'
 
 // Stores
 const airlineStore = useAirlineStore()
@@ -434,10 +434,22 @@ function selectCabinClass(v) {
     isCabinClassOpen.value = false
 }
 
-function incrementAdults() { if (adultCount.value < 9) adultCount.value++ }
-function decrementAdults() { if (adultCount.value > 1) adultCount.value-- }
-function incrementChildren() { if (childrenCount.value < 8) childrenCount.value++ }
-function decrementChildren() { if (childrenCount.value > 0) childrenCount.value-- }
+function incrementAdults() { 
+  const totalPassengers = adultCount.value + childrenCount.value
+  if (adultCount.value < 9 && totalPassengers < 9)
+    adultCount.value++ 
+}
+function decrementAdults() {
+  if (adultCount.value > 1) adultCount.value--
+}
+function incrementChildren() { 
+  const totalPassengers = adultCount.value + childrenCount.value
+  if (childrenCount.value < 8 && totalPassengers < 9)
+    childrenCount.value++ 
+}
+function decrementChildren() {
+  if (childrenCount.value > 0) childrenCount.value--
+}
 
 function toggleDeparture() { isDepartureOpen.value = !isDepartureOpen.value }
 function toggleDestination() { isArrivalOpen.value = !isArrivalOpen.value }

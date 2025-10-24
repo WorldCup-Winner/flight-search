@@ -10,6 +10,10 @@ export function getLocations() {
     return axios.get(`${API_URL}/location`)
 }
 
+export function getNationality() {
+    return axios.get(`${API_URL}/nationality`)
+}
+
 export function flightSearch(req: any) {
     return axios.post(`${API_URL}/flight-search`, req)
 }

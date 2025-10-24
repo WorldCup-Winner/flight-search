@@ -5,9 +5,6 @@ import { defineStore } from 'pinia'
 export const useFlightSearchStore = defineStore('flightSearch', {
     state: () => ({
         data: [] as Array<any>,
-        searchP: [] as Array<any>,
-        selectedAirlines: [] as Array<Sector>,
-        tripType: 0,
         fareRule: {} as Object,
         loading: 'default',
         bookingResponse: {} as Order,
@@ -54,15 +51,6 @@ export const useFlightSearchStore = defineStore('flightSearch', {
                 this.error = err.response?.data?.message || 'LiyiFP04 Loading failed.'
                 console.log(err)
             }
-        },
-        addAirlines(airline: any) {
-            this.selectedAirlines.push(airline)
-        },
-        addSearchP(p: any) {
-            this.searchP.push(p)
-        },
-        setTripType(type: any) {
-            this.tripType = type
         }
     }
 })

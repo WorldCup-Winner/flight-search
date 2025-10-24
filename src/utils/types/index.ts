@@ -390,3 +390,44 @@ export interface AssistanceInfo {
   isNeedAssistance: boolean
   description?: string
 }
+
+export interface PaymentMethod {
+  DET01: string;        // 付款方式代碼
+  DET02: string;        // 排序 (API 回傳字串)
+  DET03: string;        // 群組一代號 (A=信用卡, B=匯款, L=LINE Pay)
+  DET03S: string;       // 群組一頁籤名稱
+  DET04: string;        // 群組二代號 (信用卡類型等)
+  DET04S: string;       // 群組二選項名稱
+  DET04D: string;       // 群組二備註
+  DET05?: string;       // 付款方式說明（選填）
+  DET06: number;        // 分期期數
+  DET07: number;        // 總金額
+  DET08: number;        // 每期金額
+  DET09?: string;       // 付款類型代碼（選填）
+  DET09S?: string;      // 付款類型說明（選填）
+}
+
+export interface PaymentGroup {
+  code: string;   // DET03 code
+  name: string;   // DET03S name
+  options: PaymentMethod[];
+}
+
+
+export type Contact = {
+  name: string;
+  number: string;
+  mail: string;
+}
+
+export type Receipt = {
+  type: string;
+  name: string;
+  number: string;
+  summary: string;
+}
+
+export type SpecialCooperation = {
+  type: string;
+  detail: string;
+}

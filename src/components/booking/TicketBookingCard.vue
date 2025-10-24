@@ -125,9 +125,8 @@ const orderNumber = computed(() => {
 });
 
 const flights = computed<Flight[]>(() => {
-  console.log(bookingStore.bookingResult)
     if (!bookingStore.bookingResult?.itineraries || bookingStore.bookingResult.itineraries.length === 0) {
-        const segments = []
+      const segments = []
         if (bookingStore.outboundSegment) {
             segments.push(...bookingStore.outboundSegment.sectors.map((sector: any) => ({
                 departureTime: `${sector.departureDate} ${sector.departureTime}`,

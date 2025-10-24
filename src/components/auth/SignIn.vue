@@ -1,7 +1,6 @@
 <template>
     <div class="flex flex-col items-center justify-center bg-white">
         <div class="bg-white rounded-t-2xl border-b-0 px-[40px] py-[30px] w-[500px] border-2 border-primary-gold">
-            <!-- Tabs -->
             <div class="flex gap-4">
                 <button @click="activeTab = 'login-member'" class="flex-1 py-2 rounded-md"
                     :class="[activeTab === 'login-member' ? 'text-white bg-primary-gold' : 'bg-others-gray4 text-others-gray1']">
@@ -16,7 +15,6 @@
         <div class="bg-white rounded-b-2xl px-[40px] py-[30px] w-[500px] border-2 border-primary-gold">
             <div v-if="activeTab === 'login-member'">
                 <form @submit.prevent="handleLogin" class="flex flex-col items-center">
-                    <!-- 身分證號 -->
                     <div class="mb-4 w-full">
                         <label class="block mb-1 text-others-gray1 text-sm">身分證號 / 外籍人士護照號碼</label>
                         <div class="relative flex items-center">
@@ -25,11 +23,9 @@
                             <button type="button" class="absolute right-2 mx-0 text-others-gray1"
                                 @click="toggleUsername">
                                 <div v-if="showUsername">
-                                    <!-- Login dialog -->
                                     <img src="@/assets/imgs/icon-eye1.svg" />
                                 </div>
                                 <div v-else>
-                                    <!-- Signup dialog -->
                                     <img src="@/assets/imgs/icon-eye2.svg" />
                                 </div>
                             </button>

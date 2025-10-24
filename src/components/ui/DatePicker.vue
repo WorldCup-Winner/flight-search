@@ -1,22 +1,57 @@
 <template>
-    <div class="bg-white rounded-2xl shadow-2xl w-[730px] max-w-[95vw] z-100">
+    <div class="relative bg-white rounded-2xl shadow-2xl w-[730px] max-w-[95vw] z-100">
         <!-- Title bar -->
-        <div class="bg-primary-gold text-white px-6 py-3 rounded-t-2xl text-[18px] font-semibold">
-            日期選擇
+        <div class="flex items-center bg-primary-gold text-white px-6 py-3 rounded-t-2xl text-[18px] font-semibold">
+            <span>日期選擇</span>
+            <button
+                class="absolute right-6 text-white hover:opacity-80 z-10"
+                @click="$emit('close')"
+                aria-label="Close"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
 
         <div class="px-6 py-5">
             <!-- Header -->
             <div class="relative mb-8 text-center text-[18px] leading-8 text-gray-500 font-semi">
-
                 <div class="grid grid-cols-2 items-center">
-                    <div class="text-center text-[18px] leading-8 font-semi text-gray-500">
-                        {{ monthLabel(currentMonth) }}
+                    <!-- Left month selector -->
+                    <div class="flex justify-center items-center space-x-2">
+                        <input
+                            type="number"
+                            v-model="editableYear"
+                            @change="updateMonth(0)"
+                            class="w-20 text-center border border-gray-300 rounded-lg px-1 py-0.5 text-gray-700"
+                        />
+                        <select
+                            v-model="editableMonth"
+                            @change="updateMonth(0)"
+                            class="border border-gray-300 rounded-lg px-1 py-0.5 text-gray-700"
+                        >
+                            <option v-for="m in 12" :key="m" :value="m - 1">{{ m }}月</option>
+                        </select>
                     </div>
-                    <div class="text-center text-[18px] leading-8 font-semi text-gray-500">
-                        {{ monthLabel1(currentMonth) }}
+
+                    <!-- Right month label (auto next month) -->
+                    <div class="flex justify-center items-center space-x-2">
+                        <input
+                            type="number"
+                            :value="rightYear"
+                            disabled
+                            class="w-20 text-center border border-gray-200 bg-gray-100 rounded-lg px-1 py-0.5 text-gray-500"
+                        />
+                        <input
+                            type="text"
+                            :value="rightMonth + 1 + '月'"
+                            disabled
+                            class="w-16 text-center border border-gray-200 bg-gray-100 rounded-lg px-1 py-0.5 text-gray-500"
+                        />
                     </div>
                 </div>
+
 
                 <button @click="shift(-1)"
                     class="w-[36px] h-[36px] absolute cursor-pointer left-0 top-1/2 -translate-y-1/2 p-1 rounded-xl bg-others-gray2 text-primary-gold hover:bg-others-gray4 transition transform scale-y-[-1]"
@@ -92,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps<{
     modelValue?: Date
@@ -103,6 +138,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'update:modelValue', v: Date): void
     (e: 'apply', v: Date): void
+    (e: 'close'): void
 }>()
 
 const selectedDate = ref<Date | null>(props.modelValue ?? null)
@@ -114,15 +150,19 @@ const currentMonth = ref(new Date(today.getFullYear(), today.getMonth(), 1))
 function shift(delta: number) {
     currentMonth.value = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() + delta, 1)
 }
-function monthLabel(d: Date) {
-    return `${d.getFullYear()}年 ${d.getMonth() + 1}月`
-}
-function monthLabel1(d: Date) {
-    if (d.getMonth() >= 11) return `${d.getFullYear()}年 1月`
-    return `${d.getFullYear()}年 ${d.getMonth() + 2}月`
-}
+
+const editableYear = ref(currentMonth.value.getFullYear())
+const editableMonth = ref(currentMonth.value.getMonth())
 const dow = ['日', '一', '二', '三', '四', '五', '六']
 
+const rightMonth = computed(() => (editableMonth.value + 1) % 12)
+const rightYear = computed(() =>
+    editableMonth.value === 11 ? editableYear.value + 1 : editableYear.value
+)
+
+function updateMonth(_: number) {
+    currentMonth.value = new Date(editableYear.value, editableMonth.value, 1)
+}
 function getGrid(month: Date) {
     const first = new Date(month.getFullYear(), month.getMonth(), 1)
     const startOffset = first.getDay()
@@ -155,4 +195,10 @@ function onPick(d: Date) {
     emit('update:modelValue', selectedDate.value)
     emit('apply', selectedDate.value)
 }
+
+watch(currentMonth, (newVal) => {
+    editableYear.value = newVal.getFullYear()
+    editableMonth.value = newVal.getMonth()
+})
+
 </script>

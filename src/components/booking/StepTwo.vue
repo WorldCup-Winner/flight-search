@@ -12,7 +12,9 @@
                         </div>
                     </div>
                     <div v-else>
-                        Loading...
+                        <div class="w-ful flex items-center gap-2 bg-white text-others-gray7 text-[17px] rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-4 font-bold">
+                            加载中...
+                        </div>
                     </div>
                     <div class="px-20 py-10">
                         <div v-if="bookingStore.outboundSegment" class="relative w-full mb-10">
@@ -22,7 +24,6 @@
                             </div>
                             <div v-for="(sec, i) in bookingStore.outboundSegment.sectors" :key="i" class="ml-12">
                             <div class="grid grid-cols-12 gap-4 py-8 px-8">
-                                <!-- left dates/times -->
                                 <div class="flex items-center flex-col justify-between col-span-12 md:col-span-3">
                                     <div class="flex flex-row items-center justify-between gap-6">
                                         <div class="text-others-gray1">{{ formatDateToChinese(sec.departureDate) }}</div>
@@ -35,14 +36,12 @@
                                     </div>
                                 </div>
 
-                                <!-- vertical line w/ dots (hidden on mobile) -->
                                 <div class="relative mx-6">
                                     <span class="absolute -left-[6px] top-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
                                     <div class="w-[3px] h-full bg-others-gray3"></div>
                                     <span class="absolute -left-[6px] bottom-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
                                 </div>
 
-                                <!-- right info -->
                                 <div class="col-span-12 md:col-span-8 space-y-2">
                                 <div class="font-bold text-others-gray7">
                                     {{ sec.departureAirportCode }}{{ sec.departureAirportName }}{{ sec.departureTerminal }}{{  sec.departureCityName }}
@@ -65,7 +64,6 @@
                                 </div>
                             </div>
 
-                            <!-- transfer chips (between legs) -->
                             <div v-if="i < bookingStore.outboundSegment.sectors.length - 1 && sec.transfer" class="mx-10 my-2 text-others-gray1">
                                 <div class="inline-flex items-center gap-2 bg-tb-body rounded-[10px] px-6 py-2">
                                 <span>於{{ sec.transfer.transferCity }}轉機</span>
@@ -82,12 +80,11 @@
                         </div>
                         <div v-if="bookingStore.returnSegment" class="relative w-full mb-10">
                             <div class="space-x-10">
-                                <span class="px-5 py-3 rounded-[15px] rounded-br-none text-white bg-others-original">去程</span>
+                                <span class="px-5 py-3 rounded-[15px] rounded-br-none text-white bg-others-original">回程</span>
                                 <span class="text-others-gray7 text-[15px]">{{ formatDateToChinese(bookingStore.returnSegment.sectors[0]?.departureDate) }} 週三 飛行時間 {{ toDuration(bookingStore.returnSegment.sectors.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}</span>
                             </div>
                             <div v-for="(sec, i) in bookingStore.returnSegment.sectors" :key="i" class="ml-12">
                             <div class="grid grid-cols-12 gap-4 py-8 px-8">
-                                <!-- left dates/times -->
                                 <div class="flex items-center flex-col justify-between col-span-12 md:col-span-3">
                                     <div class="flex flex-row items-center justify-between gap-6">
                                         <div class="text-others-gray1">{{ formatDateToChinese(sec.departureDate) }}</div>
@@ -160,7 +157,7 @@
                                 </span>
                             </li>
                         </ul>
-                        <button class="absolute top-[120px] right-[40px] w-[200px] h-[40px] text-white bg-others-original rounded-[10px] text-[14px] cursor-pointer" @click="openBaggageInfoAndFeeRule">行李資訊及票價規定</button>
+                        <button class="absolute bottom-[10px] right-[40px] w-[200px] h-[40px] text-white bg-others-original rounded-[10px] text-[14px] cursor-pointer" @click="openBaggageInfoAndFeeRule">行李資訊及票價規定</button>
                     </div>
                 </div>
                 <div class="relative mt-[20px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-16 py-8 w-full">
@@ -237,10 +234,12 @@
                                                     @click.stop
                                                     >
                                                     <DatePicker
-                                                        :modelValue="activeDateField?.passenger ? activeDateField.passenger.birthDate : startDate"
-                                                        :min="new Date()"
-                                                        @update:modelValue="handleSingleDateApply"
-                                                        @apply="handleSingleDateApply"
+                                                      :modelValue="datePickerModelValue"
+                                                      :min="datePickerMinDate"
+                                                      :max="datePickerMaxDate"
+                                                      @update:modelValue="handleSingleDateApply"
+                                                      @apply="handleSingleDateApply"
+                                                      @close="closeDatePicker"
                                                     />
                                                 </div>
                                             </teleport>
@@ -248,11 +247,33 @@
                                 </div>
                                 <div class="relative grid-cols-12 md:col-span-3 mb-4">
                                     <label class="block mb-1 text-others-gray1">國籍</label>
-                                    <input
-                                        v-model="p.nationality"
-                                        type="text"
-                                        placeholder="TW台灣"
-                                        class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
+                                    <div class="relative">
+                                        <select
+                                            v-model="p.nationality"
+                                            class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none appearance-none bg-transparent cursor-pointer"
+                                            aria-label="Nationality"
+                                        >
+                                            <option
+                                                v-for="item in nationalities"
+                                                :key="item.countryCode"
+                                                :value="item.countryCode"
+                                                >
+                                                {{ item.countryCode }}({{ item.countryNameZh }})
+                                            </option>
+                                        </select>
+
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            class="text-primary-gold pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 fill-none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        >
+                                            <path d="M18 10l-6 6-6-6" />
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -261,19 +282,27 @@
                 <div class="relative mt-[20px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-16 py-8 w-full">
                     <p class="absolute left-[40px] top-[20px] text-primary-gold font-bold">主要聯絡人</p>
                     <div class="grid grid-cols-12 justify-between gap-x-5 items-center text-others-gray1 pt-8">
-                        <div class="relative grid-cols-12 md:col-span-4 mb-4">
-                            <label class="block mb-1 text-others-gray1">聯絡人姓名</label>
+                        <div class="relative grid-cols-12 md:col-span-3 mb-4">
+                            <label class="block mb-1 text-others-gray1">聯絡人姓氏</label>
                             <input 
-                                v-model="contactName"
+                                v-model="contactFirstName"
                                 type="text" 
-                                placeholder="必填"
+                                placeholder="英文姓 例：JOHN"
                                 class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                         </div>
-                        <div class="relative grid-cols-12 md:col-span-4 mb-4">
+                        <div class="relative grid-cols-12 md:col-span-3 mb-4">
+                            <label class="block mb-1 text-others-gray1">聯絡人名字</label>
+                            <input 
+                                v-model="contactLastName"
+                                type="text" 
+                                placeholder="英文名 例：SMITH"
+                                class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
+                        </div>
+                        <div class="relative grid-cols-12 md:col-span-3 mb-4">
                             <label class="block mb-1 text-others-gray1">聯絡手機</label>
                             <PhoneField v-model="phoneNumber" :countryCode="code" :show-eye="false" />
                         </div>
-                        <div class="relative grid-cols-12 md:col-span-4 mb-4">
+                        <div class="relative grid-cols-12 md:col-span-3 mb-4">
                             <label class="block mb-1 text-others-gray1">聯絡email</label>
                             <input 
                                 v-model="contactEmail"
@@ -501,10 +530,10 @@
                 <!-- Submit button -->
                 <button
                     class="mt-6 w-full rounded-[10px] bg-others-original py-3 font-semibold text-white hover:bg-others-hover disabled:opacity-30 disabled:cursor-not-allowed"
-                    :disabled="!isAgreedToTheTerms"
-                    @click="emitSubmitTest"
+                    :disabled="!isAgreedToTheTerms || isSubmitting"
+                    @click="emitSubmit"
                     >
-                    送出訂單
+                    <span>{{ isSubmitting ? '處理中...' : '送出訂單' }}</span>
                 </button>
             </div>
         </div>
@@ -559,9 +588,8 @@ import BaggageInfoAndFeeRule from '@/components/ui/BaggageInfoAndFeeRule.vue'
 import PhoneField from '../ui/PhoneField.vue'
 import DatePicker from '../ui/DatePicker.vue'
 import type { BookingRequestViewModel, Sector } from '@/utils/types'
-import { useFlightSearchStore } from '@/stores/flightSearch'
 import { useBookingStore } from '@/stores/booking'
-import { booking } from '@/api'
+import { booking, getNationality } from '@/api'
 
 const bookingStore = useBookingStore()
 
@@ -587,10 +615,36 @@ function openBaggageInfoAndFeeRule() {
 }
 
 const isDatePickerOpen = ref(false)
+const isSubmitting = ref(false)
 const startDate = ref<any>(new Date())
 const activeInputEl = ref<HTMLElement | null>(null)
 const activeDateField = ref<{ passenger?: any; field: string } | null>(null)
 const popoverStyle = ref<Record<string, string>>({})
+
+const datePickerModelValue = computed(() => {
+  if (!activeDateField.value) return new Date();
+  if (activeDateField.value.field === 'birthDate') {
+    return activeDateField.value.passenger?.birthDate || new Date();
+  }
+  if (activeDateField.value.field === 'documentExpiryDate') {
+    return activeDateField.value.passenger?.documentExpiryDate || null;
+  }
+  return new Date();
+});
+
+const datePickerMinDate = computed(() => {
+  if (activeDateField.value?.field === 'documentExpiryDate') {
+    return new Date();
+  }
+  return undefined;
+});
+
+const datePickerMaxDate = computed(() => {
+  if (activeDateField.value?.field === 'birthDate') {
+    return new Date();
+  }
+  return undefined;
+});
 
 function toggleDatePicker(event: FocusEvent, passenger?: any, field: string = 'outbound') {
   activeInputEl.value = event.target as HTMLElement
@@ -678,7 +732,8 @@ const bookingError = ref<string | null>(null)
 const code  = ref('+886')
 const phoneNumber  = ref('')
 
-const contactName = ref('')
+const contactFirstName = ref('')
+const contactLastName = ref('')
 const contactEmail = ref('')
 
 const companyName = ref('')
@@ -697,16 +752,23 @@ const emit = defineEmits<{
     }): void
 }>()
 
-const total:any = computed(() => {
-    return props.lines.reduce((sum: number, l: Line) => sum + (Number(l.amount) * (Number(l.qty ?? 1))), 0)
-})
 const currency = computed(() => props.currency ?? 'TWD')
-
 const passengers = ref<any[]>([])
-
 const loading = ref(true)
+const nationalities = ref<Array<{
+    countryCode: string,
+    countryNameZh: string
+}>>([])
+
 onMounted(async () => {
     await bookingStore.getBookingData()
+
+    try {
+        const res = await getNationality()
+        nationalities.value = res.data.data || []
+    } catch (error) {
+        console.error('Error loading nationality list:', error)
+    }
     loading.value = false
 })
 
@@ -755,126 +817,13 @@ const effectiveTotal = computed(() => {
 })
 
 
-function emitSubmitTest() {
-
-    const bookingData: BookingRequestViewModel = {
-        itineraries: [
-            {
-                order: 1,
-                departureAirportCode: "TPE",
-                arrivalAirportCode: "HKG",
-                sectors: [
-                    {
-                        order: 1,
-                        departureAirportCode: "TPE",
-                        arrivalAirportCode: "HKG",
-                        departureDate: "2025-12-10",
-                        departureTime: "07:15",
-                        arrivalDate: "2025-12-10",
-                        arrivalTime: "09:15",
-                        marketingAirlineCode: "CX",
-                        flightNo: "CX479",
-                        bookingClass: "M"
-                    }
-                ]
-            }
-        ],
-        passengers: [
-            {
-                firstName: "Reyeaa",
-                lastName: "Farroww",
-                gender: 0,
-                dateOfBirth: "1985-05-01",
-                nationality: "TW",
-                passengerType: 0,
-                documentType: 0,
-                documentNumber: "EJ1234567",
-                documentExpiryDate: "2028-05-01",
-                mobileNumberCountryCode: "+886",
-                mobileNumber: "2222222222",
-                email: "reyes@example.com",
-                isTheOrderer: true,
-                mainlandTravelPermitNumber: "11111111",
-                mainlandTravelPermitExpiryDate: "2028-12-01",
-                mealPreference: "",
-                frequentFlyerNumber: "",
-                frequentFlyerAirline: "",
-                specialStatus: ""
-            }
-        ],
-        contactInfo: {
-            firstNameOfContactPerson: "Reyeaa",
-            lastNameOfContactPerson: "Farroww",
-            genderOfContactPerson: 0,
-            mobileNumberCountryCode: "+886",
-            contactMobileNumber: "2222222222",
-            contactEmail: "reyes@example.com",
-            orderMethod: 0,
-            registrationIdType: 0,
-            registrationIdNumber: "Z123556767",
-            registrationPassword: "",
-            mobileVerificationId: "",
-            memberId: "",
-            lineId: "",
-            preferredContactMethod: 1,
-            assignedLocationCode: "",
-            assignedConsultantId: ""
-        },
-        receiptInfo: {
-            isNeedReceipt: false,
-            receiptTitle: "",
-            uniformNumber: "",
-            isNeedFlightList: false
-        },
-        assistanceInfo: {
-            isNeedAssistance: false,
-            description: ""
-        },
-        isAgreedToTheTerms: true
-    }
-
-  // 呼叫 booking API
-  booking(bookingData)
-    .then(response => {
-      if (response.data.head.code === 0) {
-        console.log('Booking successful:', response.data);
-        
-        bookingStore.setBookingResult({
-          bookingData: response.data.data,
-          itineraries: bookingData.itineraries,
-          passengers: bookingData.passengers
-        });
-        
-        step.value = 3; // Proceed to payment
-      } else {
-        console.error('Booking API error:', response.data.head.message);
-        bookingError.value = response.data.head.message || '訂單提交失敗，請檢查您的資料。';
-      }
-    })
-    .catch(error => {
-      console.error('Booking request failed:', error);
-      let errorMessage = '訂單提交失敗，請稍後再試';
-      if (error.response?.data?.head?.message) {
-        errorMessage = error.response.data.head.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      bookingError.value = errorMessage;
-    })
-}
-
 function emitSubmit() {
-    console.log("TermAgreement: ", isAgreedToTheTerms.value)
-    console.log("contactName: ", contactName.value, contactEmail.value, phoneNumber.value)
-    console.log("isReceipt", isReceipt.value, companyName.value, taxId.value)
-    console.log("isSpecialNeed", isSpecialNeed.value, specialNeedsText.value.trim())
-    console.log("Passenger: ", passengers.value)
   if (!isAgreedToTheTerms.value) {
     bookingError.value = '請先閱讀並同意訂購須知';
     return
     }
   
-  if (!contactName.value || !contactEmail.value || !phoneNumber.value) {
+  if (!contactFirstName.value || !contactLastName.value || !contactEmail.value || !phoneNumber.value) {
     bookingError.value = '請填寫完整的聯絡人資訊';
     return
     }
@@ -899,84 +848,86 @@ function emitSubmit() {
   if (incompletePassengers.length > 0) {
     bookingError.value = '請填寫完整的乘客資訊，包含證件號碼與效期';
     return
-  }
+    }
+  
+  isSubmitting.value = true;
 
-    const bookingData: BookingRequestViewModel = {
-        itineraries: [] as any[],
+const bookingData: BookingRequestViewModel = {
+itineraries: [] as any[],
 
-        passengers: passengers.value.map((p, index) => {
-            const birthDate = new Date(p.birthDate);
-            const today = new Date();
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
-            return {
-                order: index + 1,  // 乘客順序從 1 開始
-                firstName: p.firstName,
-                lastName: p.lastName,
-                gender: p.gender === 'male' ? 0 : 1, // 0 = male, 1 = female
-                dateOfBirth: formatDateWithYYYYMMDD(p.birthDateText),
-                nationality: p.nationality || 'TW',
-                passengerType: age >= 12 ? 0 : 1, // 0 for adult (12+), 1 for child
-                documentType: p.documentType,
-                documentNumber: p.documentNumber,
-                documentExpiryDate: formatDateWithYYYYMMDD(p.documentExpiryDateText),
-                mobileNumberCountryCode: code.value,
-                mobileNumber: phoneNumber.value,
-                email: contactEmail.value,
-                isTheOrderer: index === 0,
-                mainlandTravelPermitNumber: "11111111",
-                mainlandTravelPermitExpiryDate: "2028-12-01",
-                mealPreference: '',
-                frequentFlyerNumber: '',
-                frequentFlyerAirline: '',
-                specialStatus: p.passengerType === 'INF' ? 'INF' : null
-            }
-        }),
+passengers: passengers.value.map((p, index) => {
+    const birthDate = new Date(p.birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return {
+        order: index + 1,  // 乘客順序從 1 開始
+        firstName: p.firstName,
+        lastName: p.lastName,
+        gender: p.gender === 'male' ? 0 : 1, // 0 = male, 1 = female
+        dateOfBirth: formatDateWithYYYYMMDD(p.birthDateText),
+        nationality: p.nationality || 'TW',
+        passengerType: age >= 12 ? 0 : 1, // 0 for adult (12+), 1 for child
+        documentType: p.documentType,
+        documentNumber: p.documentNumber,
+        documentExpiryDate: formatDateWithYYYYMMDD(p.documentExpiryDateText),
+        mobileNumberCountryCode: code.value,
+        mobileNumber: phoneNumber.value,
+        email: contactEmail.value,
+        isTheOrderer: index === 0,
+        mainlandTravelPermitNumber: "11111111",
+        mainlandTravelPermitExpiryDate: "2028-12-01",
+        mealPreference: '',
+        frequentFlyerNumber: '',
+        frequentFlyerAirline: '',
+        specialStatus: p.passengerType === 'INF' ? 'INF' : null
+    }
+}),
 
-        contactInfo: {
-            firstNameOfContactPerson: contactName.value.split(' ')[0] || contactName.value,
-            lastNameOfContactPerson: contactName.value.split(' ').slice(1).join(' ') || '',
-            genderOfContactPerson: 0, // 0 = male, 1 = female
-            mobileNumberCountryCode: code.value,
-            contactMobileNumber: phoneNumber.value,
-            contactEmail: contactEmail.value,
-            orderMethod: 0,
-            registrationIdType: 0,  // 0 = 護照
-            registrationIdNumber: "Z123556767",  // 參考 sample data
-            registrationPassword: '',
-            mobileVerificationId: '',
-            memberId: '',
-            lineId: '',
-            preferredContactMethod: 1,  // 1 = email
-            assignedLocationCode: '',
-            assignedConsultantId: ''
-        },
+contactInfo: {
+    firstNameOfContactPerson: contactFirstName.value,
+    lastNameOfContactPerson: contactLastName.value,
+    genderOfContactPerson: 0, // 0 = male, 1 = female
+    mobileNumberCountryCode: code.value,
+    contactMobileNumber: phoneNumber.value,
+    contactEmail: contactEmail.value,
+    orderMethod: 0,
+    registrationIdType: 0,  // 0 = 護照
+    registrationIdNumber: "Z123556767",  // 參考 sample data
+    registrationPassword: '',
+    mobileVerificationId: '',
+    memberId: '',
+    lineId: '',
+    preferredContactMethod: 1,  // 1 = email
+    assignedLocationCode: '',
+    assignedConsultantId: ''
+},
 
-        receiptInfo: isReceipt.value ? {
-            isNeedReceipt: true,
-            receiptTitle: companyName.value,
-            uniformNumber: taxId.value,
-            isNeedFlightList: isSummary.value
-        } : {
-            isNeedReceipt: false,
-            receiptTitle: '',
-            uniformNumber: '',
-            isNeedFlightList: false
-        },
+receiptInfo: isReceipt.value ? {
+    isNeedReceipt: true,
+    receiptTitle: companyName.value,
+    uniformNumber: taxId.value,
+    isNeedFlightList: isSummary.value
+} : {
+    isNeedReceipt: false,
+    receiptTitle: '',
+    uniformNumber: '',
+    isNeedFlightList: false
+},
 
-        assistanceInfo: isSpecialNeed.value ? {
-            isNeedAssistance: true,
-            description: specialNeedsText.value
-        } : {
-            isNeedAssistance: false,
-            description: ''
-        },
+assistanceInfo: isSpecialNeed.value ? {
+    isNeedAssistance: true,
+    description: specialNeedsText.value
+} : {
+    isNeedAssistance: false,
+    description: ''
+},
 
-        isAgreedToTheTerms: isAgreedToTheTerms.value
-  }
+isAgreedToTheTerms: isAgreedToTheTerms.value
+}
 
   let itineraryOrder = 1
 
@@ -985,17 +936,21 @@ function emitSubmit() {
       order: itineraryOrder++,
       departureAirportCode: bookingStore.outboundSegment.header.departureAirportCode,
       arrivalAirportCode: bookingStore.outboundSegment.header.arrivalAirportCode,
-      sectors: bookingStore.outboundSegment.sectors.map((sector: any, index: number) => ({
+      sectors: bookingStore.outboundSegment.sectors.map((sector: Sector, index: number) => ({
         order: index + 1,
         departureAirportCode: sector.departureAirportCode,
         arrivalAirportCode: sector.arrivalAirportCode,
-        departureDate: formatDateToChinese(sector.departureDate),
+        departureAirportName: sector.departureAirportName,
+        arrivalAirportName: sector.arrivalAirportName,
+        departureDate: formatDateWithYYYYMMDD(sector.departureDate),
         departureTime: sector.departureTime,
-        arrivalDate: formatDateToChinese(sector.arrivalDate),
+        arrivalDate: formatDateWithYYYYMMDD(sector.arrivalDate),
         arrivalTime: sector.arrivalTime,
         marketingAirlineCode: sector.marketingAirlineCode,
+        marketingAirlineName: sector.marketingAirlineName,
         flightNo: sector.flightNo,
-        bookingClass: sector.bookingClass || 'Y'
+        bookingClass: sector.bookingClass || 'Y',
+        cabinType: sector.cabinType
       }))
     }
     bookingData.itineraries.push(outboundItinerary)
@@ -1010,39 +965,41 @@ function emitSubmit() {
         order: index + 1,
         departureAirportCode: sector.departureAirportCode,
         arrivalAirportCode: sector.arrivalAirportCode,
-        departureDate: formatDateToChinese(sector.departureDate),
+        departureAirportName: sector.departureAirportName,
+        arrivalAirportName: sector.arrivalAirportName,
+        departureDate: formatDateWithYYYYMMDD(sector.departureDate),
         departureTime: sector.departureTime,
-        arrivalDate: formatDateToChinese(sector.arrivalDate),
+        arrivalDate: formatDateWithYYYYMMDD(sector.arrivalDate),
         arrivalTime: sector.arrivalTime,
         marketingAirlineCode: sector.marketingAirlineCode,
+        marketingAirlineName: sector.marketingAirlineName,
         flightNo: sector.flightNo,
-        bookingClass: sector.bookingClass || 'Y'
+        bookingClass: sector.bookingClass || 'Y',
+        cabinType: sector.cabinType
       }))
     }
     bookingData.itineraries.push(returnItinerary)
   }
 
-  console.log('Submitting booking data:', bookingData)
-
-  // 呼叫 booking API
   booking(bookingData)
     .then(response => {
       if (response.data.head.code === 0) {
         console.log('Booking successful:', response.data);
         
-        // 儲存訂票結果到 store
-        // response.data.data 包含: pnrCode, orderNumber, totalAmount, orderUniqId, details[]
         bookingStore.setBookingResult({
           bookingData: response.data.data,  // API 回應中的 data 欄位
           itineraries: bookingData.itineraries,
           passengers: bookingData.passengers
         });
+
+        localStorage.setItem("BOOKING_DATA", JSON.stringify(bookingStore))
         
-        step.value = 3; // Proceed to payment
+        step.value = 3
       } else {
         console.error('Booking API error:', response.data.head.message);
         bookingError.value = response.data.head.message || '訂單提交失敗，請檢查您的資料。';
       }
+    isSubmitting.value = false;
     })
     .catch(error => {
       console.error('Booking request failed:', error);
@@ -1053,6 +1010,7 @@ function emitSubmit() {
         errorMessage = error.message;
       }
       bookingError.value = errorMessage;
+        isSubmitting.value = false;
     })
 }
 

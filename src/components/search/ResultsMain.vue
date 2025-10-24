@@ -173,22 +173,20 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, watch, onMounted, onBeforeUnmount, reactive, ref } from 'vue'
+import { computed, onMounted, onBeforeUnmount, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { timeToMin, inWindow, formatDateToChinese } from '@/utils'
-import type { AirlineAlliance, CardRow, Sector } from '@/utils/types'
+import type { CardRow, Sector } from '@/utils/types'
 
 import FlightResultCard from '@/components/search/FlightResultCard.vue'
 import FilterSideBar from '@/components/search/FilterSideBar.vue'
 import SorryNoData from '@/components/ui/SorryNoData.vue'
 import { useAirlineStore } from '@/stores/airline'
-import { useFlightSearchStore } from '@/stores/flightSearch'
 import { useBookingStore } from '@/stores/booking'
 
 const airlineStore = useAirlineStore()
 
-// ---------- Props ----------
 const props = defineProps<{
   data: CardRow[],
   tripType: string,
@@ -197,10 +195,8 @@ const props = defineProps<{
   selectedSegments?: any[]
 }>()
 
-// ---------- Header context (derived from props.data) ----------
 const first = computed(() => props.data?.[0])
 const dateText = computed(() => {
-  // prefer itinerary-level date if provided, else first sector
   const d = first.value?.departureDate || first.value?.sectors?.[0]?.departureDate
   return d ? d : ''
 })
@@ -221,14 +217,13 @@ const currentLeg = computed<'outbound' | 'return'>(() => {
   if (props.tripType === 'roundtrip') {
     return segmentIndex === 0 ? 'outbound' : 'return'
   } else if (props.tripType === 'multi') {
-    const totalSegments = props.searchRequest?.flightSegments?.length ?? 1
+    const totalSegments = props.searchRequest?. flightSegments?.length ?? 1
     return segmentIndex < totalSegments - 1 ? 'outbound' : 'return'
   } else {
     return 'return'
   }
 })
 
-// Generate segment title
 const segmentTitle = computed(() => {
   const segmentIndex = props.currentSegmentIndex ?? 0
   
@@ -291,7 +286,6 @@ const arrAirports = computed<OptionItem[]>(() => {
   return Array.from(map.entries()).map(([id, v]) => ({ id, name: v.name, price: v.min }))
 })
 
-// Stops pricing (min price for direct vs one-stop+)
 const stopsPricing = computed(() => {
   let directMin = Infinity
   let oneStopMin = Infinity
@@ -306,11 +300,9 @@ const stopsPricing = computed(() => {
   }
 })
 
-// ---------- Router / handlers ----------
 const router = useRouter()
 const bookingStore = useBookingStore()
 
-// ---------- Filters (from sidebar) ----------
 const filters = reactive<{
   studentOnly: boolean
   stops: { direct: boolean; oneStop: boolean }
@@ -334,25 +326,20 @@ const filters = reactive<{
 const handleSelect = (payload: any) => {
   console.log('HandleSelect:', payload)
   
-  // Step 1: For non-final segments (outbound in round trip, or non-last in multi-trip)
-  // Add the selected refNumber and trigger next search
   if (payload.refNumber !== undefined) {
     selectedRefNumbers.value.push(payload.refNumber)
     
-    // Store the selected flight segments for later use in fare-rule API
     if (payload.sectors && payload.sectors.length > 0) {
       accumulatedSegments.value.push(payload)
       console.log('Selected segments accumulated:', accumulatedSegments.value)
     }
     
-    // Emit to parent to trigger next flight search with updated selectedRefNumbers and segments
     emit('searchNextSegment', { 
       selectedRefNumbers: selectedRefNumbers.value,
       selectedSegments: accumulatedSegments.value
     })
   }
 }
-
 
 function onPurchase(payload: any) {
   console.log('purchase', payload)
@@ -388,7 +375,6 @@ function onPurchase(payload: any) {
   const segmentIndex = props.currentSegmentIndex ?? 0
   const isReturnSegment = tripType.value === 'roundtrip' && segmentIndex === 1
   
-  // 設定航段資訊
   if (isReturnSegment) {
     bookingStore.setReturnSegment(currentSegment)
     if (props.selectedSegments && props.selectedSegments.length > 0) {

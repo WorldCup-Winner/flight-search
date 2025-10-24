@@ -129,7 +129,7 @@
             <div v-if="isDatePickerOpen" ref="datePopoverRef" class="absolute left-[-2rem] top-3/4 mt-2 z-50"
               @click.stop>
 
-              <DatePicker :modelValue="startDate" :min="new Date()" @update:modelValue="startDate = $event"
+              <DatePicker :modelValue="startDate" :min="new Date()" :max="getMaxDate()" @update:modelValue="startDate = $event"
                 @apply="handleSingleDateApply" />
             </div>
           </transition>
@@ -338,7 +338,7 @@ import { useLocationStore } from '@/stores/location'
 import { useAirlineStore } from '@/stores/airline'
 
 import DatePicker from '@/components/ui/DatePicker.vue'
-import { formatDate } from '@/utils'
+import { formatDate, getMaxDate } from '@/utils'
 
 // Stores
 const airlineStore = useAirlineStore()
@@ -431,10 +431,22 @@ function swapCities() {
     selectedDepartureCity.value = selectedArrivalCity.value
     selectedArrivalCity.value = temp
 }
-function incrementAdults() { if (adultCount.value < 9) adultCount.value++ }
-function decrementAdults() { if (adultCount.value > 1) adultCount.value-- }
-function incrementChildren() { if (childrenCount.value < 8) childrenCount.value++ }
-function decrementChildren() { if (childrenCount.value > 0) childrenCount.value-- }
+function incrementAdults() { 
+  const totalPassengers = adultCount.value + childrenCount.value
+  if (adultCount.value < 9 && totalPassengers < 9)
+    adultCount.value++ 
+}
+function decrementAdults() {
+  if (adultCount.value > 1) adultCount.value--
+}
+function incrementChildren() { 
+  const totalPassengers = adultCount.value + childrenCount.value
+  if (childrenCount.value < 8 && totalPassengers < 9)
+    childrenCount.value++ 
+}
+function decrementChildren() {
+  if (childrenCount.value > 0) childrenCount.value--
+}
 function toggleDeparture() { isDepartureOpen.value = !isDepartureOpen.value }
 function toggleArrival() { isArrivalOpen.value = !isArrivalOpen.value }
 function togglePassengers() { isPassengersOpen.value = !isPassengersOpen.value }

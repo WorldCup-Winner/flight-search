@@ -129,7 +129,7 @@
             <transition name="fade-scale">
               <div v-if="openDateIndex === idx" :ref="setDatePopoverRef(idx)"
                 class="absolute lg:left-auto lg:right-6 left-0 top-full mt-2 z-50" @click.stop>
-                <DatePicker :modelValue="seg.departureDate" :min="new Date()"
+                <DatePicker :modelValue="seg.departureDate" :min="new Date()" :max="getMaxDate()"
                   @update:modelValue="d => (segments[idx].departureDate = d)" @apply="d => onDateApply(idx, d)" />
               </div>
             </transition>
@@ -357,7 +357,7 @@ import { useLocationStore } from '@/stores/location'
 import { useAirlineStore } from '@/stores/airline'
 
 import DatePicker from '@/components/ui/DatePicker.vue'
-import { formatDate } from '@/utils'
+import { formatDate, getMaxDate } from '@/utils'
 
 // Stores
 const airlineStore = useAirlineStore()
@@ -425,10 +425,22 @@ function toggleAirline() {
   if (isAirlineOpen.value) airlineSearchTerm.value = ''
 }
 
-function incrementAdults() { if (adultCount.value < 9) adultCount.value++ }
-function decrementAdults() { if (adultCount.value > 1) adultCount.value-- }
-function incrementChildren() { if (childrenCount.value < 8) childrenCount.value++ }
-function decrementChildren() { if (childrenCount.value > 0) childrenCount.value-- }
+function incrementAdults() { 
+  const totalPassengers = adultCount.value + childrenCount.value
+  if (adultCount.value < 9 && totalPassengers < 9)
+    adultCount.value++ 
+}
+function decrementAdults() {
+  if (adultCount.value > 1) adultCount.value--
+}
+function incrementChildren() { 
+  const totalPassengers = adultCount.value + childrenCount.value
+  if (childrenCount.value < 8 && totalPassengers < 9)
+    childrenCount.value++ 
+}
+function decrementChildren() {
+  if (childrenCount.value > 0) childrenCount.value--
+}
 
 function addSegment() {
   if (!canAdd.value) return
