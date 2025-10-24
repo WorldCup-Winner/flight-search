@@ -474,7 +474,7 @@ const handleNextStep = async () => {
       return
     }
     
-    localStorage.setItem('paymentInfo', JSON.stringify({
+    localStorage.setItem('PAYMENT_INFO', JSON.stringify({
       paymentOrderId: response.data.PEP01,     // 付款單號
       paymentNumber: response.data.PEP02,      // 付款序號
       amount: response.data.PEP05,             // 付款金額

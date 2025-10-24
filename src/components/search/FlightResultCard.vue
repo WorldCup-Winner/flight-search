@@ -509,10 +509,6 @@ async function fetchFareRule() {
     return
   }
 
-  console.log('Starting fetchFareRule...')
-  console.log('Current flight sectors:', props.sectors)
-  console.log('Previous segments:', props.previousSegments)
-  
   fareRuleLoading.value = true
   fareRuleError.value = null
 
@@ -522,7 +518,6 @@ async function fetchFareRule() {
       ...(props.previousSegments?.flatMap(seg => seg.sectors) ?? []),
       ...props.sectors
     ]
-    console.log('All sectors for fare-rule API:', allSectors)
     
     const segments: FareSegment[] = allSectors.map(sector => {
       const airlineCode = sector.marketingAirlineCode || sector.operatingAirlineCode
@@ -553,19 +548,13 @@ async function fetchFareRule() {
     }
 
     const request: FareRuleRequest = { segments, pax }
-    
-    console.log('Fare rule request:', JSON.stringify(request, null, 2))
-    
     const response = await fareRule(request)
-    
-    console.log('Fare rule response:', response)
-    
+
     if (response.data.head.code === 0) {
       fareRuleData.value = response.data.data
       
       console.log('Fare rule data received:', fareRuleData.value)
       
-      // Transform fare rule data into fare options for display
       dynamicFareOptions.value = transformFareRuleToOptions(response.data.data)
       
       console.log('Dynamic fare options generated:', dynamicFareOptions.value)
@@ -617,22 +606,30 @@ function transformFareRuleToOptions(data: FareRuleResponse['data']): FareOption[
       notes.push({ type: 'notallowed', icon: 'suitcase', text: baggageText })
     }
 
-    // 顯示所有規則（退票、去程改期、回程改期...）
-    for (const rule of rules.slice(0, rules.length / 2)) {
+    for (const rule of rules.slice(0, rules.length)) {
       let label = rule.type;
       if (rule.type.includes('去程')) label = '去程改期費';
       if (rule.type.includes('回程')) label = '回程改期費';
       if (rule.type.includes('退票')) label = '退票費';
       const fee = rule.before !== null ? rule.before : 0;
       notes.push({
-        type: fee === 0 ? 'allowed' : 'permitted',
+        type: 'allowed',
         icon: rule.type.includes('退票') ? 'ticket' : 'calendar',
         text: `${label}${rule.currency} ${fee.toLocaleString()}起${rule.passengerTypeDisplay ? '（' + rule.passengerTypeDisplay + '）' : ''}`
       });
     }
   }
+  
+  const seen = new Set();
+  const filteredNotes: { type: FareNoteType; icon: FareIconType; text: string }[] = notes.filter(note => {
+    if (seen.has(note.icon)) return false;
+    seen.add(note.icon);
+    return true;
+  });
 
-  notes.push(
+  console.log("FilteredNotes:", filteredNotes)
+
+  filteredNotes.push(
     {
       type: 'allowed',
       icon: 'clock',
@@ -649,16 +646,14 @@ function transformFareRuleToOptions(data: FareRuleResponse['data']): FareOption[
       text: '由海外供應商提供'
     }
   )
-  console.log("NOTES:", notes)
-  // 只顯示一個艙等
+
   const cabinDesc = sectors.value[0]?.cabinDesc || '經濟艙';
-  // 票價以第一個 fareSummary 為主（或可加總/平均，依需求）
   const price = data.fareSummary[0]?.price ?? 0;
   return [{
     id: `fare-0`,
     cabin: cabinDesc,
     price,
-    notes
+    notes: filteredNotes
   }];
 }
 </script>

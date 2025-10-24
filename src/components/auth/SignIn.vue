@@ -32,7 +32,6 @@
                         </div>
                     </div>
 
-                    <!-- 密碼 -->
                     <div class="mb-4 w-full">
                         <label class="block mb-1 text-others-gray1 text-sm">密碼</label>
                         <div class="relative flex items-center">
@@ -42,22 +41,20 @@
                             <button type="button" class="absolute right-2 mx-0 text-others-gray1"
                                 @click="togglePassword">
                                 <div v-if="showPassword">
-                                    <!-- Login dialog -->
                                     <img src="@/assets/imgs/icon-eye1.svg" />
                                 </div>
                                 <div v-else>
-                                    <!-- Signup dialog -->
                                     <img src="@/assets/imgs/icon-eye2.svg" />
                                 </div>
                             </button>
                         </div>
                     </div>
-                    <!-- Submit -->
+                    
                     <button type="submit"
                         class="w-[150px] mx-auto bg-others-original text-white py-2 rounded-md hover:bg-others-hover transition">
                         登入
                     </button>
-                    <!-- Footer text -->
+                    
                     <p class="mt-4 text-sm text-others-gray1">
                         若您曾參加過加利利旅行社團體即為會員，可利用會員登入進行訂購。
                         若忘記密碼，可至「
@@ -68,7 +65,6 @@
             </div>
             <div v-else>
                 <form @submit.prevent="handleLogin" class="flex flex-col items-center">
-                    <!-- 身分證號 -->
                     <div class="mb-4 w-full">
                         <p class="block mb-1 text-others-original text-sm">訪客購買需先驗證手機，或切換至會員登入頁籤進行登入</p>
                         <p class="block mb-3 text-others-original text-sm">非本國籍請輸入護照英文拼音</p>
@@ -122,7 +118,6 @@
                                 </svg>
                             </span>
                         </label>
-                        <!-- Footer text -->
                         <div class="flex flex-row w-full mb-4">
                             <span class="text-h6 text-others-gray1 md:text-h6-d">
                                 我已閱讀
@@ -133,7 +128,7 @@
                             </span>
                         </div>
                     </div>
-                    <!-- Submit -->
+                    
                     <button type="submit"
                         class="w-[150px] mx-auto bg-others-original text-white py-2 rounded-md hover:bg-others-hover transition">
                         送出

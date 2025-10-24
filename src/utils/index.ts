@@ -212,3 +212,28 @@ export function onImageError(event: Event) {
   const target = event.target as HTMLImageElement;
   target.src = AirlineDefault;  // Fallback to default logo when image fails to load
 }
+
+export function formatBaggage(data: { text: string; piece: number; weight: number } | null): string {
+  if (!data) return '資訊待確認';
+  if (data.text) return data.text;
+  if (data.piece > 0 && data.weight > 0) return `${data.piece}件, 每件${data.weight}公斤`;
+  if (data.piece > 0) return `${data.piece}件`;
+  if (data.weight > 0) return `${data.weight}公斤`;
+  return '無免費行李';
+}
+
+export function getPassengerDisplay(type: string): string {
+  const displays: Record<string, string> = {
+    'ADT': '成人',
+    'CNN': '孩童',
+    'CHD': '孩童',
+    'INF': '嬰兒'
+  };
+  return displays[type] || type;
+}
+
+export function formatPriceOnFareRule(price: number | null, currency: string = 'TWD'): string {
+  if (price === null) return '不可適用';
+  if (price === 0) return '免費';
+  return `${currency} ${price.toLocaleString()}`;
+}

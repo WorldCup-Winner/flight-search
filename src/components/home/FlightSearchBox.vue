@@ -51,7 +51,7 @@
     </div>
     
     <Transition name="fade">
-        <BaggageInfoAndFeeRule :open="sharedValue?.isOpenBaggageInfoAndFeeRule" @close="updateValue?.({ isOpenBaggageInfoAndFeeRule: false })" />
+        <BaggageInfoAndFeeRule :open="sharedValue?.isOpenBaggageInfoAndFeeRule" :fareRuleData="sharedValue?.fareRuleData" @close="updateValue?.({ isOpenBaggageInfoAndFeeRule: false, fareRuleData: undefined })" />
     </Transition>
   </div>
 </template>
