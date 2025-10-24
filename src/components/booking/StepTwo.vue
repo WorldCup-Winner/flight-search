@@ -993,7 +993,7 @@ isAgreedToTheTerms: isAgreedToTheTerms.value
           passengers: bookingData.passengers
         });
 
-        localStorage.setItem("BOOKING_DATA", JSON.stringify(bookingStore))
+        localStorage.setItem("BOOKING_DATA", JSON.stringify(bookingStore.$state))
         
         step.value = 3
       } else {
