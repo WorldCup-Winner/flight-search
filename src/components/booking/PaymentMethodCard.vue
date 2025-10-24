@@ -251,7 +251,7 @@ const handleIframeLoad = () => {
         if (props.orderNumber) {
           emit('payment-completed')
         } else {
-          const orderBasicInfo = sessionStorage.getItem('orderBasicInfo')
+          const orderBasicInfo = localStorage.getItem('ORDER_BASIC_INFO')
           if (orderBasicInfo) {
             emit('update:step', 4)
           }
@@ -474,7 +474,7 @@ const handleNextStep = async () => {
       return
     }
     
-    sessionStorage.setItem('paymentInfo', JSON.stringify({
+    localStorage.setItem('paymentInfo', JSON.stringify({
       paymentOrderId: response.data.PEP01,     // 付款單號
       paymentNumber: response.data.PEP02,      // 付款序號
       amount: response.data.PEP05,             // 付款金額
@@ -483,7 +483,7 @@ const handleNextStep = async () => {
       pep04: PEP04
     }))
     
-    sessionStorage.setItem('orderBasicInfo', JSON.stringify({
+    localStorage.setItem('ORDER_BASIC_INFO', JSON.stringify({
       orderNumber,
       orderUniqId,
       paymentOrderId: response.data.PEP01,
@@ -512,7 +512,7 @@ const handleNextStep = async () => {
         iframeUrl.value = KEY21
         iframeKey.value = ''
 
-        sessionStorage.setItem('iframePaymentData', JSON.stringify({
+        localStorage.setItem('iframePaymentData', JSON.stringify({
           url: KEY21,
           key: '',
           orderNumber,
@@ -553,7 +553,7 @@ const handleNextStep = async () => {
           return
         }
         
-        sessionStorage.setItem('orderDataWithPayment', JSON.stringify(fp02AfterPayment.data))
+        localStorage.setItem('ORDER_DATA', JSON.stringify(fp02AfterPayment.data))
         
         if (props.orderNumber) {
           emit('payment-completed')

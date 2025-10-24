@@ -1,7 +1,7 @@
 <template>
     <div class="relative bg-white rounded-2xl shadow-2xl w-[730px] max-w-[95vw] z-100">
         <!-- Title bar -->
-        <div class="flex items-center bg-primary-gold text-white px-6 py-3 rounded-t-2xl text-[18px] font-semibold">
+        <div v-if="type == true" class="flex items-center bg-primary-gold text-white px-6 py-3 rounded-t-2xl text-[18px] font-semibold">
             <span>日期選擇</span>
             <button
                 class="absolute right-6 text-white hover:opacity-80 z-10"
@@ -13,11 +13,15 @@
                 </svg>
             </button>
         </div>
+        
+        <div v-if="type == false" class="bg-primary-gold text-white px-6 py-3 rounded-t-2xl text-[18px] font-semibold">
+            日期選擇
+        </div>
 
         <div class="px-6 py-5">
             <!-- Header -->
             <div class="relative mb-8 text-center text-[18px] leading-8 text-gray-500 font-semi">
-                <div class="grid grid-cols-2 items-center">
+                <div v-if="type == true" class="grid grid-cols-2 items-center">
                     <!-- Left month selector -->
                     <div class="flex justify-center items-center space-x-2">
                         <input
@@ -52,6 +56,15 @@
                     </div>
                 </div>
 
+                
+                <div v-if="type == false" class="grid grid-cols-2 items-center">
+                    <div class="text-center text-[18px] leading-8 font-semi text-gray-500">
+                        {{ monthLabel(currentMonth) }}
+                    </div>
+                    <div class="text-center text-[18px] leading-8 font-semi text-gray-500">
+                        {{ monthLabel1(currentMonth) }}
+                    </div>
+                </div>
 
                 <button @click="shift(-1)"
                     class="w-[36px] h-[36px] absolute cursor-pointer left-0 top-1/2 -translate-y-1/2 p-1 rounded-xl bg-others-gray2 text-primary-gold hover:bg-others-gray4 transition transform scale-y-[-1]"
@@ -133,6 +146,7 @@ const props = defineProps<{
     modelValue?: Date
     min?: Date
     max?: Date
+    type?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -150,7 +164,13 @@ const currentMonth = ref(new Date(today.getFullYear(), today.getMonth(), 1))
 function shift(delta: number) {
     currentMonth.value = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() + delta, 1)
 }
-
+function monthLabel(d: Date) {
+    return `${d.getFullYear()}年 ${d.getMonth() + 1}月`
+}
+function monthLabel1(d: Date) {
+    if (d.getMonth() >= 11) return `${d.getFullYear()}年 1月`
+    return `${d.getFullYear()}年 ${d.getMonth() + 2}月`
+}
 const editableYear = ref(currentMonth.value.getFullYear())
 const editableMonth = ref(currentMonth.value.getMonth())
 const dow = ['日', '一', '二', '三', '四', '五', '六']

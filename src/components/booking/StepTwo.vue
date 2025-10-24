@@ -20,7 +20,7 @@
                         <div v-if="bookingStore.outboundSegment" class="relative w-full mb-10">
                             <div class="space-x-10">
                                 <span class="px-5 py-3 rounded-[15px] rounded-br-none text-white bg-others-original">去程</span>
-                                <span class="text-others-gray7 text-[15px]">{{ formatDateToChinese(bookingStore.outboundSegment.sectors[0]?.departureDate) }} 週三 飛行時間 {{ toDuration(bookingStore.outboundSegment.sectors.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}</span>
+                                <span class="text-others-gray7 text-[15px]">{{ formatDateToChineseWithWeek(bookingStore.outboundSegment.sectors[0]?.departureDate) }} 飛行時間 {{ toDuration(bookingStore.outboundSegment.sectors.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}</span>
                             </div>
                             <div v-for="(sec, i) in bookingStore.outboundSegment.sectors" :key="i" class="ml-12">
                             <div class="grid grid-cols-12 gap-4 py-8 px-8">
@@ -81,7 +81,7 @@
                         <div v-if="bookingStore.returnSegment" class="relative w-full mb-10">
                             <div class="space-x-10">
                                 <span class="px-5 py-3 rounded-[15px] rounded-br-none text-white bg-others-original">回程</span>
-                                <span class="text-others-gray7 text-[15px]">{{ formatDateToChinese(bookingStore.returnSegment.sectors[0]?.departureDate) }} 週三 飛行時間 {{ toDuration(bookingStore.returnSegment.sectors.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}</span>
+                                <span class="text-others-gray7 text-[15px]">{{ formatDateToChineseWithWeek(bookingStore.returnSegment.sectors[0]?.departureDate) }} 飛行時間 {{ toDuration(bookingStore.returnSegment.sectors.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}</span>
                             </div>
                             <div v-for="(sec, i) in bookingStore.returnSegment.sectors" :key="i" class="ml-12">
                             <div class="grid grid-cols-12 gap-4 py-8 px-8">
@@ -237,6 +237,7 @@
                                                       :modelValue="datePickerModelValue"
                                                       :min="datePickerMinDate"
                                                       :max="datePickerMaxDate"
+                                                      :type="true"
                                                       @update:modelValue="handleSingleDateApply"
                                                       @apply="handleSingleDateApply"
                                                       @close="closeDatePicker"
@@ -575,7 +576,7 @@
 </template>
 <script setup lang="ts">
 import { provide, computed, onBeforeUnmount, ref, onMounted, watch } from 'vue'
-import { airlineLogoFor, formatDate, formatDateToChinese, formatDateWithYYYYMMDD, formatPrice, makeDirect, noteIcon, onImageError, toDuration } from '@/utils'
+import { airlineLogoFor, formatDate, formatDateToChinese, formatDateToChineseWithWeek, formatDateWithYYYYMMDD, formatPrice, makeDirect, noteIcon, onImageError, toDuration } from '@/utils'
 
 import Airline_1 from '@/assets/imgs/airlines/TK.png'
 

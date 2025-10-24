@@ -300,7 +300,7 @@ const total = computed(() =>
 let pollingTimer: number | null = null
 
 onMounted(async () => {
-  const orderBasicInfoStr = sessionStorage.getItem('orderBasicInfo')
+  const orderBasicInfoStr = localStorage.getItem('ORDER_BASIC_INFO')
   let orderBasicInfo: any = null
   
   if (orderBasicInfoStr) {
@@ -314,7 +314,7 @@ onMounted(async () => {
   }
   
   if (paymentType.value === 'B1') {
-    const orderDataStr = sessionStorage.getItem('orderDataWithPayment')
+    const orderDataStr = localStorage.getItem('ORDER_DATA')
     if (orderDataStr) {
       try {
         orderData.value = JSON.parse(orderDataStr)

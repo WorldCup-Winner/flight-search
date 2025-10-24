@@ -129,7 +129,7 @@
             <div v-if="isDatePickerOpen" ref="datePopoverRef" class="absolute left-[-2rem] top-3/4 mt-2 z-50"
               @click.stop>
 
-              <DatePicker :modelValue="startDate" :min="new Date()" :max="getMaxDate()" @update:modelValue="startDate = $event"
+              <DatePicker :modelValue="startDate" :min="new Date()" :max="getMaxDate()" :type="false" @update:modelValue="startDate = $event"
                 @apply="handleSingleDateApply" />
             </div>
           </transition>

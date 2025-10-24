@@ -612,6 +612,9 @@ function transformFareRuleToOptions(data: FareRuleResponse['data']): FareOption[
       if (baggageText) {
         notes.push({ type: 'allowed', icon: 'suitcase', text: baggageText });
       }
+    } else {
+      let baggageText = '無免費託運行李';
+      notes.push({ type: 'notallowed', icon: 'suitcase', text: baggageText })
     }
 
     // 顯示所有規則（退票、去程改期、回程改期...）

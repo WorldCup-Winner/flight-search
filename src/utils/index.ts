@@ -147,6 +147,16 @@ export function formatDateToChinese(dateStr: string) {
   return `${month}月${day}日`;
 }
 
+export function formatDateToChineseWithWeek(dateStr: string) {
+  const date = new Date(dateStr); // e.g., "November 1"
+
+  const month = date.getMonth() + 1; // JS months are 0-based
+  const day = date.getDate();
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+
+  return `${month}月${day}日 週${weekdays[date.getDay()]}`;
+}
+
 
 export function formatDateWithYYYYMMDD(input: string): string {
   if (!input) return '';
@@ -159,6 +169,27 @@ export function formatDateWithYYYYMMDD(input: string): string {
   return input;
 }
 
+export function formateDateYYYYMMDDHHMM(dateStr: string) {
+  if (!dateStr) return ''
+  try {
+    const date = new Date(dateStr)
+    return date.toLocaleString('zh-TW', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).replace(/\//g, '/')
+  } catch {
+    return dateStr
+  }
+}
+
+export function getMaxDate(range: number = 350) {
+  const max = new Date()
+  max.setDate(new Date().getDate() + range)
+  return max
+}
 
 export function airlineLogoFor(sec: Sector) {
   const code = sec.marketingAirlineCode || sec.operatingAirlineCode
@@ -180,27 +211,4 @@ export function resolveAirlineLogo(code?: string) {
 export function onImageError(event: Event) {
   const target = event.target as HTMLImageElement;
   target.src = AirlineDefault;  // Fallback to default logo when image fails to load
-}
-
-export function getMaxDate() {
-  const today = new Date()
-  const max = new Date()
-  max.setDate(today.getDate() + 350)
-  return max
-}
-
-export function formateDateYYYYMMDDHHMM(dateStr: string) {
-  if (!dateStr) return ''
-  try {
-    const date = new Date(dateStr)
-    return date.toLocaleString('zh-TW', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).replace(/\//g, '/')
-  } catch {
-    return dateStr
-  }
 }
