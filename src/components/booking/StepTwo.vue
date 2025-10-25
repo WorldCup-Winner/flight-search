@@ -847,7 +847,7 @@ function emitSubmit() {
     return
     }
   
-  if (!contactFirstName.value || !contactLastName.value || ~contactGender.value ||  !contactEmail.value || !phoneNumber.value) {
+  if (!contactFirstName.value || !contactLastName.value || !contactGender.value ||  !contactEmail.value || !phoneNumber.value) {
     bookingError.value = '請填寫完整的聯絡人資訊';
     return
     }
