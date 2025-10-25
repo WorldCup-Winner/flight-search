@@ -92,7 +92,7 @@
               {{ formatPrice(it.paid) }}
             </td>
             <td class="px-4 py-3 text-center tabular-nums text-others-gray1 font-bold border-t-2 border-b-2">
-              {{ formatPrice(Math.max(it.fare + it.tax - it.paid, 0)) }}
+              {{ formatPrice(Math.max(it.fare - it.paid, 0)) }}
             </td>
             <td class="px-4 py-3 text-center text-others-original whitespace-nowrap border-t-2 border-b-2">
               {{ it.deadline }}
