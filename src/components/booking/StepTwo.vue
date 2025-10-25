@@ -578,7 +578,7 @@
         <BookingInstruction :open="isOpenBookingInstruction" @close="isOpenBookingInstruction = false" />
     </Transition>
     <Transition name="fade">
-        <BaggageInfoAndFeeRule :open="sharedValue.isOpenBaggageInfoAndFeeRule" @close="sharedValue.isOpenBaggageInfoAndFeeRule = false" />
+        <BaggageInfoAndFeeRule :open="sharedValue.isOpenBaggageInfoAndFeeRule" :fareRuleData="sharedValue?.fareRuleData" @close="sharedValue.isOpenBaggageInfoAndFeeRule = false" />
     </Transition>
     <Transition name="fade">
         <div v-if="bookingError" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" @click.self="bookingError = null">
