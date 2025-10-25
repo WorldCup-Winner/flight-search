@@ -5,17 +5,19 @@
             <h2 class="text-others-gray1 text-[26px]">訂單查詢</h2>
             <div class="bg-white mt-6 rounded-[10px] border-[2px] px-8 py-4 w-full">
                 <h2 class="font-semibold text-primary-gold">訂單狀況</h2>
-                <div class="space-x-4 mt-4">
+                <div v-if="orderData?.FPA50S == '訂單成立'" class="space-x-4 mt-4">
                     <span class="text-green-600 text-[22px] font-bold">付款完成</span>
                     <span class="text-others-gray7">感謝您的訂購，客服人員將為您開票，並於開票完成後寄送電子機票email給您。</span>
-                    <!-- <span class="text-text-error text-[22px] font-bold">待付款</span> -->
-                    <!-- <span class="text-others-gray7">為保留機位及票價，請於付款期限內完成付款，逾期訂單將自動取消並釋出機位。</span> -->
+                </div>
+                <div v-else class="space-x-4 mt-4">
+                    <span class="text-text-error text-[22px] font-bold">待付款</span>
+                    <span class="text-others-gray7">為保留機位及票價，請於付款期限內完成付款，逾期訂單將自動取消並釋出機位。</span>
                 </div>
                 <div class="flex flex-row items-center justify-between">
                     <div>
                         <div class="space-x-4 mt-2">
                             <span class="text-others-gray7">應付金額</span>
-                            <span class="text-others-gray7 text-[18px] font-bold">{{ formatPrice(total) }}</span>
+                            <span class="text-others-gray7 text-[18px] font-bold">{{ formatPrice(orderData?.FPA51) }}</span>
                         </div>
                         <div class="space-x-4 mt-2">
                             <span class="text-others-gray7">訂單編號</span>
@@ -272,7 +274,7 @@
 <script setup lang="ts">
 import { reactive, computed, ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { formatPrice } from "@/utils";
+import { formateDateYYYYMMDDHHMM, formatPrice } from "@/utils";
 import type { Contact, Flight, Item, Receipt, SpecialCooperation } from "@/utils/types";
 import PaymentMethodCard from "@/components/booking/PaymentMethodCard.vue";
 
@@ -328,7 +330,7 @@ const processOrderData = () => {
         fare: parseInt(cust.FPC52) || 0,
         tax: 0,
         paid: parseInt(cust.FPC53) || 0,
-        deadline: formatDateTime(orderData.value.FPA55) || '2025/12/31 23:59'
+        deadline: formateDateYYYYMMDDHHMM(orderData.value.FPA55) || '2025/12/31 23:59'
       })
     })
   }
@@ -366,39 +368,18 @@ const processOrderData = () => {
   }
 }
 
-// 格式化日期時間
-const formatDateTime = (dateStr: string) => {
-  if (!dateStr) return ''
-  try {
-    const date = new Date(dateStr)
-    return date.toLocaleString('zh-TW', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).replace(/\//g, '/')
-  } catch {
-    return dateStr
-  }
-}
-
 const total = computed(() =>
   items
     .filter((i) => i.checked)
     .reduce((sum, i) => sum + i.fare - i.paid, 0)
 );
 
-// 處理付款完成
 const handlePaymentCompleted = async () => {
-  // 關閉對話框
   showPaymentDialog.value = false
   
   // 重新載入訂單資料
   if (orderData.value?.FPA01 && orderData.value?.FPA02) {
     try {
-      // 這裡可以呼叫 FP02 API 重新取得訂單資料
-      // 暫時先重新整理頁面，或顯示成功訊息
       alert('付款處理中，請稍後查詢訂單狀態')
       
       // 可選：導向訂單查詢頁面或重新載入當前頁面

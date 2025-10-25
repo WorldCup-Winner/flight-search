@@ -3,7 +3,7 @@
     class="relative z-[50] hover:z-[999] rounded-[10px] bg-white drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] overflow-visible"
   >
     <!-- HEADER (always visible) -->
-    <div class="flex items-center gap-5 px-6 py-4">
+    <div class="flex items-center gap-5 px-4 py-4">
       <!-- Airlines block -->
       <div
         class="relative group flex items-center gap-3 min-w-[160px]"
@@ -107,7 +107,7 @@
 
         <!-- Price & CTA -->
         <div class="flex items-center gap-4">
-          <div class="text-right">
+          <div class="text-right" :class="[expanded1 ? 'invisible' : 'block']">
             <div class="flex items-end font-bold">
               <div class="text-[12px] text-others-original">{{ currencyDisplay }}</div>
               <div class="text-[28px] text-others-original leading-none">{{ formatPrice(priceTotal) }}</div>
@@ -634,16 +634,6 @@ function transformFareRuleToOptions(data: FareRuleResponse['data']): FareOption[
       type: 'allowed',
       icon: 'clock',
       text: '付款後48小時出票'
-    },
-    {
-      type: 'allowed',
-      icon: 'info',
-      text: '由2至多張機票組成'
-    },
-    {
-      type: 'allowed',
-      icon: 'info',
-      text: '由海外供應商提供'
     }
   )
 

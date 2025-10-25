@@ -196,17 +196,18 @@ const props = defineProps<{
 }>()
 
 const first = computed(() => props.data?.[0])
+console.log(props.data[0])
 const dateText = computed(() => {
   const d = first.value?.departureDate || first.value?.sectors?.[0]?.departureDate
   return d ? d : ''
 })
 const origin = computed(() => ({
-  code: first.value?.departureCityCode ?? first.value?.sectors?.[0]?.departureCityCode ?? '',
-  name: first.value?.departureCityName ?? first.value?.sectors?.[0]?.departureCityName ?? ''
+  code: first.value?.departureAirportCode,
+  name: first.value?.departureCityName ?? first.value?.departureAirportName
 }))
 const destination = computed(() => ({
-  code: first.value?.arrivalCityCode ?? first.value?.sectors?.slice(-1)?.[0]?.arrivalCityCode ?? '',
-  name: first.value?.arrivalCityName ?? first.value?.sectors?.slice(-1)?.[0]?.arrivalCityName ?? ''
+  code: first.value?.arrivalAirportCode,
+  name: first.value?.arrivalCityName ?? first.value?.arrivalAirportName
 }))
 
 const tripType = computed(() => props.tripType);

@@ -300,6 +300,28 @@
                                 class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                         </div>
                         <div class="relative grid-cols-12 md:col-span-3 mb-4">
+                            <label class="block mb-1 text-others-gray1">性別</label>
+                            <div class="relative">
+                                <select
+                                    v-model="contactGender"
+                                    placeholder="請選擇"
+                                    class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none appearance-none bg-transparent cursor-pointer"
+                                    aria-label="Gender"
+                                    >
+                                    <option value="male">
+                                        男
+                                    </option>
+                                    <option value="female">
+                                        女
+                                    </option>
+                                </select>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                    class="text-primary-goldpointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18 10l-6 6-6-6" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="relative grid-cols-12 md:col-span-3 mb-4">
                             <label class="block mb-1 text-others-gray1">聯絡手機</label>
                             <PhoneField v-model="phoneNumber" :countryCode="code" :show-eye="false" />
                         </div>
@@ -556,7 +578,7 @@
         <BookingInstruction :open="isOpenBookingInstruction" @close="isOpenBookingInstruction = false" />
     </Transition>
     <Transition name="fade">
-        <BaggageInfoAndFeeRule :open="sharedValue.isOpenBaggageInfoAndFeeRule" :fareRuleData="sharedValue?.fareRuleData" @close="sharedValue.isOpenBaggageInfoAndFeeRule = false" />
+        <BaggageInfoAndFeeRule :open="sharedValue.isOpenBaggageInfoAndFeeRule" @close="sharedValue.isOpenBaggageInfoAndFeeRule = false" />
     </Transition>
     <Transition name="fade">
         <div v-if="bookingError" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" @click.self="bookingError = null">
@@ -735,6 +757,7 @@ const phoneNumber  = ref('')
 
 const contactFirstName = ref('')
 const contactLastName = ref('')
+const contactGender = ref('male')
 const contactEmail = ref('')
 
 const companyName = ref('')
@@ -824,7 +847,7 @@ function emitSubmit() {
     return
     }
   
-  if (!contactFirstName.value || !contactLastName.value || !contactEmail.value || !phoneNumber.value) {
+  if (!contactFirstName.value || !contactLastName.value || ~contactGender.value ||  !contactEmail.value || !phoneNumber.value) {
     bookingError.value = '請填寫完整的聯絡人資訊';
     return
     }
@@ -891,7 +914,7 @@ passengers: passengers.value.map((p, index) => {
 contactInfo: {
     firstNameOfContactPerson: contactFirstName.value,
     lastNameOfContactPerson: contactLastName.value,
-    genderOfContactPerson: 0, // 0 = male, 1 = female
+    genderOfContactPerson: contactGender.value == 'male' ? 0 : 1, // 0 = male, 1 = female
     mobileNumberCountryCode: code.value,
     contactMobileNumber: phoneNumber.value,
     contactEmail: contactEmail.value,
