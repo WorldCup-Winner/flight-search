@@ -106,9 +106,8 @@ function handleSearchNextSegment(payload: { selectedRefNumbers: number[]; select
   // Store selected segments if provided
   if (payload.selectedSegments && payload.selectedSegments.length > 0) {
     selectedSegments.value = payload.selectedSegments
-    console.log('Selected segments stored in FlightSearchBox:', selectedSegments.value)
   }
-  
+
   if (currentSearchRequest.value) {
     // Update the search request with selectedRefNumbers
     const updatedRequest = {
@@ -119,8 +118,6 @@ function handleSearchNextSegment(payload: { selectedRefNumbers: number[]; select
     // Increment segment index
     currentSegmentIndex.value += 1
     
-    console.log('Fetching next segment with:', updatedRequest)
-    console.log('Current segment index:', currentSegmentIndex.value)
     flightSearchStore.fetchFlightSearch(updatedRequest)
   }
 }

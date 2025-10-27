@@ -307,7 +307,6 @@ onMounted(async () => {
     try {
       orderBasicInfo = JSON.parse(orderBasicInfoStr)
       paymentType.value = orderBasicInfo.pep04
-      console.log('Loaded order basic info:', orderBasicInfo)
     } catch (error) {
       console.error('Failed to parse order basic info:', error)
     }
@@ -318,7 +317,6 @@ onMounted(async () => {
     if (orderDataStr) {
       try {
         orderData.value = JSON.parse(orderDataStr)
-        console.log('Loaded B1 order data with payment:', orderData.value)
         processOrderData()
       } catch (error) {
         console.error('Failed to parse order data:', error)
@@ -326,12 +324,10 @@ onMounted(async () => {
     }
   } else if (paymentType.value === 'A1' || paymentType.value === 'A5') {
     if (orderBasicInfo) {
-      console.log(`Starting polling for ${paymentType.value} payment`)
       await pollOrderStatus(orderBasicInfo.orderNumber, orderBasicInfo.orderUniqId)
     }
   } else if (paymentType.value === 'A4') {
     if (orderBasicInfo) {
-      console.log('A4 payment completed, fetching order status')
       await fetchOrderStatus(orderBasicInfo.orderNumber, orderBasicInfo.orderUniqId)
     }
   }

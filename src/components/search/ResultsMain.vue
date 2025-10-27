@@ -237,7 +237,7 @@ const segmentTitle = computed(() => {
   }
 })
 
-const selectedRefNumbers = ref<number[]>([])
+const selectedRefNumbers = ref<number[]>(props.searchRequest?.selectedRefNumbers ?? [])
 const accumulatedSegments = ref<any[]>([...(props.selectedSegments ?? [])])
 
 const emit = defineEmits<{
@@ -332,7 +332,6 @@ const handleSelect = (payload: any) => {
     
     if (payload.sectors && payload.sectors.length > 0) {
       accumulatedSegments.value.push(payload)
-      console.log('Selected segments accumulated:', accumulatedSegments.value)
     }
     
     emit('searchNextSegment', { 
@@ -348,6 +347,7 @@ function onPurchase(payload: any) {
   const { fare, refNumber, fareRuleData } = payload
   
   const currentFlight = props.data.find(flight => flight.refNumber === refNumber)
+  console.log("CURRENT FLIGHT", currentFlight)
   if (!currentFlight) {
     console.error('Flight not found:', refNumber)
     return
@@ -374,26 +374,41 @@ function onPurchase(payload: any) {
   }
   
   const segmentIndex = props.currentSegmentIndex ?? 0
-  const isReturnSegment = tripType.value === 'roundtrip' && segmentIndex === 1
   
-  if (isReturnSegment) {
-    bookingStore.setReturnSegment(currentSegment)
-    if (props.selectedSegments && props.selectedSegments.length > 0) {
-      const outboundData = props.selectedSegments[0]
-      bookingStore.setOutboundSegment({
-        refNumber: outboundData.refNumber,
-        sectors: outboundData.sectors || [],
-        totalMinutes: outboundData.sectors?.reduce((sum: number, s: Sector) => sum + (s.durationMinutes || 0), 0) || outboundData.totalMinutes || 0,
-        stopsCount: outboundData.stopsCount || 0,
-        totalPrice: outboundData.totalPrice || 0,
-        currency: outboundData.currency || 'TWD',
-        roundTripIncluded: outboundData.roundTripIncluded || false,
-        header: outboundData.header || {},
-      })
+  // 處理不同行程類型的航段設定
+  if (tripType.value === 'multi') {
+    // 多行程：將所有已選擇的航段加上當前航段
+    const allSegments = [...(props.selectedSegments || []), currentSegment]
+    bookingStore.setMultiTripSegments(allSegments)
+  } else if (tripType.value === 'roundtrip') {
+    // 來回程：根據索引設定去程或回程
+    if (segmentIndex === 0) {
+      bookingStore.setOutboundSegment(currentSegment)
+    } else {
+      bookingStore.setReturnSegment(currentSegment)
+      // 確保去程航段也被設定
+      if (props.selectedSegments && props.selectedSegments.length > 0) {
+        const outboundData = props.selectedSegments[0]
+        bookingStore.setOutboundSegment({
+          refNumber: outboundData.refNumber,
+          sectors: outboundData.sectors || [],
+          totalMinutes: outboundData.sectors?.reduce((sum: number, s: Sector) => sum + (s.durationMinutes || 0), 0) || outboundData.totalMinutes || 0,
+          stopsCount: outboundData.stopsCount || 0,
+          totalPrice: outboundData.totalPrice || 0,
+          currency: outboundData.currency || 'TWD',
+          roundTripIncluded: outboundData.roundTripIncluded || false,
+          header: outboundData.header || {},
+        })
+      }
     }
   } else {
+    // 單程：設定為去程航段
     bookingStore.setOutboundSegment(currentSegment)
   }
+  
+  console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+  console.log(props.selectedSegments)
+  console.log(currentSegment)
   
   bookingStore.setSelectedFare(fare)
   
@@ -416,7 +431,7 @@ function onPurchase(payload: any) {
     })
   }
   
-  localStorage.setItem("BOOKING_DATA", JSON.stringify(bookingStore.$state))
+  bookingStore.saveBookingData()
   router.push('/booking')
 }
 

@@ -5,10 +5,22 @@
                 <div class="relative mt-[0px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] w-full">
                     <div v-if="!loading">
                         <div class="w-ful flex items-center gap-2 bg-white text-others-gray7 text-[17px] rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-4 font-bold">
-                            <span>{{ bookingStore.searchParams?.departureCity || '出發地' }}</span>
-                            <img v-if="bookingStore.isRoundTrip" src="@/assets/imgs/arrow-both.svg" />
-                            <img v-else src="@/assets/imgs/arrow-right.svg" />
-                            <span>{{ bookingStore.searchParams?.arrivalCity || '目的地' }}</span>
+                            <!-- Display all segments in the route -->
+                            <template v-if="bookingStore.segments.length > 0">
+                                <template v-for="(segment, index) in bookingStore.segments" :key="index">
+                                    <span>{{ getSegmentDeparture(segment) }}</span>
+                                    <img src="@/assets/imgs/arrow-right.svg" />
+                                    <span>{{ getLastSegmentArrival(segment) }}</span>
+                                    <span v-if="index < bookingStore.segments.length - 1" class="mx-2 text-divider-medium">|</span>
+                                </template>
+                            </template>
+                            <!-- Fallback for old data structure -->
+                            <template v-else>
+                                <span>{{ bookingStore.searchParams?.departureCity || '出發地' }}</span>
+                                <img v-if="bookingStore.isRoundTrip" src="@/assets/imgs/arrow-both.svg" />
+                                <img v-else src="@/assets/imgs/arrow-right.svg" />
+                                <span>{{ bookingStore.searchParams?.arrivalCity || '目的地' }}</span>
+                            </template>
                         </div>
                     </div>
                     <div v-else>
@@ -17,129 +29,71 @@
                         </div>
                     </div>
                     <div class="px-20 py-10">
-                        <div v-if="bookingStore.outboundSegment" class="relative w-full mb-10">
+                        <!-- Display segments based on trip type -->
+                        <div v-for="(segment, segmentIndex) in bookingStore.segments" :key="segmentIndex" class="relative w-full mb-10">
                             <div class="space-x-10">
-                                <span class="px-5 py-3 rounded-[15px] rounded-br-none text-white bg-others-original">去程</span>
-                                <span class="text-others-gray7 text-[15px]">{{ formatDateToChineseWithWeek(bookingStore.outboundSegment.sectors[0]?.departureDate) }} 飛行時間 {{ toDuration(bookingStore.outboundSegment.sectors.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}</span>
+                                <span class="px-5 py-3 rounded-[15px] rounded-br-none text-white bg-others-original">
+                                    {{ getSegmentTitle(segmentIndex) }}
+                                </span>
+                                <span class="text-others-gray7 text-[15px]">
+                                    {{ formatDateToChineseWithWeek(segment.sectors[0]?.departureDate) }} 
+                                    飛行時間 {{ toDuration(segment.sectors.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}
+                                </span>
                             </div>
-                            <div v-for="(sec, i) in bookingStore.outboundSegment.sectors" :key="i" class="ml-12">
-                            <div class="grid grid-cols-12 gap-4 py-8 px-8">
-                                <div class="flex items-center flex-col justify-between col-span-12 md:col-span-3">
-                                    <div class="flex flex-row items-center justify-between gap-6">
-                                        <div class="text-others-gray1">{{ formatDateToChinese(sec.departureDate) }}</div>
-                                        <div class="font-bold text-others-gray7">{{ sec.departureTime }}</div>
+                            <div v-for="(sec, i) in segment.sectors" :key="i" class="ml-12">
+                                <div class="grid grid-cols-12 gap-4 py-8 px-8">
+                                    <div class="flex items-center flex-col justify-between col-span-12 md:col-span-3">
+                                        <div class="flex flex-row items-center justify-between gap-6">
+                                            <div class="text-others-gray1">{{ formatDateToChinese(sec.departureDate) }}</div>
+                                            <div class="font-bold text-others-gray7">{{ sec.departureTime }}</div>
+                                        </div>
+                                        <div class="text-others-gray1">{{ toDuration(sec.durationMinutes) }}</div>
+                                        <div class="flex items-center justify-between gap-6">
+                                            <div class="text-others-gray1">{{ formatDateToChinese(sec.arrivalDate) }}</div>
+                                            <div class="font-bold text-others-gray7">{{ sec.arrivalTime }}</div>
+                                        </div>
                                     </div>
-                                    <div class="text-others-gray1">{{ toDuration(sec.durationMinutes) }}</div>
-                                    <div class="flex items-center justify-between gap-6">
-                                        <div class="text-others-gray1">{{ formatDateToChinese(sec.arrivalDate) }}</div>
-                                        <div class="font-bold text-others-gray7">{{ sec.arrivalTime }}</div>
+
+                                    <div class="relative mx-6">
+                                        <span class="absolute -left-[6px] top-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
+                                        <div class="w-[3px] h-full bg-others-gray3"></div>
+                                        <span class="absolute -left-[6px] bottom-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
                                     </div>
-                                </div>
 
-                                <div class="relative mx-6">
-                                    <span class="absolute -left-[6px] top-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
-                                    <div class="w-[3px] h-full bg-others-gray3"></div>
-                                    <span class="absolute -left-[6px] bottom-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
-                                </div>
-
-                                <div class="col-span-12 md:col-span-8 space-y-2">
-                                <div class="font-bold text-others-gray7">
-                                    {{ sec.departureAirportCode }}{{ sec.departureAirportName }}{{ sec.departureTerminal }}{{  sec.departureCityName }}
-                                </div>
-                                <div class="flex items-center gap-2 text-others-gray1">
-                                    <img
-                                        v-if="airlineLogoFor(sec)"
-                                        :src="airlineLogoFor(sec)"
-                                        :alt="sec.marketingAirlineName || sec.operatingAirlineName"
-                                        class="w-5 h-5 object-contain"
-                                        @error="onImageError"
-                                    />
-                                    <span class="font-semibold">{{ sec.flightNo || sec.operatingFlightNo }}</span>
-                                    <span class="text-others-gray1">{{ sec.marketingAirlineName || sec.operatingAirlineName }}</span>
-                                    <span class="text-others-gray1">{{ sec.craft?.craftName ? ' ' + sec.craft.craftName : '' }}</span>
-                                </div>
-                                <div class="font-bold text-others-gray7">
-                                    {{ sec.arrivalAirportCode }}{{ sec.arrivalAirportName }}{{ sec.arrivalTerminal }}{{ sec.arrivalCityName }}
-                                </div>
-                                </div>
-                            </div>
-
-                            <div v-if="i < bookingStore.outboundSegment.sectors.length - 1 && sec.transfer" class="mx-10 my-2 text-others-gray1">
-                                <div class="inline-flex items-center gap-2 bg-tb-body rounded-[10px] px-6 py-2">
-                                <span>於{{ sec.transfer.transferCity }}轉機</span>
-                                <span class="text-others-gray3">|</span>
-                                <span class="text-others-original">{{ toDuration(sec.transfer.transferStayMinutes) }}</span>
-                                <span class="text-others-gray3" v-if="sec.transfer.isChangeTerminal">|</span>
-                                <span v-if="sec.transfer.isChangeTerminal" class="text-others-original">不同航廈</span>
-                                <span class="text-others-gray3" v-if="sec.transfer.isChangeAirport">|</span>
-                                <span v-if="sec.transfer.isChangeAirport" class="text-others-original">不同機場</span>
-                                <span v-if="sec.baggageStraight > 0">｜ 行李直掛</span>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-                        <div v-if="bookingStore.returnSegment" class="relative w-full mb-10">
-                            <div class="space-x-10">
-                                <span class="px-5 py-3 rounded-[15px] rounded-br-none text-white bg-others-original">回程</span>
-                                <span class="text-others-gray7 text-[15px]">{{ formatDateToChineseWithWeek(bookingStore.returnSegment.sectors[0]?.departureDate) }} 飛行時間 {{ toDuration(bookingStore.returnSegment.sectors.reduce((sum: number, sec: Sector) => sum + sec.durationMinutes, 0) || 0)}}</span>
-                            </div>
-                            <div v-for="(sec, i) in bookingStore.returnSegment.sectors" :key="i" class="ml-12">
-                            <div class="grid grid-cols-12 gap-4 py-8 px-8">
-                                <div class="flex items-center flex-col justify-between col-span-12 md:col-span-3">
-                                    <div class="flex flex-row items-center justify-between gap-6">
-                                        <div class="text-others-gray1">{{ formatDateToChinese(sec.departureDate) }}</div>
-                                        <div class="font-bold text-others-gray7">{{ sec.departureTime }}</div>
-                                    </div>
-                                    <div class="text-others-gray1">{{ toDuration(sec.durationMinutes) }}</div>
-                                    <div class="flex items-center justify-between gap-6">
-                                        <div class="text-others-gray1">{{ formatDateToChinese(sec.arrivalDate) }}</div>
-                                        <div class="font-bold text-others-gray7">{{ sec.arrivalTime }}</div>
+                                    <div class="col-span-12 md:col-span-8 space-y-2">
+                                        <div class="font-bold text-others-gray7">
+                                            {{ sec.departureAirportCode }}{{ sec.departureAirportName }}{{ sec.departureTerminal }}{{  sec.departureCityName }}
+                                        </div>
+                                        <div class="flex items-center gap-2 text-others-gray1">
+                                            <img
+                                                v-if="airlineLogoFor(sec)"
+                                                :src="airlineLogoFor(sec)"
+                                                :alt="sec.marketingAirlineName || sec.operatingAirlineName"
+                                                class="w-5 h-5 object-contain"
+                                                @error="onImageError"
+                                            />
+                                            <span class="font-semibold">{{ sec.flightNo || sec.operatingFlightNo }}</span>
+                                            <span class="text-others-gray1">{{ sec.marketingAirlineName || sec.operatingAirlineName }}</span>
+                                            <span class="text-others-gray1">{{ sec.craft?.craftName ? ' ' + sec.craft.craftName : '' }}</span>
+                                        </div>
+                                        <div class="font-bold text-others-gray7">
+                                            {{ sec.arrivalAirportCode }}{{ sec.arrivalAirportName }}{{ sec.arrivalTerminal }}{{ sec.arrivalCityName }}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- vertical line w/ dots (hidden on mobile) -->
-                                <div class="relative mx-6">
-                                    <span class="absolute -left-[6px] top-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
-                                    <div class="w-[3px] h-full bg-others-gray3"></div>
-                                    <span class="absolute -left-[6px] bottom-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
+                                <div v-if="i < segment.sectors.length - 1 && sec.transfer" class="mx-10 my-2 text-others-gray1">
+                                    <div class="inline-flex items-center gap-2 bg-tb-body rounded-[10px] px-6 py-2">
+                                        <span>於{{ sec.transfer.transferCity }}轉機</span>
+                                        <span class="text-others-gray3">|</span>
+                                        <span class="text-others-original">{{ toDuration(sec.transfer.transferStayMinutes) }}</span>
+                                        <span class="text-others-gray3" v-if="sec.transfer.isChangeTerminal">|</span>
+                                        <span v-if="sec.transfer.isChangeTerminal" class="text-others-original">不同航廈</span>
+                                        <span class="text-others-gray3" v-if="sec.transfer.isChangeAirport">|</span>
+                                        <span v-if="sec.transfer.isChangeAirport" class="text-others-original">不同機場</span>
+                                        <span v-if="sec.baggageStraight > 0">｜ 行李直掛</span>
+                                    </div>
                                 </div>
-
-                                <!-- right info -->
-                                <div class="col-span-12 md:col-span-8 space-y-2">
-                                <div class="font-bold text-others-gray7">
-                                    {{ sec.departureAirportCode }}{{ sec.departureAirportName }}{{ sec.departureTerminal }}{{  sec.departureCityName }}
-                                </div>
-                                <div class="flex items-center gap-2 text-others-gray1">
-                                    <img
-                                        v-if="airlineLogoFor(sec)"
-                                        :src="airlineLogoFor(sec)"
-                                        :alt="sec.marketingAirlineName || sec.operatingAirlineName"
-                                        class="w-5 h-5 object-contain"
-                                        @error="onImageError"
-                                    />
-                                    <span class="font-semibold">{{ sec.flightNo || sec.operatingFlightNo }}</span>
-                                    <span class="text-others-gray1">{{ sec.marketingAirlineName || sec.operatingAirlineName }}</span>
-                                    <span class="text-others-gray1">{{ sec.craft?.craftName ? ' ' + sec.craft.craftName : '' }}</span>
-                                </div>
-                                <div class="font-bold text-others-gray7">
-                                    {{ sec.arrivalAirportCode }}{{ sec.arrivalAirportName }}{{ sec.arrivalTerminal }}{{ sec.arrivalCityName }}
-                                </div>
-                                </div>
-                            </div>
-
-                            <!-- transfer chips (between legs) -->
-                            <div v-if="i < bookingStore.returnSegment.sectors.length - 1 && sec.transfer" class="mx-10 my-2 text-others-gray1">
-                                <div class="inline-flex items-center gap-2 bg-tb-body rounded-[10px] px-6 py-2">
-                                <span>於{{ sec.transfer.transferCity }}轉機</span>
-                                <span class="text-others-gray3">|</span>
-                                <span class="text-others-original">{{ toDuration(sec.transfer.transferStayMinutes) }}</span>
-                                <span class="text-others-gray3" v-if="sec.transfer.isChangeTerminal">|</span>
-                                <span v-if="sec.transfer.isChangeTerminal" class="text-others-original">不同航廈</span>
-                                <span class="text-others-gray3" v-if="sec.transfer.isChangeAirport">|</span>
-                                <span v-if="sec.transfer.isChangeAirport" class="text-others-original">不同機場</span>
-                                <span v-if="sec.baggageStraight > 0">｜ 行李直掛</span>
-                                </div>
-                            </div>
                             </div>
                         </div>
                     </div>
@@ -496,17 +450,38 @@
             </div>
             <div class="col-span-12 md:col-span-3 rounded-[10px] bg-white p-6 drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] md:p-4 w-full h-fit">
                 <div class="space-y-3">
-                    <!-- Header total -->
-                    <div class="flex items-baseline justify-between text-primary-gold font-semibold">
-                        <span>{{ titleLabel }}</span>
+                    <!-- Adult ticket total -->
+                    <div v-if="adultTotal > 0" class="flex items-baseline justify-between text-primary-gold font-semibold">
+                        <span>成人機票總額</span>
                         <div class="flex items-end">
-                            {{ currency }} {{ formatPrice(effectiveTotal) }}
+                            {{ currency }} {{ formatPrice(adultTotal) }}
                         </div>
                     </div>
-                    <!-- Line items -->
+                    
+                    <!-- Adult line items -->
                     <div
-                        v-for="(line, idx) in effectiveLines"
-                        :key="idx"
+                        v-for="(line, idx) in adultLines"
+                        :key="`adult-${idx}`"
+                        class="flex justify-between text-others-gray1"
+                        >
+                        <span>{{ line.label }}</span>
+                        <div class="flex items-end">
+                            {{ currency }} {{ formatPrice(line.amount) }} x {{ line.qty ?? 1 }}
+                        </div>
+                    </div>
+                    
+                    <!-- Child ticket total -->
+                    <div v-if="childTotal > 0" class="flex items-baseline justify-between text-primary-gold font-semibold">
+                        <span>兒童機票總額</span>
+                        <div class="flex items-end">
+                            {{ currency }} {{ formatPrice(childTotal) }}
+                        </div>
+                    </div>
+                    
+                    <!-- Child line items -->
+                    <div
+                        v-for="(line, idx) in childLines"
+                        :key="`child-${idx}`"
                         class="flex justify-between text-others-gray1"
                         >
                         <span>{{ line.label }}</span>
@@ -578,7 +553,10 @@
         <BookingInstruction :open="isOpenBookingInstruction" @close="isOpenBookingInstruction = false" />
     </Transition>
     <Transition name="fade">
-        <BaggageInfoAndFeeRule :open="sharedValue.isOpenBaggageInfoAndFeeRule" :fareRuleData="sharedValue?.fareRuleData" @close="sharedValue.isOpenBaggageInfoAndFeeRule = false" />
+        <BaggageInfoAndFeeRule 
+            :open="sharedValue.isOpenBaggageInfoAndFeeRule" 
+            :fareRuleData="bookingStore.fareRuleData" 
+            @close="updateValue({ isOpenBaggageInfoAndFeeRule: false })" />
     </Transition>
     <Transition name="fade">
         <div v-if="bookingError" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" @click.self="bookingError = null">
@@ -784,6 +762,42 @@ const nationalities = ref<Array<{
     countryNameZh: string
 }>>([])
 
+// Helper function to get segment title based on trip type and index
+function getSegmentTitle(segmentIndex: number): string {
+  if (bookingStore.isMultiTrip) {
+    return `行程${segmentIndex + 1}`
+  } else if (bookingStore.isRoundTrip) {
+    return segmentIndex === 0 ? '去程' : '回程'
+  } else {
+    return '去程'
+  }
+}
+
+// Helper function to get departure city from a segment
+function getSegmentDeparture(segment: any): string {
+  if (segment?.sectors && segment.sectors.length > 0) {
+    return segment.sectors[0].departureCityName || segment.sectors[0].departureAirportName || '出發地'
+  }
+  return '出發地'
+}
+
+// Helper function to get departure city from first segment
+function getFirstSegmentDeparture(): string {
+  if (bookingStore.segments.length > 0) {
+    return getSegmentDeparture(bookingStore.segments[0])
+  }
+  return bookingStore.searchParams?.departureCity || '出發地'
+}
+
+// Helper function to get arrival city from last sector of a segment
+function getLastSegmentArrival(segment: any): string {
+  if (segment?.sectors && segment.sectors.length > 0) {
+    const lastSector = segment.sectors[segment.sectors.length - 1]
+    return lastSector.arrivalCityName || lastSector.arrivalAirportName || '目的地'
+  }
+  return '目的地'
+}
+
 onMounted(async () => {
     await bookingStore.getBookingData()
 
@@ -808,20 +822,21 @@ const realLines = computed(() => {
   const lines: Line[] = []
   fareSummary.forEach(summary => {
     const passengerType = summary.passengerType
+    const passengerLabel = passengerType === 'ADT' ? '成人' : passengerType === 'CNN' ? '兒童' : '嬰兒'
     const qty = passengerType === 'ADT' ? (bookingStore.searchParams?.adults || 1) : 
                passengerType === 'CNN' ? (bookingStore.searchParams?.children || 0) : 
                passengerType === 'INF' ? (bookingStore.searchParams?.infants || 0) : 1
 
     if (qty > 0) {
       lines.push({
-        label: `${passengerType === 'ADT' ? '成人' : passengerType === 'CNN' ? '兒童' : '嬰兒'}票價`,
+        label: `${passengerLabel}票價`,
         amount: summary.price,
         qty: qty
       })
 
       if (summary.taxAmount > 0) {
         lines.push({
-          label: `稅與費用`,
+          label: `${passengerLabel}稅與費用`,
           amount: summary.taxAmount,
           qty: qty
         })
@@ -838,6 +853,25 @@ const effectiveLines = computed(() => {
 
 const effectiveTotal = computed(() => {
   return effectiveLines.value.reduce((sum: number, l: Line) => sum + (Number(l.amount) * (Number(l.qty ?? 1))), 0)
+})
+
+// Filter lines by passenger type
+const adultLines = computed(() => {
+  return effectiveLines.value.filter(line => line.label.startsWith('成人'))
+})
+
+const childLines = computed(() => {
+  return effectiveLines.value.filter(line => line.label.startsWith('兒童'))
+})
+
+// Calculate adult total
+const adultTotal = computed(() => {
+  return adultLines.value.reduce((sum: number, l: Line) => sum + (Number(l.amount) * (Number(l.qty ?? 1))), 0)
+})
+
+// Calculate child total
+const childTotal = computed(() => {
+  return childLines.value.reduce((sum: number, l: Line) => sum + (Number(l.amount) * (Number(l.qty ?? 1))), 0)
 })
 
 
@@ -953,57 +987,33 @@ assistanceInfo: isSpecialNeed.value ? {
 isAgreedToTheTerms: isAgreedToTheTerms.value
 }
 
-  let itineraryOrder = 1
-
-  if (bookingStore.outboundSegment && bookingStore.outboundSegment.sectors && bookingStore.outboundSegment.sectors.length > 0) {
-    const outboundItinerary = {
-      order: itineraryOrder++,
-      departureAirportCode: bookingStore.outboundSegment.header.departureAirportCode,
-      arrivalAirportCode: bookingStore.outboundSegment.header.arrivalAirportCode,
-      sectors: bookingStore.outboundSegment.sectors.map((sector: Sector, index: number) => ({
-        order: index + 1,
-        departureAirportCode: sector.departureAirportCode,
-        arrivalAirportCode: sector.arrivalAirportCode,
-        departureAirportName: sector.departureAirportName,
-        arrivalAirportName: sector.arrivalAirportName,
-        departureDate: formatDateWithYYYYMMDD(sector.departureDate),
-        departureTime: sector.departureTime,
-        arrivalDate: formatDateWithYYYYMMDD(sector.arrivalDate),
-        arrivalTime: sector.arrivalTime,
-        marketingAirlineCode: sector.marketingAirlineCode,
-        marketingAirlineName: sector.marketingAirlineName,
-        flightNo: sector.flightNo,
-        bookingClass: sector.bookingClass || 'Y',
-        cabinType: sector.cabinType
-      }))
+  // Build itineraries from segments array
+  bookingStore.segments.forEach((segment, segmentIndex) => {
+    if (segment && segment.sectors && segment.sectors.length > 0) {
+      const itinerary = {
+        order: segmentIndex + 1,
+        departureAirportCode: segment.header.departureAirportCode,
+        arrivalAirportCode: segment.header.arrivalAirportCode,
+        sectors: segment.sectors.map((sector: Sector, index: number) => ({
+          order: index + 1,
+          departureAirportCode: sector.departureAirportCode,
+          arrivalAirportCode: sector.arrivalAirportCode,
+          departureAirportName: sector.departureAirportName,
+          arrivalAirportName: sector.arrivalAirportName,
+          departureDate: formatDateWithYYYYMMDD(sector.departureDate),
+          departureTime: sector.departureTime,
+          arrivalDate: formatDateWithYYYYMMDD(sector.arrivalDate),
+          arrivalTime: sector.arrivalTime,
+          marketingAirlineCode: sector.marketingAirlineCode,
+          marketingAirlineName: sector.marketingAirlineName,
+          flightNo: sector.flightNo,
+          bookingClass: sector.bookingClass || 'Y',
+          cabinType: sector.cabinType
+        }))
+      }
+      bookingData.itineraries.push(itinerary)
     }
-    bookingData.itineraries.push(outboundItinerary)
-  }
-
-  if (bookingStore.returnSegment && bookingStore.returnSegment.sectors && bookingStore.returnSegment.sectors.length > 0) {
-    const returnItinerary = {
-      order: itineraryOrder++,
-      departureAirportCode: bookingStore.returnSegment.header.departureAirportCode,
-      arrivalAirportCode: bookingStore.returnSegment.header.arrivalAirportCode,
-      sectors: bookingStore.returnSegment.sectors.map((sector: any, index: number) => ({
-        order: index + 1,
-        departureAirportCode: sector.departureAirportCode,
-        arrivalAirportCode: sector.arrivalAirportCode,
-        departureAirportName: sector.departureAirportName,
-        arrivalAirportName: sector.arrivalAirportName,
-        departureDate: formatDateWithYYYYMMDD(sector.departureDate),
-        departureTime: sector.departureTime,
-        arrivalDate: formatDateWithYYYYMMDD(sector.arrivalDate),
-        arrivalTime: sector.arrivalTime,
-        marketingAirlineCode: sector.marketingAirlineCode,
-        marketingAirlineName: sector.marketingAirlineName,
-        flightNo: sector.flightNo,
-        bookingClass: sector.bookingClass || 'Y',
-        cabinType: sector.cabinType
-      }))
-    }
-    bookingData.itineraries.push(returnItinerary)
-  }
+  })
 
   booking(bookingData)
     .then(response => {
@@ -1016,7 +1026,7 @@ isAgreedToTheTerms: isAgreedToTheTerms.value
           passengers: bookingData.passengers
         });
 
-        localStorage.setItem("BOOKING_DATA", JSON.stringify(bookingStore.$state))
+        bookingStore.saveBookingData()
         
         step.value = 3
       } else {

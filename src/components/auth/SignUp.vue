@@ -47,7 +47,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <div class="flex flex-row w-full mb-4">
                     <span class="text-h6 text-others-gray1 md:text-h6-d">
                         我已閱讀
