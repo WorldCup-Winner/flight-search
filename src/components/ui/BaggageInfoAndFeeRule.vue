@@ -138,7 +138,7 @@ import { ref, defineProps, defineEmits, computed } from "vue";
 
 const props = defineProps<{
     open?: boolean;
-    fareRuleData: FareRuleResponse['data']
+    fareRuleData: FareRuleResponse['data'] | null
 }>();
 
 const departureOrarrival = ref(true)
