@@ -170,7 +170,7 @@
             <!-- right info -->
             <div class="col-span-12 md:col-span-8 space-y-2">
               <div class="font-bold text-others-gray7">
-                {{ sec.departureAirportCode }}{{ sec.departureAirportName }}{{ sec.departureTerminal }}{{  sec.departureCityName }}
+                {{ sec.departureAirportCode }} {{ sec.departureAirportName }} {{ sec.departureTerminal }} {{  sec.departureCityName }}
               </div>
               <div class="flex items-center gap-2 text-others-gray1">
                 <img
@@ -182,10 +182,10 @@
                 />
                 <span class="font-semibold">{{ sec.flightNo || sec.operatingFlightNo }}</span>
                 <span class="text-others-gray1">{{ sec.marketingAirlineName || sec.operatingAirlineName }}</span>
-                <span class="text-others-gray1">{{ sec.craft?.craftName ? ' ' + sec.craft.craftName : '' }}</span>
+                <span v-if="sec.craft?.craftName != '未知機型'" class="text-others-gray1">{{ sec.craft?.craftName ? ' ' + sec.craft.craftName : '' }}</span>
               </div>
               <div class="font-bold text-others-gray7">
-                {{ sec.arrivalAirportCode }}{{ sec.arrivalAirportName }}{{ sec.arrivalTerminal }}{{ sec.arrivalCityName }}
+                {{ sec.arrivalAirportCode }} {{ sec.arrivalAirportName }} {{ sec.arrivalTerminal }} {{ sec.arrivalCityName }}
               </div>
             </div>
           </div>
@@ -193,7 +193,7 @@
           <!-- transfer chips (between legs) -->
           <div v-if="i < sectors.length - 1 && sec.transfer" class="mx-10 my-2 text-others-gray1">
             <div class="inline-flex items-center gap-2 bg-white rounded-[10px] px-6 py-2">
-              <span>於{{ sec.transfer.transferCity }}轉機</span>
+              <span>於{{ sec.arrivalCityName }}轉機</span>
               <span class="text-others-gray3">|</span>
               <span class="text-others-original">{{ toDuration(sec.transfer.transferStayMinutes) }}</span>
               <span class="text-others-gray3" v-if="sec.transfer.isChangeTerminal">|</span>
@@ -270,9 +270,11 @@
               <div class="text-right">
                 <div class="flex items-end font-bold">
                   <div class="text-[12px] text-others-original">{{ currencyDisplay }}</div>
-                  <div class="text-[28px] text-others-original leading-none">{{ formatPrice(roundTripIncluded ? priceTotal : fare.price) }}</div>
+                  <div class="text-[28px] text-others-original leading-none">{{ formatPrice(priceTotal) }}</div>
+                  <div class="text-[12px] text-others-gray1">&nbsp; 起</div>
                 </div>
-                <div class="text-[12px] pt-2 text-others-gray1">{{ roundTripIncluded ? '來回含稅價' : '含稅價' }}</div>
+                <div v-if="taxMode == 'in'" class="text-[12px] pt-1 text-others-gray1">{{ '來回含稅價'  }}</div>
+                <div v-else class="text-[12px] pt-1 text-others-gray1">{{ '參考稅費'  }}&nbsp;{{ currencyDisplay }}&nbsp;{{ formatPrice(taxAmount ?? 0) }}</div>
               </div>
               <button class="bg-others-original hover:bg-others-hover min-w-[98px] text-white font-bold rounded-[10px] px-6 py-3" @click="goBooking(fare)" type="button">
                 訂購

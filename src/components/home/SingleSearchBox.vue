@@ -515,6 +515,10 @@ function onSearch() {
   emit('search', payload)
 }
 
+function handleSingleDateApply(date) {
+    isDatePickerOpen.value = false
+}
+
 // Others
 function onDocClick(e) {
   const t = e.target

@@ -8,7 +8,7 @@
         <div class="max-w-[800px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-8 py-8 ">
             <h3 class="mb-2 text-h3 text-others-gray1 md:text-h3-d font-light">行李資訊及票價規定</h3>
             <p class="mb-6 text-sm text-others-gray1 leading-relaxed">
-                請確認您的機票依序使用，若第一段航程未搭乘，後續航程將自動失效。若您的行程包含多張不同機票或由不同航空公司承運，任一機票的變更或取消不影響其他機票行程，您仍須依原票規使用。
+                機票須依序使用，若第一段未搭乘，後段航程將自動失效。若您的行程包含多張不同機票或由不同航空公司承運，任一機票的變更或取消不影響其他機票行程，您仍須依原票規使用。
             </p>
             <div class="h-[700px] overflow-y-scroll text-sm leading-relaxed text-gray-700
                     [&::-webkit-scrollbar]:w-[4px]
@@ -46,7 +46,7 @@
 
                 <h3 class="text-lg font-bold text-others-original">票價規定</h3>
                 <p class="mb-4 text-sm text-others-gray1">
-                    如需退票，航空公司將以代金券方式退給您，僅可訂購原航空公司之行程，使用方式依航空公司為準。
+                    如需退票，航空公司將以現金/代金券方式退給您，代金券僅可訂購原航空公司之行程，退票方式依航空公司為準。
                 </p>
                 <div v-if="!fareRuleData?.fareRuleTable || fareRuleData.fareRuleTable.length === 0" class="text-others-gray1 mb-4 p-4 bg-tb-body rounded-[10px]">
                     <p>暫無票價規定資訊</p>
@@ -99,7 +99,8 @@
                                     <th scope="row" class="p-4">退改說明</th>
                                     <td colspan="3" class="p-4">
                                         <ol class="list-decimal pl-5 space-y-1">
-                                        <li>改期：如更改後的票價及稅費較高，須另補足差額。</li>
+                                            <li>退票：依起飛前後之規定，按系統計算之退票費用收費，若機票已部分使用，需扣除已使用航段的價格/稅金，通常已部分使用的機票無退票價值。</li>
+                                            <li>改期：依起飛前後之規定，按系統計算之改票費用收費，若更改後票價及稅費較高，須另外補足差額。</li>
                                         </ol>
                                     </td>
                                 </tr>
@@ -107,7 +108,9 @@
                                     <th scope="row" class="p-4">服務費</th>
                                     <td colspan="3" class="p-4">
                                         <ol class="list-decimal pl-5 space-y-1">
-                                        <li>改期：加利利服務費 TWD500 元。</li>
+                                            <li>退票：加利利旅遊服務費 TWD 800 元。</li>
+                                            <li>改期：加利利旅遊服務費 TWD 500 元。</li>
+                                            <li>若非自營票而產生供應商服務費，則依服務人員提供之退/改票服務費金額為準。</li>
                                         </ol>
                                     </td>
                                 </tr>
@@ -115,10 +118,10 @@
                                     <th scope="row" class="p-4">備註</th>
                                     <td colspan="3" class="p-4">
                                         <ol class="list-decimal pl-5 space-y-1">
-                                            <li>若未提前 24～72 小時取消機位，也未如期搭乘，辦理退改時將依各航空公司規定額外收取未登機費。</li>
-                                            <li>購票作業費用為：退改費用 + 價差 + 服務費，每人每次計算。</li>
-                                            <li>航司訂位費含於稅費內，退票不退還。各航司費用不同，每張票約 USD25～USD40 不等。</li>
-                                            <li>請依上述退改期限至少提前 2 天（不含假日）申請，以免作業來不及而導致無法退／改。</li>
+                                            <li>若未在出發前 24～72 小時內取消機位，且當日未搭乘，辦理退票或改票時，將依航空公司規定加收「未登機費」，需結清費用後才能辦理退款。</li>
+                                            <li>退改實際費用包含：航空公司之退改手續費＋票價/稅金差額＋服務費，按每人每次計算。</li>
+                                            <li>航空公司訂位費已含於稅金內，各航空公司收費標準不同，退票時不退還。</li>
+                                            <li>請務必於規定退改期限前至少 2 個工作天（不含假日）提出申請，避免因時間不足導致無法辦理退票或改票。</li>
                                         </ol>
                                     </td>
                                 </tr>

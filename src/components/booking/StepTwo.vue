@@ -6,7 +6,7 @@
                     <div v-if="!loading">
                         <div class="w-ful flex items-center gap-2 bg-white text-others-gray7 text-[17px] rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-4 font-bold">
                             <!-- Display all segments in the route -->
-                            <template v-if="bookingStore.segments.length > 0">
+                            <template v-if="bookingStore.segments.length > 0 && !bookingStore.isRoundTrip">
                                 <template v-for="(segment, index) in bookingStore.segments" :key="index">
                                     <span>{{ getSegmentDeparture(segment) }}</span>
                                     <img src="@/assets/imgs/arrow-right.svg" />
@@ -15,7 +15,7 @@
                                 </template>
                             </template>
                             <!-- Fallback for old data structure -->
-                            <template v-else>
+                            <template v-else-if="bookingStore.segments.length > 0 && bookingStore.isRoundTrip">
                                 <span>{{ bookingStore.searchParams?.departureCity || '出發地' }}</span>
                                 <img v-if="bookingStore.isRoundTrip" src="@/assets/imgs/arrow-both.svg" />
                                 <img v-else src="@/assets/imgs/arrow-right.svg" />
@@ -62,7 +62,7 @@
 
                                     <div class="col-span-12 md:col-span-8 space-y-2">
                                         <div class="font-bold text-others-gray7">
-                                            {{ sec.departureAirportCode }}{{ sec.departureAirportName }}{{ sec.departureTerminal }}{{  sec.departureCityName }}
+                                            {{ sec.departureAirportCode }} {{ sec.departureAirportName }} {{ sec.departureTerminal }} {{  sec.departureCityName }}
                                         </div>
                                         <div class="flex items-center gap-2 text-others-gray1">
                                             <img
@@ -77,7 +77,7 @@
                                             <span class="text-others-gray1">{{ sec.craft?.craftName ? ' ' + sec.craft.craftName : '' }}</span>
                                         </div>
                                         <div class="font-bold text-others-gray7">
-                                            {{ sec.arrivalAirportCode }}{{ sec.arrivalAirportName }}{{ sec.arrivalTerminal }}{{ sec.arrivalCityName }}
+                                            {{ sec.arrivalAirportCode }} {{ sec.arrivalAirportName }} {{ sec.arrivalTerminal }} {{ sec.arrivalCityName }}
                                         </div>
                                     </div>
                                 </div>
@@ -134,7 +134,7 @@
                                 <div class="relative grid-cols-12 md:col-span-3 mb-4">
                                     <label class="block mb-1 text-others-gray1">姓氏</label>
                                     <input
-                                        v-model="p.firstName"
+                                        v-model="p.lastName"
                                         type="text"
                                         placeholder="英文姓 例：PENG"
                                         class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
@@ -142,7 +142,7 @@
                                 <div class="relative grid-cols-12 md:col-span-3 mb-4">
                                     <label class="block mb-1 text-others-gray1">名字</label>
                                     <input
-                                        v-model="p.lastName"
+                                        v-model="p.firstName"
                                         type="text" 
                                         placeholder="英文名 例：DAKUAI"
                                         class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
@@ -238,7 +238,7 @@
                     <p class="absolute left-[40px] top-[20px] text-primary-gold font-bold">主要聯絡人</p>
                     <div class="grid grid-cols-12 justify-between gap-x-5 items-center text-others-gray1 pt-8">
                         <div class="relative grid-cols-12 md:col-span-3 mb-4">
-                            <label class="block mb-1 text-others-gray1">聯絡人姓氏</label>
+                            <label class="block mb-1 text-others-gray1">姓氏</label>
                             <input 
                                 v-model="contactFirstName"
                                 type="text" 
@@ -246,7 +246,7 @@
                                 class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                         </div>
                         <div class="relative grid-cols-12 md:col-span-3 mb-4">
-                            <label class="block mb-1 text-others-gray1">聯絡人名字</label>
+                            <label class="block mb-1 text-others-gray1">名字</label>
                             <input 
                                 v-model="contactLastName"
                                 type="text" 

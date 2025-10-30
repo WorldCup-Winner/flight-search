@@ -79,8 +79,6 @@
 
                 <!-- RIGHT MONTH -->
                 <div class="w-full">
-
-
                     <!-- DOW header -->
                     <div class="grid grid-cols-7 text-center mb-4 text-[16px] leading-none">
                         <div v-for="(d, i) in dow" :key="d" class="tracking-wide h-8 flex items-center justify-center"
@@ -201,6 +199,7 @@ function onPick(d: Date) {
         }
         emit('update:start', start.value)
         emit('update:end', end.value)
+        emit('apply', {start: start.value, end: end.value})
     }
 }
 

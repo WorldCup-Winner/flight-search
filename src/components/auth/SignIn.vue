@@ -37,7 +37,7 @@
                         <div class="relative flex items-center">
                             <input v-model="form.password" :type="showPassword ? 'text' : 'password'"
                                 placeholder="......."
-                                class="w-full px-5 py-2 border border-primary-gold rounded-md tracking-[10px] text-others-gray1 focus:ring-2 focus:ring-others-original focus:outline-none" />
+                                class="w-full px-5 py-2 border border-primary-gold rounded-md text-others-gray1 focus:ring-2 focus:ring-others-original focus:outline-none" />
                             <button type="button" class="absolute right-2 mx-0 text-others-gray1"
                                 @click="togglePassword">
                                 <div v-if="showPassword">
@@ -75,7 +75,6 @@
                             <input v-model="form1.lastname" type="text" placeholder="名字"
                                 class="w-[190px] px-5 py-2 border rounded-md border-primary-gold text-others-gray1 focus:ring-2 focus:ring-others-original focus:outline-none" />
                         </div>
-                        <p class="block mb-1 text-others-gray1 text-sm">非本國籍請輸入護照英文拼音</p>
                     </div>
                     <div class="mb-4 w-full">
                         <label class="block mb-1 text-others-gray1 text-sm">手機號碼</label>
