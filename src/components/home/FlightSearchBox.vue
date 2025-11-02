@@ -144,7 +144,7 @@ function handleSearchNextSegment(payload: { selectedRefNumbers: number[]; select
 
 // Restore state from URL on mount
 onMounted(() => {
-  const query = route.query
+  const query = route.query as Record<string, string | string[]>
   if (Object.keys(query).length > 0) {
     const restoredParams = decodeSearchParams(query)
     if (restoredParams) {
