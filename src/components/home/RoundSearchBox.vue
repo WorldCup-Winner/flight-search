@@ -341,7 +341,8 @@ import { useAirlineStore } from '@/stores/airline'
 import { useLocationStore } from '@/stores/location'
 
 import RangeDatePicker from '@/components/ui/RangeDatePicker.vue'
-import { formatDate, getMaxDate } from '@/utils'
+import { formatDate, getMaxDate, formatDateLocal } from '@/utils'
+import dayjs from 'dayjs'
 
 // Stores
 const airlineStore = useAirlineStore()
@@ -513,8 +514,8 @@ function onSearch() {
                 order: 1,
                 departureLocation: selectedDepartureCity.value?.iataCode || 'TPE',
                 arrivalLocation: selectedArrivalCity.value?.iataCode || '',
-                departureDate: startDate.value ? startDate.value.toISOString().slice(0, 10) : null,
-                returnDate: endDate.value ? endDate.value.toISOString().slice(0, 10) : null,
+                departureDate: formatDateLocal(startDate.value),
+                returnDate: formatDateLocal(endDate.value),
             }
         ],
         adultCount: adultCount.value,

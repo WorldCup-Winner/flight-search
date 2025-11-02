@@ -38,7 +38,12 @@
         <BannerImg />
         <RecommendedTrips />
       </div>
-      <SearchResultLoading v-else-if="flightSearchStore.loading === 'loading'" v-model="state" :rows="11" :speed="1300" />
+      <template v-else-if="flightSearchStore.loading === 'loading'">
+        <div class="relative">
+          <SearchResultLoading :rows="11" />
+          <FlightSearchLoading />
+        </div>
+      </template>
       <ResultsMain 
         v-else-if="flightSearchStore.loading === 'success'" 
         :data="flightSearchStore.data" 
@@ -57,25 +62,31 @@
 </template>
 
 <script setup lang="ts">
-import { inject, ref } from 'vue'
+import { inject, ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
 import { useFlightSearchStore } from '@/stores/flightSearch'
+import { encodeSearchParams, decodeSearchParams, updateURLParams } from '@/utils'
 
 import MultiSearchBox from '@/components/home/MultiSearchBox.vue'
 import SingleSearchBox from '@/components/home/SingleSearchBox.vue'
 import RoundSearchBox from "@/components/home/RoundSearchBox.vue"
 import RecommendedTrips from '@/components/home/RecommendedTrips.vue'
 import BannerImg from '@/components/home/BannerImg.vue'
+import FlightSearchLoading from '@/components/ui/FlightSearchLoading.vue'
 import SearchResultLoading from '@/components/ui/SearchResultLoading.vue'
 import ResultsMain from '@/components/search/ResultsMain.vue';
 import BaggageInfoAndFeeRule from '@/components/ui/BaggageInfoAndFeeRule.vue'
 import { useAirlineStore } from '@/stores/airline'
 
+// Router
+const router = useRouter()
+const route = useRoute()
+
 // Store
 const flightSearchStore = useFlightSearchStore()
 const airlineStore = useAirlineStore()
 const activeTab = ref('roundtrip')
-const state = ref('default') // "default" | "loading" | "result"
 const currentSearchRequest = ref<any>(null)
 const currentSegmentIndex = ref(0)
 const selectedSegments = ref<any[]>([])
@@ -94,6 +105,11 @@ function handleSearchFlight(payload: any) {
   currentSearchRequest.value = payload
   currentSegmentIndex.value = 0 // Reset to first segment
   selectedSegments.value = [] // Clear selected segments for new search
+  
+  // Update URL with search params
+  const urlParams = encodeSearchParams(payload)
+  updateURLParams(urlParams, router, false)
+  
   flightSearchStore.fetchFlightSearch(payload)
   airlineStore.fetchAirlineAlliance()
   
@@ -115,12 +131,44 @@ function handleSearchNextSegment(payload: { selectedRefNumbers: number[]; select
       selectedRefNumbers: payload.selectedRefNumbers
     }
     
+    // Update URL with new selected ref numbers
+    const urlParams = encodeSearchParams(updatedRequest)
+    updateURLParams(urlParams, router, true) // Use replace to avoid creating new history entry
+    
     // Increment segment index
     currentSegmentIndex.value += 1
     
     flightSearchStore.fetchFlightSearch(updatedRequest)
   }
 }
+
+// Restore state from URL on mount
+onMounted(() => {
+  const query = route.query
+  if (Object.keys(query).length > 0) {
+    const restoredParams = decodeSearchParams(query)
+    if (restoredParams) {
+      // Set active tab based on trip type
+      const tripType = Array.isArray(query.tripType) ? query.tripType[0] : query.tripType
+      if (tripType === 'oneway' || tripType === 'roundtrip' || tripType === 'multi') {
+        activeTab.value = tripType
+      }
+      
+      // Calculate segment index from selectedRefNumbers
+      if (restoredParams.selectedRefNumbers?.length) {
+        currentSegmentIndex.value = restoredParams.selectedRefNumbers.length
+      } else {
+        currentSegmentIndex.value = 0
+      }
+      
+      // Restore search request and trigger search
+      currentSearchRequest.value = restoredParams
+      flightSearchStore.fetchFlightSearch(restoredParams)
+      airlineStore.fetchAirlineAlliance()
+      updateValue?.({ isSearch: true })
+    }
+  }
+})
 </script>
 <style scoped>
 /* subtle entrance for the small modal */

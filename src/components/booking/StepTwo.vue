@@ -506,7 +506,7 @@
                 <!-- Agreement -->
                 <div class="mt-10 flex gap-2 items-start text-sm text-slate-600 select-none">                        
                     <label class="flex mt-[3px] items-center cursor-pointer relative">
-                    <input type="checkbox" checked
+                    <input type="checkbox"
                         class="peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-primary-gold"
                         id="check" v-model="isAgreedToTheTerms" />
                         <span
@@ -573,6 +573,20 @@
             </div>
         </div>
     </Transition>
+    <Transition name="fade">
+        <ThankYou v-if="showThankYouDialog" @close="showThankYouDialog = false" />
+    </Transition>
+    <Transition name="fade">
+        <ReviewPassengers 
+            v-if="showReviewPassengers" 
+            :passengers="reviewPassengersList" 
+            @confirm="proceedWithBooking" 
+            @cancel="showReviewPassengers = false" 
+        />
+    </Transition>
+    <Transition name="fade">
+        <BookingInProgress v-if="showBookingInProgress" :passengers="reviewPassengersList" />
+    </Transition>
 </template>
 <script setup lang="ts">
 import { provide, computed, onBeforeUnmount, ref, onMounted, watch } from 'vue'
@@ -585,6 +599,9 @@ import SignUp from "@/components/auth/SignUp.vue"
 import WakeUp from "@/components/ui/WakeUp.vue"
 import BookingInstruction from '@/components/ui/BookingInstruction.vue'
 import BaggageInfoAndFeeRule from '@/components/ui/BaggageInfoAndFeeRule.vue'
+import ThankYou from '@/components/ui/ThankYou.vue'
+import ReviewPassengers from '@/components/ui/ReviewPassengers.vue'
+import BookingInProgress from '@/components/ui/BookingInProgress.vue'
 
 import PhoneField from '../ui/PhoneField.vue'
 import DatePicker from '../ui/DatePicker.vue'
@@ -729,6 +746,9 @@ const isOpenBookingInstruction = ref(false)
 const isAgreedToTheTerms = ref(false)
 const isWakeUp = ref(false)
 const bookingError = ref<string | null>(null)
+const showThankYouDialog = ref(false)
+const showReviewPassengers = ref(false)
+const showBookingInProgress = ref(false)
 
 const code  = ref('+886')
 const phoneNumber  = ref('')
@@ -874,6 +894,15 @@ const childTotal = computed(() => {
   return childLines.value.reduce((sum: number, l: Line) => sum + (Number(l.amount) * (Number(l.qty ?? 1))), 0)
 })
 
+// Format passengers for review dialog
+const reviewPassengersList = computed(() => {
+  return passengers.value.map(p => ({
+    lastName: p.lastName,
+    firstName: p.firstName,
+    gender: p.gender,
+    type: p.type
+  }))
+})
 
 function emitSubmit() {
   if (!isAgreedToTheTerms.value) {
@@ -908,7 +937,14 @@ function emitSubmit() {
     return
     }
   
-  isSubmitting.value = true;
+  // Show review dialog first
+  showReviewPassengers.value = true
+}
+
+function proceedWithBooking() {
+  showReviewPassengers.value = false
+  isSubmitting.value = true
+  showBookingInProgress.value = true
 
 const bookingData: BookingRequestViewModel = {
 itineraries: [] as any[],
@@ -1033,7 +1069,8 @@ isAgreedToTheTerms: isAgreedToTheTerms.value
         console.error('Booking API error:', response.data.head.message);
         bookingError.value = response.data.head.message || '訂單提交失敗，請檢查您的資料。';
       }
-    isSubmitting.value = false;
+      isSubmitting.value = false;
+      showBookingInProgress.value = false;
     })
     .catch(error => {
       console.error('Booking request failed:', error);
@@ -1044,7 +1081,8 @@ isAgreedToTheTerms: isAgreedToTheTerms.value
         errorMessage = error.message;
       }
       bookingError.value = errorMessage;
-        isSubmitting.value = false;
+      isSubmitting.value = false;
+      showBookingInProgress.value = false;
     })
 }
 
@@ -1125,6 +1163,16 @@ watch(
     passengers.value = list
   },
   { immediate: true, deep: true }
+)
+
+watch(
+  () => isAgreedToTheTerms.value,
+  (newValue) => {
+    if (newValue) {
+      showThankYouDialog.value = true
+    }
+  },
+  { immediate: false }
 )
 
 window.scrollTo({

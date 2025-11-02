@@ -7,13 +7,12 @@ export type Airline = {
 
 export type Location = {
   region: string;
-  airports: [
-    {
-      iataCode: string;
-      cityNameZhTw: string;
-      airportNameZh: string;
-    }
-  ];
+  airports: Array<{
+    iataCode: string;
+    cityNameZhTw: string;
+    airportNameZh: string;
+    cityDisplayOrder?: number;
+  }>;
 }
 
 export type EndPoint = {

@@ -432,7 +432,15 @@ function onPurchase(payload: any) {
   }
   
   bookingStore.saveBookingData()
-  router.push('/booking')
+  
+  // Update URL with booking step and selected trip ID
+  router.push({
+    path: '/booking',
+    query: {
+      step: '2',
+      tripId: String(refNumber)
+    }
+  })
 }
 
 function onFiltersChange(v: any) { Object.assign(filters, v) }

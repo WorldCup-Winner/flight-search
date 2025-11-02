@@ -7,7 +7,8 @@
   </main>
 </template>
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue'
+import { onUnmounted, ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import BookingProcessBar from '@/components/booking/BookingProcessBar.vue'
 import StepTwo from '@/components/booking/StepTwo.vue'
@@ -15,11 +16,36 @@ import StepThree from '@/components/booking/StepThree.vue'
 import StepFour from '@/components/booking/StepFour.vue'
 import { useBookingStore } from '@/stores/booking'
 
+const route = useRoute()
+const router = useRouter()
 const step = ref(2)
 const bookingStore = useBookingStore()
 
+// Restore booking step from URL or localStorage
+onMounted(() => {
+  // Try to restore from URL first
+  const urlStep = Array.isArray(route.query.step) ? route.query.step[0] : route.query.step
+  if (urlStep) {
+    const stepNum = parseInt(urlStep)
+    if (stepNum >= 2 && stepNum <= 4) {
+      step.value = stepNum
+    }
+  }
+  
+  // Try to restore booking data from localStorage
+  bookingStore.getBookingData()
+})
+
+// Update URL when step changes
+watch(step, (newStep) => {
+  const currentQuery = { ...route.query }
+  currentQuery.step = String(newStep)
+  router.replace({ query: currentQuery })
+})
+
 onUnmounted(() => {
-  bookingStore.clearBookingData() 
+  // Don't clear booking data immediately on unmount - keep it for back navigation
+  // bookingStore.clearBookingData()
 })
 
 // With options for smooth scrolling

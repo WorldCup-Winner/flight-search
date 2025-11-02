@@ -248,7 +248,7 @@
         </div>
 
         <!-- Error state -->
-        <div v-else-if="fareRuleError" class="p-8 text-center text-text-error">
+        <div v-else-if="fareRuleError && !show404Dialog" class="p-8 text-center text-text-error">
           {{ fareRuleError }}
         </div>
 
@@ -298,17 +298,42 @@
         </div>
       </div>
     </Transition>
+
+    <!-- 404 Error Dialog -->
+    <Transition name="fade">
+      <div v-if="show404Dialog" 
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+        @click.self="show404Dialog = false">
+        <div class="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+          <div class="text-center">
+            <h3 class="text-xl font-bold text-others-gray1 mb-4">無法取得票價規則</h3>
+            <p class="text-others-gray7 mb-6">
+              抱歉，目前無法取得此航班的票價規則資訊，請重新搜尋。
+            </p>
+            <button
+              @click="handle404Confirm"
+              class="px-6 py-2 bg-primary-gold text-white rounded-lg font-medium hover:bg-others-hover transition">
+              確定
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </article>
 </template>
 
 <script setup lang="ts">
 import { inject, computed, ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { airlineLogoFor, airlineLogoForWithCode, formatDateToChinese, formatPrice, noteIcon, onImageError, resolveAirlineLogo, toDuration } from '@/utils'
 
 // Icons
 import AirlineTwo from '@/assets/imgs/airlines/airline-two.svg'
 import type { CardRow, FareIconType, FareNoteType, FareOption, FareRuleRequest, FareRuleResponse, FareSegment, Pax, Sector } from '@/utils/types'
 import { fareRule } from '@/api'
+
+const router = useRouter()
+const route = useRoute()
 
 const props = defineProps<{
   tripType: string
@@ -404,6 +429,7 @@ const taxMode = computed(() => props.taxMode ?? "來回含稅價")
 const fareRuleData = ref<FareRuleResponse['data'] | null>(null)
 const fareRuleLoading = ref(false)
 const fareRuleError = ref<string | null>(null)
+const show404Dialog = ref(false)
 const dynamicFareOptions = ref<FareOption[]>([])
 const visibleFares = computed(() => {
   const options = dynamicFareOptions.value.length > 0 ? dynamicFareOptions.value : (props.fareOptions ?? [])
@@ -561,15 +587,71 @@ async function fetchFareRule() {
       
       console.log('Dynamic fare options generated:', dynamicFareOptions.value)
     } else {
-      fareRuleError.value = response.data.head.message || 'Failed to fetch fare rules'
-      console.error('Fare rule API error:', fareRuleError.value)
+      // Check if it's a 404 error (could be in response code or HTTP status)
+      if (response.data.head.code === 404 || response.status === 404) {
+        show404Dialog.value = true
+        fareRuleError.value = null
+      } else {
+        fareRuleError.value = response.data.head.message || 'Failed to fetch fare rules'
+        console.error('Fare rule API error:', fareRuleError.value)
+      }
     }
   } catch (error: any) {
-    fareRuleError.value = error.message || 'Error fetching fare rules'
-    console.error('Fare rule fetch error:', error)
+    // Check if it's a 404 error
+    if (error.response?.status === 404) {
+      show404Dialog.value = true
+      fareRuleError.value = null
+    } else {
+      fareRuleError.value = error.message || 'Error fetching fare rules'
+      console.error('Fare rule fetch error:', error)
+    }
   } finally {
     fareRuleLoading.value = false
   }
+}
+
+function handle404Confirm() {
+  show404Dialog.value = false
+  
+  // Get current search params from URL to preserve user inputs
+  const currentQuery = route.query
+  const searchParams: Record<string, string> = {}
+  
+  // Extract all search-related params (preserve trip type, all segments, dates, passengers, filters)
+  // This handles single, round trip, and multi-segment searches
+  // Clear selectedRefs to reset to first step (no segments selected)
+  Object.keys(currentQuery).forEach(key => {
+    // Keep all search-related params (tripType, dep*, arr*, date*, returnDate*, passengers, filters)
+    // Exclude booking-specific params (step, tripId) and selectedRefs (to reset to first step)
+    if (
+      key === 'tripType' ||
+      key.startsWith('dep') ||
+      key.startsWith('arr') ||
+      key.startsWith('date') ||
+      key.startsWith('returnDate') ||
+      key === 'adults' ||
+      key === 'children' ||
+      key === 'infants' ||
+      key === 'airline' ||
+      key === 'cabin' ||
+      key === 'nonStop'
+    ) {
+      const value = currentQuery[key]
+      if (Array.isArray(value)) {
+        searchParams[key] = value[0]
+      } else if (value) {
+        searchParams[key] = value
+      }
+    }
+  })
+  
+  // Note: We intentionally exclude 'selectedRefs' to reset to the first step of flight search
+  
+  // Navigate to home page with preserved search params
+  router.push({
+    path: '/',
+    query: searchParams
+  })
 }
 
 function transformFareRuleToOptions(data: FareRuleResponse['data']): FareOption[] {
@@ -672,5 +754,15 @@ function transformFareRuleToOptions(data: FareRuleResponse['data']): FareOption[
 }
 @keyframes shimmer {
   100% { transform: translateX(100%); }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

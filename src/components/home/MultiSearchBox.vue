@@ -358,6 +358,7 @@ import { useAirlineStore } from '@/stores/airline'
 
 import DatePicker from '@/components/ui/DatePicker.vue'
 import { formatDate, getMaxDate } from '@/utils'
+import dayjs from 'dayjs'
 
 // Stores
 const airlineStore = useAirlineStore()
@@ -620,7 +621,7 @@ function onSearch() {
       order: idx + 1,
       departureLocation: s.departureCity?.iataCode || 'TPE',
       arrivalLocation: s.arrivalCity?.iataCode || '',
-      departureDate: s.departureDate ? s.departureDate.toISOString().slice(0, 10) : null,
+      departureDate: s.departureDate ? dayjs( s.departureDate).format('YYYY-MM-DD') : null,
       returnDate: null
     })),
     adultCount: adultCount.value,
