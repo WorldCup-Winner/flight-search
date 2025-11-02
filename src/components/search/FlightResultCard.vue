@@ -614,7 +614,7 @@ function handle404Confirm() {
   show404Dialog.value = false
   
   // Get current search params from URL to preserve user inputs
-  const currentQuery = route.query
+  const currentQuery = route.query as Record<string, string | string[]>
   const searchParams: Record<string, string> = {}
   
   // Extract all search-related params (preserve trip type, all segments, dates, passengers, filters)
