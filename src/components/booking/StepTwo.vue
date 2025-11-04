@@ -561,8 +561,9 @@
     <Transition name="fade">
         <div v-if="bookingError" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" @click.self="bookingError = null">
             <div class="flex flex-col items-center justify-center w-[400px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-16 py-8">
-                <img src="@/assets/imgs/alert-price-change.png" class="w-20 h-20 mb-4" />
-                <h3 class="text-others-gray1 text-h3 md:text-h3-d mb-2">訂單提交失敗</h3>
+                <img src="@/assets/imgs/alert-failed-order.png" class="w-25 h-25 mb-4" />
+                <h3 v-if="bookingErrorType === '500'" class="text-others-gray1 text-h3 md:text-h3-d mb-2">航班已滿</h3>
+                <h3 v-else class="text-others-gray1 text-h3 md:text-h3-d mb-2">訂單提交失敗</h3>
                 <p class="text-others-gray1 text-center mb-6">{{ bookingError }}</p>
                 <button
                   class="mt-6 px-4 py-1 w-[93px] h-[40px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition"
@@ -746,6 +747,7 @@ const isOpenBookingInstruction = ref(false)
 const isAgreedToTheTerms = ref(false)
 const isWakeUp = ref(false)
 const bookingError = ref<string | null>(null)
+const bookingErrorType = ref<string | null>(null)
 const showThankYouDialog = ref(false)
 const showReviewPassengers = ref(false)
 const showBookingInProgress = ref(false)
@@ -906,21 +908,25 @@ const reviewPassengersList = computed(() => {
 
 function emitSubmit() {
   if (!isAgreedToTheTerms.value) {
+    bookingErrorType.value = '0'
     bookingError.value = '請先閱讀並同意訂購須知';
     return
     }
   
   if (!contactFirstName.value || !contactLastName.value || !contactGender.value ||  !contactEmail.value || !phoneNumber.value) {
+    bookingErrorType.value = '0'
     bookingError.value = '請填寫完整的聯絡人資訊';
     return
     }
   
   if (isReceipt.value && (!companyName.value || !taxId.value)) {
+    bookingErrorType.value = '0'
     bookingError.value = '請填寫完整的發票資訊';
     return
   }
 
   if (isSpecialNeed.value && !specialNeedsText.value.trim()) {
+    bookingErrorType.value = '0'
     bookingError.value = '請描述您的特殊需求';
     return
     }
@@ -933,6 +939,7 @@ function emitSubmit() {
     !p.documentExpiryDateText.trim()
   )
   if (incompletePassengers.length > 0) {
+    bookingErrorType.value = '0'
     bookingError.value = '請填寫完整的乘客資訊，包含證件號碼與效期';
     return
     }
@@ -1065,7 +1072,12 @@ isAgreedToTheTerms: isAgreedToTheTerms.value
         bookingStore.saveBookingData()
         
         step.value = 3
+      } else if (response.data.head.code == 500) {
+        bookingErrorType.value = '500'
+        console.error('Booking API error:', response.data.head.message);
+        bookingError.value = '趕快來找找其他航班，可能有更好的價格呢！';
       } else {
+        bookingErrorType.value = '600'
         console.error('Booking API error:', response.data.head.message);
         bookingError.value = response.data.head.message || '訂單提交失敗，請檢查您的資料。';
       }
@@ -1073,8 +1085,9 @@ isAgreedToTheTerms: isAgreedToTheTerms.value
       showBookingInProgress.value = false;
     })
     .catch(error => {
+      bookingErrorType.value = '600'
       console.error('Booking request failed:', error);
-      let errorMessage = '訂單提交失敗，請稍後再試';
+      let errorMessage = '趕快來找找其他航班，可能有更好的價格呢！';
       if (error.response?.data?.head?.message) {
         errorMessage = error.response.data.head.message;
       } else if (error.message) {
