@@ -16,10 +16,10 @@
                             </template>
                             <!-- Fallback for old data structure -->
                             <template v-else-if="bookingStore.segments.length > 0 && bookingStore.isRoundTrip">
-                                <span>{{ bookingStore.searchParams?.departureCity || '出發地' }}</span>
+                                <span>{{ getSegmentDeparture(bookingStore.segments[0]) || '出發地' }}</span>
                                 <img v-if="bookingStore.isRoundTrip" src="@/assets/imgs/arrow-both.svg" />
                                 <img v-else src="@/assets/imgs/arrow-right.svg" />
-                                <span>{{ bookingStore.searchParams?.arrivalCity || '目的地' }}</span>
+                                <span>{{ getSegmentDeparture(bookingStore.segments[1]) || '目的地' }}</span>
                             </template>
                         </div>
                     </div>
