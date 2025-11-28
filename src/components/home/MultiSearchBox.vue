@@ -265,7 +265,7 @@
 
 <script setup lang="ts">
 import { ref, watch, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
-import type { ComponentPublicInstance, Element } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import { useLocationStore } from '@/stores/location'
 import { useAirlineStore } from '@/stores/airline'
 import type { Location, Airline } from '@/utils/types'
@@ -330,7 +330,7 @@ const isAirlineOpen = ref(false)
 const isCabinClassOpen = ref(false)
 
 // Triggers
-type VNodeRef = Element | ComponentPublicInstance | null
+type VNodeRef = HTMLElement | ComponentPublicInstance | null
 type ElementMap = Record<number, VNodeRef>
 const depTriggerRefs = reactive<ElementMap>({})
 const depPopoverRefs = reactive<ElementMap>({})
@@ -749,19 +749,23 @@ function onDocClick(e: MouseEvent) {
 
   // bottom popovers
   if (isPassengersOpen.value && passPopoverRef.value && passTriggerRef.value &&
-    !passPopoverRef.value.contains(t) && !passTriggerRef.value.contains(t)) {
+    passPopoverRef.value instanceof HTMLElement && passTriggerRef.value instanceof HTMLElement &&
+    !passPopoverRef.value.contains(target) && !passTriggerRef.value.contains(target)) {
     isPassengersOpen.value = false
   }
   if (isAirlineOpen.value && airlinePopoverRef.value && airlineTriggerRef.value &&
-    !airlinePopoverRef.value.contains(t) && !airlineTriggerRef.value.contains(t)) {
+    airlinePopoverRef.value instanceof HTMLElement && airlineTriggerRef.value instanceof HTMLElement &&
+    !airlinePopoverRef.value.contains(target) && !airlineTriggerRef.value.contains(target)) {
     isAirlineOpen.value = false
   }
   if (
     isCabinClassOpen.value &&
     cabinClassPopoverRef.value &&
     cabinClassTriggerRef.value &&
-    !cabinClassPopoverRef.value.contains(t) &&
-    !cabinClassTriggerRef.value.contains(t)
+    cabinClassPopoverRef.value instanceof HTMLElement &&
+    cabinClassTriggerRef.value instanceof HTMLElement &&
+    !cabinClassPopoverRef.value.contains(target) &&
+    !cabinClassTriggerRef.value.contains(target)
   ) {
     isCabinClassOpen.value = false
   }
