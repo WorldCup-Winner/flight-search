@@ -147,7 +147,7 @@
             <div class="relative flex-1 md:flex-none" ref="airlineTriggerRef">
                 <button @click="toggleAirline"
                     class="flex items-center justify-between w-full md:min-w-[200px] bg-divider-soft text-primary-gold px-3 md:px-4 py-2 md:py-3 rounded-xl text-xs md:text-sm font-medium transition-colors duration-200">
-                    <span class="truncate">{{ selectedAirline.nameZhTw?.trim() || "航空公司偏好" }}</span>
+                    <span class="truncate">{{ selectedAirline?.nameZhTw?.trim() || "航空公司偏好" }}</span>
                     <svg class="w-3 h-3 md:w-4 md:h-4 ml-2 flex-shrink-0 transition-transform duration-200"
                         :class="{ 'rotate-180': isAirlineOpen }" fill="currentColor" viewBox="0 0 12 12">
                         <path d="M6 9L2 4h8l-4 5z" />

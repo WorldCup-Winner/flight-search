@@ -186,7 +186,7 @@
             <div class="relative flex-1 md:flex-none" ref="airlineTriggerRef">
                 <button @click="toggleAirline"
                     class="flex items-center justify-between w-full md:min-w-[200px] bg-divider-soft text-primary-gold px-3 md:px-4 py-2 md:py-3 rounded-xl text-xs md:text-sm font-medium transition-colors duration-200">
-                    <span class="truncate">{{ selectedAirline.nameZhTw?.trim() || "航空公司偏好" }}</span>
+                    <span class="truncate">{{ selectedAirline?.nameZhTw?.trim() || "航空公司偏好" }}</span>
                     <svg class="w-3 h-3 md:w-4 md:h-4 ml-2 flex-shrink-0 transition-transform duration-200"
                         :class="{ 'rotate-180': isAirlineOpen }" fill="currentColor" viewBox="0 0 12 12">
                         <path d="M6 9L2 4h8l-4 5z" />
@@ -265,8 +265,10 @@
 
 <script setup lang="ts">
 import { ref, watch, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
+import type { ComponentPublicInstance, Element } from 'vue'
 import { useLocationStore } from '@/stores/location'
 import { useAirlineStore } from '@/stores/airline'
+import type { Location, Airline } from '@/utils/types'
 
 import DatePicker from '@/components/ui/DatePicker.vue'
 import LocationPicker from '@/components/ui/LocationPicker.vue'
@@ -274,6 +276,22 @@ import AirlinePicker from '@/components/ui/AirlinePicker.vue'
 import CabinClassPicker from '@/components/ui/CabinClassPicker.vue'
 import PassengerPicker from '@/components/ui/PassengerPicker.vue'
 import { formatDate, formatDateToYYYYMMDD } from '@/utils'
+
+interface Airport {
+    iataCode: string
+    cityNameZhTw: string
+    airportNameZh?: string
+    cityDisplayOrder?: number
+}
+
+interface Segment {
+    id: number
+    departureLocation: Location | null
+    arrivalLocation: Location | null
+    departureCity: Airport | null
+    arrivalCity: Airport | null
+    departureDate: Date | null
+}
 
 // Props
 const props = defineProps<{
@@ -290,14 +308,12 @@ const childrenCount = ref(0)
 
 // Filter Options
 const airlineSearchTerm = ref('')
-const selectedAirline = ref({
-    iataCode: null,
-    nameZhTw: null
-})
-const cabinClassOptions = ['艙等不限', '經濟艙', '豪華經濟艙', '商務艙', '頭等艙']
-const selectedCabinClass = ref('艙等不限')
+const selectedAirline = ref<Airline | null>(null)
+const cabinClassOptions = ['艙等不限', '經濟艙', '豪華經濟艙', '商務艙', '頭等艙'] as const
+type CabinClassOption = typeof cabinClassOptions[number]
+const selectedCabinClass = ref<CabinClassOption>('艙等不限')
 const isNonStopFlight = ref(false)
-const cabinClassMap = {
+const cabinClassMap: Record<CabinClassOption, string | null> = {
   '艙等不限': null,
   '經濟艙': 'M',
   '豪華經濟艙': 'W',
@@ -314,7 +330,8 @@ const isAirlineOpen = ref(false)
 const isCabinClassOpen = ref(false)
 
 // Triggers
-type ElementMap = Record<number, HTMLElement | null>
+type VNodeRef = Element | ComponentPublicInstance | null
+type ElementMap = Record<number, VNodeRef>
 const depTriggerRefs = reactive<ElementMap>({})
 const depPopoverRefs = reactive<ElementMap>({})
 const destTriggerRefs = reactive<ElementMap>({})
@@ -322,19 +339,19 @@ const destPopoverRefs = reactive<ElementMap>({})
 const dateTriggerRefs = reactive<ElementMap>({})
 const datePopoverRefs = reactive<ElementMap>({})
 
-const passTriggerRef = ref<HTMLElement | null>(null)
-const passPopoverRef = ref<HTMLElement | null>(null)
-const airlineTriggerRef = ref<HTMLElement | null>(null)
-const airlinePopoverRef = ref<HTMLElement | null>(null)
-const cabinClassTriggerRef = ref<HTMLElement | null>(null)
-const cabinClassPopoverRef = ref<HTMLElement | null>(null)
+const passTriggerRef = ref<VNodeRef>(null)
+const passPopoverRef = ref<VNodeRef>(null)
+const airlineTriggerRef = ref<VNodeRef>(null)
+const airlinePopoverRef = ref<VNodeRef>(null)
+const cabinClassTriggerRef = ref<VNodeRef>(null)
+const cabinClassPopoverRef = ref<VNodeRef>(null)
 
-const setDepTriggerRef = (i: number) => (el: HTMLElement | null) => { if (el) depTriggerRefs[i] = el }
-const setDepPopoverRef = (i: number) => (el: HTMLElement | null) => { if (el) depPopoverRefs[i] = el }
-const setArrTriggerRef = (i: number) => (el: HTMLElement | null) => { if (el) destTriggerRefs[i] = el }
-const setArrPopoverRef = (i: number) => (el: HTMLElement | null) => { if (el) destPopoverRefs[i] = el }
-const setDateTriggerRef = (i: number) => (el: HTMLElement | null) => { if (el) dateTriggerRefs[i] = el }
-const setDatePopoverRef = (i: number) => (el: HTMLElement | null) => { if (el) datePopoverRefs[i] = el }
+const setDepTriggerRef = (i: number) => (el: VNodeRef) => { if (el && el instanceof HTMLElement) depTriggerRefs[i] = el }
+const setDepPopoverRef = (i: number) => (el: VNodeRef) => { if (el && el instanceof HTMLElement) depPopoverRefs[i] = el }
+const setArrTriggerRef = (i: number) => (el: VNodeRef) => { if (el && el instanceof HTMLElement) destTriggerRefs[i] = el }
+const setArrPopoverRef = (i: number) => (el: VNodeRef) => { if (el && el instanceof HTMLElement) destPopoverRefs[i] = el }
+const setDateTriggerRef = (i: number) => (el: VNodeRef) => { if (el && el instanceof HTMLElement) dateTriggerRefs[i] = el }
+const setDatePopoverRef = (i: number) => (el: VNodeRef) => { if (el && el instanceof HTMLElement) datePopoverRefs[i] = el }
 
 // Methods
 function toggleDeparture(i: any) { openDepIndex.value = openDepIndex.value === i ? -1 : i }
@@ -379,7 +396,7 @@ function addSegment() {
     newSegment.departureCity = lastSegment.arrivalCity
     // Also set the location if available
     if (lastSegment.arrivalLocation) {
-      newSegment.departureLocation = lastSegment.arrivalLocation ?? ""
+      newSegment.departureLocation = lastSegment.arrivalLocation
     }
   }
   
@@ -396,11 +413,11 @@ function removeSegment(idx: any) {
   errors.value.splice(idx, 1)
 }
 
-function selectDepartureCity(i:any, city:any) {
+function selectDepartureCity(i: number, city: Airport) {
   segments.value[i].departureCity = city
   openDepIndex.value = -1
 }
-function selectArrivalCity(i:any, city:any) {
+function selectArrivalCity(i: number, city: Airport) {
   segments.value[i].arrivalCity = city
   openArrIndex.value = -1
   
@@ -412,13 +429,19 @@ function selectArrivalCity(i:any, city:any) {
     // Also update the location if available
     const currentSegment = segments.value[i]
     if (currentSegment.arrivalLocation) {
-      nextSegment.departureLocation = currentSegment.arrivalLocation ?? ""
+      nextSegment.departureLocation = currentSegment.arrivalLocation
     }
   }
 }
-function selectCabinClass(v: any) {
-  selectedCabinClass.value = v
+function selectCabinClass(v: string) {
+  if (isCabinClassOption(v)) {
+    selectedCabinClass.value = v
+  }
   isCabinClassOpen.value = false
+}
+
+function isCabinClassOption(v: string): v is CabinClassOption {
+  return cabinClassOptions.includes(v as CabinClassOption)
 }
 
 function onPassengerUpdate(payload: { adults: number; children: number }) {
@@ -532,18 +555,18 @@ function isDateBeforePrevious(idx: number): boolean {
   
   return currentDate < prevDate
 }
-function swapCities(i: any) {
+function swapCities(i: number) {
   const s = segments.value[i]
 
-  let temp = s.departureLocation
-  s.departureLocation = s.arrivalLocation ?? ""
-  s.arrivalLocation = temp
+  const tempLocation = s.departureLocation
+  s.departureLocation = s.arrivalLocation
+  s.arrivalLocation = tempLocation
 
-  temp = s.departureCity
+  const tempCity = s.departureCity
   s.departureCity = s.arrivalCity
-  s.arrivalCity = temp
+  s.arrivalCity = tempCity
 }
-function selectAirline(airline: any) {
+function selectAirline(airline: Airline) {
   selectedAirline.value = airline
   isAirlineOpen.value = false
   airlineSearchTerm.value = ''
@@ -693,11 +716,11 @@ function findAirportByCode(code: string) {
 // Segments
 let nextId = 1
 
-const makeSeg = () => ({
+const makeSeg = (): Segment => ({
   id: nextId++,
   departureLocation: null,
   // 目的地預設選擇「日韓」區域
-  arrivalLocation: (locationStore.locations && locationStore.locations.find(loc => loc.region === '日韓')) || null,
+  arrivalLocation: locationStore.locations.find(loc => loc.region === '日韓') ?? null,
   departureCity: null,
   arrivalCity: null,
   departureDate: null
@@ -708,14 +731,17 @@ const segments = ref([makeSeg(), makeSeg()])
 // Others
 const hasSearched = ref(false)
 
-function onDocClick(e: any) {
-  const t = e.target
-  const closeIfOutside = (openIdxRef: any, popRefs: any, trigRefs: any) => {
+function onDocClick(e: MouseEvent) {
+  const target = e.target
+  if (!(target instanceof Node)) return
+  
+  const closeIfOutside = (openIdxRef: { value: number }, popRefs: ElementMap, trigRefs: ElementMap) => {
     const i = openIdxRef.value
     if (i < 0) return
-    const pop = popRefs[i], trig = trigRefs[i]
-    if (!pop || !trig) return
-    if (!pop.contains(t) && !trig.contains(t)) openIdxRef.value = -1
+    const pop = popRefs[i]
+    const trig = trigRefs[i]
+    if (!pop || !trig || !(pop instanceof HTMLElement) || !(trig instanceof HTMLElement)) return
+    if (!pop.contains(target) && !trig.contains(target)) openIdxRef.value = -1
   }
   closeIfOutside(openDepIndex, depPopoverRefs, depTriggerRefs)
   closeIfOutside(openArrIndex, destPopoverRefs, destTriggerRefs)
@@ -805,7 +831,7 @@ function onSearch() {
     })),
     adultCount: adultCount.value,
     childCount: childrenCount.value,
-    carrierId: selectedAirline.value.iataCode || null,
+    carrierId: selectedAirline.value?.iataCode || null,
     cabinId: cabinClassMap[selectedCabinClass.value] || null,
     isNonStopFlight: isNonStopFlight.value,
     selectedRefNumbers: []
