@@ -197,8 +197,8 @@
                             @click.self="isCabinClassOpen = false"
                         >
                             <CabinClassPicker
-                                :selected-class="selectedCabinClass"
-                                @select="selectCabinClass"
+                                :selected-class="selectedCabinClass as string"
+                                @select="(v: string) => selectCabinClass(v as CabinClassOption)"
                                 @close="isCabinClassOpen = false"
                             />
                         </div>
@@ -463,6 +463,10 @@ function selectCabinClass(v: CabinClassOption) {
     isCabinClassOpen.value = false
 }
 
+function isCabinClassOption(v: string): v is CabinClassOption {
+    return cabinClassOptions.includes(v as CabinClassOption)
+}
+
 function onPassengerUpdate(payload: { adults: number; children: number }) {
     adultCount.value = payload.adults
     childrenCount.value = payload.children
@@ -507,13 +511,13 @@ function handleDateApply(range: RangeSelection) {
     }
 }
 function swapCities() {
-    let temp = selectedDepartureLocation.value
+    const tempLocation = selectedDepartureLocation.value
     selectedDepartureLocation.value = selectedArrivalLocation.value
-    selectedArrivalLocation.value = temp
+    selectedArrivalLocation.value = tempLocation
 
-    temp = selectedDepartureCity.value
+    const tempCity = selectedDepartureCity.value
     selectedDepartureCity.value = selectedArrivalCity.value
-    selectedArrivalCity.value = temp
+    selectedArrivalCity.value = tempCity
 }
 
 const errors = ref({
