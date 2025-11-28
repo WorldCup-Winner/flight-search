@@ -330,8 +330,8 @@ const isAirlineOpen = ref(false)
 const isCabinClassOpen = ref(false)
 
 // Triggers
-type VNodeRef = HTMLElement | ComponentPublicInstance | null
-type ElementMap = Record<number, VNodeRef>
+type VNodeRef = Element | ComponentPublicInstance | null
+type ElementMap = Record<number, HTMLElement | null>
 const depTriggerRefs = reactive<ElementMap>({})
 const depPopoverRefs = reactive<ElementMap>({})
 const destTriggerRefs = reactive<ElementMap>({})
@@ -339,12 +339,12 @@ const destPopoverRefs = reactive<ElementMap>({})
 const dateTriggerRefs = reactive<ElementMap>({})
 const datePopoverRefs = reactive<ElementMap>({})
 
-const passTriggerRef = ref<VNodeRef>(null)
-const passPopoverRef = ref<VNodeRef>(null)
-const airlineTriggerRef = ref<VNodeRef>(null)
-const airlinePopoverRef = ref<VNodeRef>(null)
-const cabinClassTriggerRef = ref<VNodeRef>(null)
-const cabinClassPopoverRef = ref<VNodeRef>(null)
+const passTriggerRef = ref<HTMLElement | null>(null)
+const passPopoverRef = ref<HTMLElement | null>(null)
+const airlineTriggerRef = ref<HTMLElement | null>(null)
+const airlinePopoverRef = ref<HTMLElement | null>(null)
+const cabinClassTriggerRef = ref<HTMLElement | null>(null)
+const cabinClassPopoverRef = ref<HTMLElement | null>(null)
 
 const setDepTriggerRef = (i: number) => (el: VNodeRef) => { if (el && el instanceof HTMLElement) depTriggerRefs[i] = el }
 const setDepPopoverRef = (i: number) => (el: VNodeRef) => { if (el && el instanceof HTMLElement) depPopoverRefs[i] = el }
@@ -441,7 +441,7 @@ function selectCabinClass(v: string) {
 }
 
 function isCabinClassOption(v: string): v is CabinClassOption {
-  return cabinClassOptions.includes(v as CabinClassOption)
+  return (cabinClassOptions as readonly string[]).includes(v)
 }
 
 function onPassengerUpdate(payload: { adults: number; children: number }) {
