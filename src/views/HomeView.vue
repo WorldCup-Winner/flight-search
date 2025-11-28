@@ -12,12 +12,14 @@ import FlightSearchBox from '@/components/home/FlightSearchBox.vue'
 
 interface SharedData {
   isOpenBaggageInfoAndFeeRule: boolean,
-  isSearch: boolean
+  isSearch: boolean,
+  fareRuleData?: any, // Store the fare rule data to pass to the dialog
 }
 
 const sharedValue = ref<SharedData>({
   isOpenBaggageInfoAndFeeRule: false,
   isSearch: false,
+  fareRuleData: undefined,
 })
 
 function updateValue(val: SharedData) {

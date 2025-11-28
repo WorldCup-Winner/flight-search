@@ -6,7 +6,7 @@
         <p class="text-others-gray1 text-center">為確保取得最新票價和機位資訊，網頁將重新整理</p>
         <button
           class="mt-6 px-4 py-1 w-[93px] h-[40px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition"
-          @click="notifyParent"
+          @click="step = 3"
         >
           確認
         </button>
@@ -15,10 +15,6 @@
 </template>
 <script setup lang="ts">
 import WakeUp from "@/assets/imgs/icon-wake-up.svg"
-import { defineEmits } from 'vue';
-const emit = defineEmits<{ (e: 'button-clicked', payload: boolean): void }>();
 
-function notifyParent() {
-  emit('button-clicked', true);
-}
+const step = defineModel('step')
 </script>

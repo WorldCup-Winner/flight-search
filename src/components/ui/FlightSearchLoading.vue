@@ -13,7 +13,7 @@
       <!-- Text -->
       <div class="text-center mb-8">
         <h3 class="text-xl text-others-gray1 mb-2">高速搜尋中</h3>
-        <p class="text-sm text-others-gray1">請稍等片刻</p>
+        <p class="text-sm text-others-gray1">請稍候...</p>
       </div>
       
       <!-- Loading Progress Bar -->
@@ -46,4 +46,3 @@
   width: 80%;
 }
 </style>
-

@@ -33,7 +33,7 @@
                 </div>
               </div>
               <div class="text-[15px] mt-1 text-others-gray7">
-                共找到 <span class="font-bold">{{ totalCount }}</span> 筆航班 以下皆為當地時間（24小時制），價格為每人均價。
+                共找到 <span class="font-bold">{{ totalCount }}</span> 筆航班 以下皆為當地時間（24小時制），價格為每人均價(含稅及附加費)。
               </div>
             </div>
           </div>
@@ -177,54 +177,114 @@ import { computed, onMounted, onBeforeUnmount, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { timeToMin, inWindow, formatDateToChinese } from '@/utils'
-import type { CardRow, Sector } from '@/utils/types'
+import type { CardRow } from '@/utils/types'
 
 import FlightResultCard from '@/components/search/FlightResultCard.vue'
 import FilterSideBar from '@/components/search/FilterSideBar.vue'
 import SorryNoData from '@/components/ui/SorryNoData.vue'
 import { useAirlineStore } from '@/stores/airline'
 import { useBookingStore } from '@/stores/booking'
+import { useLocationStore } from '@/stores/location'
 
 const airlineStore = useAirlineStore()
+const locationStore = useLocationStore()
 
+// ---------- Props ----------
 const props = defineProps<{
   data: CardRow[],
   tripType: string,
-  searchRequest?: any,
-  currentSegmentIndex?: number,
-  selectedSegments?: any[]
+  searchRequest?: any, // The original search request
+  currentSegmentIndex?: number, // Current segment being displayed (0-based)
+  selectedSegments?: any[] // Previously selected flight segments from parent
 }>()
 
+// ---------- Header context (derived from props.data) ----------
 const first = computed(() => props.data?.[0])
-console.log(props.data[0])
+
+// Helper function to get city name from IATA code
+const getCityInfoFromCode = (code: string): { code: string, name: string } => {
+  if (!code) return { code: '', name: '' }
+  
+  // Try to find from location store
+  for (const location of locationStore.locations) {
+    const airport = location.airports?.find((a: any) => a.iataCode === code)
+    if (airport) {
+      return {
+        code: airport.iataCode || code,
+        name: airport.cityNameZhTw || code
+      }
+    }
+  }
+  
+  return { code, name: code }
+}
+
 const dateText = computed(() => {
+  // prefer itinerary-level date if provided, else first sector
   const d = first.value?.departureDate || first.value?.sectors?.[0]?.departureDate
-  return d ? d : ''
+  
+  // Fallback to searchRequest when props.data is empty
+  if (!d && props.searchRequest?.flightSegments) {
+    const segmentIndex = props.currentSegmentIndex ?? 0
+    const segment = props.searchRequest.flightSegments[segmentIndex]
+    return segment?.departureDate || ''
+  }
+  
+  return d || ''
 })
-const origin = computed(() => ({
-  code: first.value?.departureAirportCode,
-  name: first.value?.departureCityName ?? first.value?.departureAirportName
-}))
-const destination = computed(() => ({
-  code: first.value?.arrivalAirportCode,
-  name: first.value?.arrivalCityName ?? first.value?.arrivalAirportName
-}))
+
+const origin = computed(() => {
+  const code = first.value?.departureCityCode ?? first.value?.sectors?.[0]?.departureCityCode ?? ''
+  const name = first.value?.departureCityName ?? first.value?.sectors?.[0]?.departureCityName ?? ''
+  
+  // Fallback to searchRequest when props.data is empty
+  if (!code && props.searchRequest?.flightSegments) {
+    const segmentIndex = props.currentSegmentIndex ?? 0
+    const segment = props.searchRequest.flightSegments[segmentIndex]
+    if (segment?.departureLocation) {
+      return getCityInfoFromCode(segment.departureLocation)
+    }
+  }
+  
+  return { code, name }
+})
+
+const destination = computed(() => {
+  const code = first.value?.arrivalCityCode ?? first.value?.sectors?.slice(-1)?.[0]?.arrivalCityCode ?? ''
+  const name = first.value?.arrivalCityName ?? first.value?.sectors?.slice(-1)?.[0]?.arrivalCityName ?? ''
+  
+  // Fallback to searchRequest when props.data is empty
+  if (!code && props.searchRequest?.flightSegments) {
+    const segmentIndex = props.currentSegmentIndex ?? 0
+    const segment = props.searchRequest.flightSegments[segmentIndex]
+    if (segment?.arrivalLocation) {
+      return getCityInfoFromCode(segment.arrivalLocation)
+    }
+  }
+  
+  return { code, name }
+})
 
 const tripType = computed(() => props.tripType);
 
+// Determine current leg based on tripType and currentSegmentIndex
 const currentLeg = computed<'outbound' | 'return'>(() => {
   const segmentIndex = props.currentSegmentIndex ?? 0
   
   if (props.tripType === 'roundtrip') {
+    // For round trip: 0 = outbound, 1+ = return
     return segmentIndex === 0 ? 'outbound' : 'return'
   } else if (props.tripType === 'multi') {
-    const totalSegments = props.searchRequest?. flightSegments?.length ?? 1
+    // For multi-trip: always 'outbound' until the last segment
+    const totalSegments = props.searchRequest?.flightSegments?.length ?? 1
     return segmentIndex < totalSegments - 1 ? 'outbound' : 'return'
   } else {
+    // For one-way: always 'return' (last segment)
     return 'return'
   }
 })
 
+// Generate segment title
 const segmentTitle = computed(() => {
   const segmentIndex = props.currentSegmentIndex ?? 0
   
@@ -237,9 +297,14 @@ const segmentTitle = computed(() => {
   }
 })
 
+// State for managing selected flights (selectedRefNumbers)
+// Initialize from searchRequest if available (for subsequent segments in multi-trip)
 const selectedRefNumbers = ref<number[]>(props.searchRequest?.selectedRefNumbers ?? [])
+
+// Local copy of selected segments to accumulate during current session
 const accumulatedSegments = ref<any[]>([...(props.selectedSegments ?? [])])
 
+// Emit event to parent when need to search next segment
 const emit = defineEmits<{
   (e: 'searchNextSegment', payload: { selectedRefNumbers: number[]; selectedSegments: any[] }): void
 }>()
@@ -287,6 +352,7 @@ const arrAirports = computed<OptionItem[]>(() => {
   return Array.from(map.entries()).map(([id, v]) => ({ id, name: v.name, price: v.min }))
 })
 
+// Stops pricing (min price for direct vs one-stop+)
 const stopsPricing = computed(() => {
   let directMin = Infinity
   let oneStopMin = Infinity
@@ -301,9 +367,183 @@ const stopsPricing = computed(() => {
   }
 })
 
+// ---------- Router / handlers ----------
 const router = useRouter()
 const bookingStore = useBookingStore()
 
+function onPurchase(payload: any) {
+  console.log('purchase', payload)
+  
+  // 收集訂票所需的所有資訊
+  const { fare, refNumber, fareRuleData } = payload
+  
+  // 找出當前航班的完整資訊
+  const currentFlight = props.data.find(flight => flight.refNumber === refNumber)
+  if (!currentFlight) {
+    console.error('Flight not found:', refNumber)
+    return
+  }
+  
+  // 計算停靠站數量（sectors數量 - 1）
+  const stopsCount = (currentFlight.sectors?.length || 1) - 1
+  
+  // 構建航段資訊
+  const currentSegment = {
+    refNumber: refNumber,
+    sectors: currentFlight.sectors || [],
+    totalMinutes: currentFlight.sectors?.reduce((sum, s) => sum + (s.durationMinutes || 0), 0) || currentFlight.durationMinutes || 0,
+    stopsCount: stopsCount,
+    totalPrice: currentFlight.price || 0,
+    currency: 'TWD', // 從 flight-search API 的回應來看，通常是 TWD
+    roundTripIncluded: tripType.value === 'roundtrip', // 來回票時為 true
+    header: {
+      departureTime: currentFlight.departureTime || '',
+      arrivalTime: currentFlight.arrivalTime || '',
+      departureAirportCode: currentFlight.departureAirportCode || currentFlight.sectors?.[0]?.departureCityCode || '',
+      arrivalAirportCode: currentFlight.arrivalAirportCode || currentFlight.sectors?.slice(-1)?.[0]?.arrivalCityCode || '',
+      departureTerminal: currentFlight.departureTerminal || currentFlight.sectors?.[0]?.departureTerminal,
+      arrivalTerminal: currentFlight.arrivalTerminal || currentFlight.sectors?.slice(-1)?.[0]?.arrivalTerminal,
+    },
+    // 新增：從 flight-search 回應中取得的欄位
+    validatingAirlineCode: currentFlight.validatingAirlineCode,
+    itineraryRBDs: currentFlight.itineraryRBDs,
+  }
+  
+  // 判斷行程類型和當前航段索引
+  const segmentIndex = props.currentSegmentIndex ?? 0
+  const isReturnSegment = tripType.value === 'roundtrip' && segmentIndex === 1
+  const isMultiTrip = tripType.value === 'multi'
+  
+  // 設定航段資訊
+  if (isMultiTrip) {
+    // 多行程：收集所有已選擇的航段 + 當前航段
+    const allSegments: any[] = []
+    
+    // 1. 加入之前選擇的所有航段
+    if (props.selectedSegments && props.selectedSegments.length > 0) {
+      props.selectedSegments.forEach((seg: any) => {
+        allSegments.push({
+          refNumber: seg.refNumber,
+          sectors: seg.sectors || [],
+          totalMinutes: seg.sectors?.reduce((sum: number, s: any) => sum + (s.durationMinutes || 0), 0) || seg.totalMinutes || 0,
+          stopsCount: seg.stopsCount || 0,
+          totalPrice: seg.totalPrice || 0,
+          currency: seg.currency || 'TWD',
+          roundTripIncluded: false,
+          header: seg.header || {},
+          validatingAirlineCode: seg.validatingAirlineCode,
+          itineraryRBDs: seg.itineraryRBDs,
+        })
+      })
+    }
+    
+    // 2. 加入當前選擇的航段
+    allSegments.push(currentSegment)
+    
+    // 3. 使用 setSegments 一次性設定所有航段
+    bookingStore.setSegments(allSegments)
+    
+    console.log('Multi-trip: Set all segments:', allSegments)
+  } else if (isReturnSegment) {
+    // 來回票的回程
+    bookingStore.setReturnSegment(currentSegment)
+    // 去程資訊應該已經在 selectedSegments 中
+    if (props.selectedSegments && props.selectedSegments.length > 0) {
+      const outboundData = props.selectedSegments[0]
+      bookingStore.setOutboundSegment({
+        refNumber: outboundData.refNumber,
+        sectors: outboundData.sectors || [],
+        totalMinutes: outboundData.sectors?.reduce((sum: number, s: any) => sum + (s.durationMinutes || 0), 0) || outboundData.totalMinutes || 0,
+        stopsCount: outboundData.stopsCount || 0,
+        totalPrice: outboundData.totalPrice || 0,
+        currency: outboundData.currency || 'TWD',
+        roundTripIncluded: outboundData.roundTripIncluded || false,
+        header: outboundData.header || {},
+        validatingAirlineCode: outboundData.validatingAirlineCode,
+        itineraryRBDs: outboundData.itineraryRBDs,
+      })
+    }
+  } else {
+    // 單程或來回票的去程
+    bookingStore.setOutboundSegment(currentSegment)
+  }
+  
+  // 設定選擇的票價
+  bookingStore.setSelectedFare(fare)
+  
+  // 設定 fare-rule 資料
+  if (fareRuleData) {
+    bookingStore.setFareRuleData(fareRuleData)
+  }
+  
+  // 設定搜尋參數
+  if (props.searchRequest) {
+    // 對於來回票，departureCity/arrivalCity 應該固定為原始搜尋的出發地/目的地
+    // 而不是當前航段的起訖點（回程時會相反）
+    let searchDepartureCity = origin.value.name
+    let searchArrivalCity = destination.value.name
+    let searchDepartureCityCode = origin.value.code
+    let searchArrivalCityCode = destination.value.code
+    
+    // 如果是回程航段，需要交換回來，使用去程的起訖點作為搜尋條件
+    if (isReturnSegment && props.selectedSegments && props.selectedSegments.length > 0) {
+      const outboundData = props.selectedSegments[0]
+      if (outboundData?.header) {
+        // 使用去程的出發地和目的地作為搜尋參數
+        searchDepartureCityCode = outboundData.header.departureAirportCode
+        searchArrivalCityCode = outboundData.header.arrivalAirportCode
+        // 從 sectors 取得城市名稱
+        if (outboundData.sectors && outboundData.sectors.length > 0) {
+          searchDepartureCity = outboundData.sectors[0]?.departureCityName || searchDepartureCity
+          searchArrivalCity = outboundData.sectors[outboundData.sectors.length - 1]?.arrivalCityName || searchArrivalCity
+        }
+      }
+    }
+    
+    bookingStore.setSearchParams({
+      tripType: tripType.value as any,
+      departureCity: searchDepartureCity,
+      arrivalCity: searchArrivalCity,
+      departureCityCode: searchDepartureCityCode,
+      arrivalCityCode: searchArrivalCityCode,
+      departureDate: props.searchRequest.departureDate || props.searchRequest.slices?.[0]?.departureDate || dateText.value,
+      returnDate: props.searchRequest.flightSegments?.[0]?.returnDate || props.searchRequest.returnDate || props.searchRequest.slices?.[1]?.departureDate || undefined,
+      adults: props.searchRequest.adults || props.searchRequest.adultCount || props.searchRequest.passengers?.ADT || 1,
+      children: props.searchRequest.children || props.searchRequest.childCount || props.searchRequest.passengers?.CHD || 0,
+      infants: props.searchRequest.infants || props.searchRequest.babyCount || props.searchRequest.passengers?.INF || 0,
+    })
+  }
+  
+  // 導航到訂票頁面 - 保留 URL 查詢參數以支援瀏覽器返回功能
+  router.push({
+    path: '/booking',
+    query: router.currentRoute.value.query
+  })
+}
+
+const handleSelect = (payload: any) => {
+  console.log('HandleSelect:', payload)
+  
+  // Step 1: For non-final segments (outbound in round trip, or non-last in multi-trip)
+  // Add the selected refNumber and trigger next search
+  if (payload.refNumber !== undefined) {
+    selectedRefNumbers.value.push(payload.refNumber)
+    
+    // Store the selected flight segments for later use in fare-rule API
+    if (payload.sectors && payload.sectors.length > 0) {
+      accumulatedSegments.value.push(payload)
+      console.log('Selected segments accumulated:', accumulatedSegments.value)
+    }
+    
+    // Emit to parent to trigger next flight search with updated selectedRefNumbers and segments
+    emit('searchNextSegment', { 
+      selectedRefNumbers: selectedRefNumbers.value,
+      selectedSegments: accumulatedSegments.value
+    })
+  }
+}
+
+// ---------- Filters (from sidebar) ----------
 const filters = reactive<{
   studentOnly: boolean
   stops: { direct: boolean; oneStop: boolean }
@@ -324,125 +564,6 @@ const filters = reactive<{
   arriveTime: [0, 1439]
 })
 
-const handleSelect = (payload: any) => {
-  console.log('HandleSelect:', payload)
-  
-  if (payload.refNumber !== undefined) {
-    selectedRefNumbers.value.push(payload.refNumber)
-    
-    if (payload.sectors && payload.sectors.length > 0) {
-      accumulatedSegments.value.push(payload)
-    }
-    
-    emit('searchNextSegment', { 
-      selectedRefNumbers: selectedRefNumbers.value,
-      selectedSegments: accumulatedSegments.value
-    })
-  }
-}
-
-function onPurchase(payload: any) {
-  console.log('purchase', payload)
-  
-  const { fare, refNumber, fareRuleData } = payload
-  
-  const currentFlight = props.data.find(flight => flight.refNumber === refNumber)
-  console.log("CURRENT FLIGHT", currentFlight)
-  if (!currentFlight) {
-    console.error('Flight not found:', refNumber)
-    return
-  }
-  
-  const stopsCount = (currentFlight.sectors?.length || 1) - 1
-  
-  const currentSegment = {
-    refNumber: refNumber,
-    sectors: currentFlight.sectors || [],
-    totalMinutes: currentFlight.sectors?.reduce((sum, s) => sum + (s.durationMinutes || 0), 0) || currentFlight.durationMinutes || 0,
-    stopsCount: stopsCount,
-    totalPrice: currentFlight.price || 0,
-    currency: 'TWD',
-    roundTripIncluded: tripType.value === 'roundtrip',
-    header: {
-      departureTime: currentFlight.departureTime || '',
-      arrivalTime: currentFlight.arrivalTime || '',
-      departureAirportCode: currentFlight.departureAirportCode || currentFlight.sectors?.[0]?.departureCityCode || '',
-      arrivalAirportCode: currentFlight.arrivalAirportCode || currentFlight.sectors?.slice(-1)?.[0]?.arrivalCityCode || '',
-      departureTerminal: currentFlight.departureTerminal || currentFlight.sectors?.[0]?.departureTerminal,
-      arrivalTerminal: currentFlight.arrivalTerminal || currentFlight.sectors?.slice(-1)?.[0]?.arrivalTerminal,
-    },
-  }
-  
-  const segmentIndex = props.currentSegmentIndex ?? 0
-  
-  // 處理不同行程類型的航段設定
-  if (tripType.value === 'multi') {
-    // 多行程：將所有已選擇的航段加上當前航段
-    const allSegments = [...(props.selectedSegments || []), currentSegment]
-    bookingStore.setMultiTripSegments(allSegments)
-  } else if (tripType.value === 'roundtrip') {
-    // 來回程：根據索引設定去程或回程
-    if (segmentIndex === 0) {
-      bookingStore.setOutboundSegment(currentSegment)
-    } else {
-      bookingStore.setReturnSegment(currentSegment)
-      // 確保去程航段也被設定
-      if (props.selectedSegments && props.selectedSegments.length > 0) {
-        const outboundData = props.selectedSegments[0]
-        bookingStore.setOutboundSegment({
-          refNumber: outboundData.refNumber,
-          sectors: outboundData.sectors || [],
-          totalMinutes: outboundData.sectors?.reduce((sum: number, s: Sector) => sum + (s.durationMinutes || 0), 0) || outboundData.totalMinutes || 0,
-          stopsCount: outboundData.stopsCount || 0,
-          totalPrice: outboundData.totalPrice || 0,
-          currency: outboundData.currency || 'TWD',
-          roundTripIncluded: outboundData.roundTripIncluded || false,
-          header: outboundData.header || {},
-        })
-      }
-    }
-  } else {
-    // 單程：設定為去程航段
-    bookingStore.setOutboundSegment(currentSegment)
-  }
-  
-  console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-  console.log(props.selectedSegments)
-  console.log(currentSegment)
-  
-  bookingStore.setSelectedFare(fare)
-  
-  if (fareRuleData) {
-    bookingStore.setFareRuleData(fareRuleData)
-  }
-  
-  if (props.searchRequest) {
-    bookingStore.setSearchParams({
-      tripType: tripType.value as any,
-      departureCity: origin.value.name,
-      arrivalCity: destination.value.name,
-      departureCityCode: origin.value.code,
-      arrivalCityCode: destination.value.code,
-      departureDate: props.searchRequest.departureDate || props.searchRequest.slices?.[0]?.departureDate || dateText.value,
-      returnDate: props.searchRequest.flightSegments?.[0]?.returnDate || props.searchRequest.returnDate || props.searchRequest.slices?.[1]?.departureDate || undefined,
-      adults: props.searchRequest.adults || props.searchRequest.adultCount || props.searchRequest.passengers?.ADT || 1,
-      children: props.searchRequest.children || props.searchRequest.childCount || props.searchRequest.passengers?.CHD || 0,
-      infants: props.searchRequest.infants || props.searchRequest.babyCount || props.searchRequest.passengers?.INF || 0,
-    })
-  }
-  
-  bookingStore.saveBookingData()
-  
-  // Update URL with booking step and selected trip ID
-  router.push({
-    path: '/booking',
-    query: {
-      step: '2',
-      tripId: String(refNumber)
-    }
-  })
-}
-
 function onFiltersChange(v: any) { Object.assign(filters, v) }
 
 // ---------- Sort ----------
@@ -460,8 +581,8 @@ const taxMode = ref<'in' | 'ex'>('in')
 function displayPrice(row: CardRow) {
   //含稅 = price + taxAmount?  If your API already returns "price" as tax-included, adjust here.
   //Below assumes price is base and taxAmount is taxes/fees.
-  const total = row.price + (row.taxAmount ?? 0)
-  return taxMode.value === 'in' ? total : row.price
+  const total = row.price
+  return taxMode.value === 'in' ? total : (row.price - (row.taxAmount ?? 0))
 }
 
 // ---------- Derived, filtered & sorted list ----------
@@ -505,11 +626,11 @@ const filteredFlights = computed(() => {
       const sa = Math.max(0, (a.sectors?.length ?? 1) - 1)
       const sb = Math.max(0, (b.sectors?.length ?? 1) - 1)
       if (sa !== sb) return (sa - sb)
-      return ( (a.price + (a.taxAmount ?? 0)) - (b.price + (b.taxAmount ?? 0)) ) * dir
+      return ( a.price - b.price ) * dir
     }
     if (sort.key === 'price') {
-      const pa = (a.price + (a.taxAmount ?? 0))
-      const pb = (b.price + (b.taxAmount ?? 0))
+      const pa = a.price
+      const pb = b.price
       return (pa - pb) * dir
     }
     if (sort.key === 'depTime') return (timeToMin(a.departureTime) - timeToMin(b.departureTime)) * dir

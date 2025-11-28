@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
+import axios from 'axios'
 import { sendSMS, signIn } from '@/api'
 import { useToast } from 'vue-toastification'
-import type { Pax, Sector } from '@/utils/types'
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -53,6 +53,6 @@ export const useAuthStore = defineStore('auth', {
         logout() {
             this.name = null
             localStorage.removeItem('name')
-        }
+        },
     },
 })

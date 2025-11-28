@@ -1,5 +1,6 @@
 <template>
   <div class="bg-white my-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-8 w-full">
+      <!-- A4 IFRAME 付款顯示區域 -->
       <div v-if="showIframePayment" class="w-full">
           <h2 class="font-semibold text-primary-gold mb-4">線上刷卡付款</h2>
           <div class="w-full border-2 border-others-gray8 rounded-lg overflow-hidden">
@@ -14,9 +15,11 @@
           </div>
       </div>
       
+      <!-- 一般付款方式選擇區域 -->
       <div v-else>
       <h2 class="font-semibold text-primary-gold">付款方式</h2>
       <div class="grid grid-cols-12 py-6 gap-12">
+        <!-- 左側：付款方式選擇 (群組一: DET03) -->
         <div class="col-span-12 md:col-span-3 w-full space-y-4">
             <button 
                 v-for="group in paymentGroups" 
@@ -27,11 +30,14 @@
                 {{ group.name }}
             </button>
         </div>
+        <!-- 右側：付款選項詳細設定 -->
         <div class="col-span-12 md:col-span-9 w-full space-y-6">
+            <!-- 信用卡付款 (DET03 = 'A') -->
             <div v-if="selectedGroup === 'A'">
                 <div class="w-full border-others-gray8 border-2 rounded-[10px] p-6">
                     <h2 class="font-bold text-primary-gold">信用卡選擇與付款設定</h2>
 
+                    <!-- 信用卡類型選擇 (DET04) -->
                     <div v-if="selectedGroupOptions.length > 0" class="mt-5">
                         <h3 class="text-sm font-medium text-others-gray1 mb-3">選擇信用卡類型</h3>
                         <div class="flex gap-3 flex-wrap">
@@ -58,6 +64,7 @@
                         </div>
                     </div>
 
+                    <!-- 分期期數選擇 (DET06) -->
                     <div v-if="installmentOptions.length > 0" class="mt-5">
                         <h3 class="text-sm font-medium text-others-gray1 mb-3">分期方式</h3>
                         <div class="flex gap-3 flex-wrap">
@@ -83,18 +90,29 @@
                             </label>
                         </div>
                     </div>
+
+                    <!-- 分期金額資訊 -->
+                    <div v-if="selectedInstallment > 1 && currentInstallment" class="mt-5 p-4 bg-others-gray4 rounded-lg">
+                        <div class="flex justify-between items-center text-sm">
+                            <div>總金額：<span class="font-bold text-primary-gold">{{ formatPrice(currentInstallment.totalAmount) }} TWD</span></div>
+                            <div>每期金額：<span class="font-bold text-others-original">{{ formatPrice(currentInstallment.perPeriodAmount) }} TWD</span></div>
+                        </div>
+                    </div>
                 </div>
 
+                <!-- 付款注意事項 (DET04D) -->
                 <div v-if="currentOptionNote" class="w-full mt-4 border-others-gray8 border-2 rounded-[10px] p-6">
                     <h2 class="font-bold text-primary-gold">{{ selectedInstallment === 1 ? '付款注意事項' : '分期付款說明' }}</h2>
                     <div class="mt-4 text-others-gray1 text-sm" v-html="currentOptionNote"></div>
                 </div>
             </div>
 
+            <!-- LINE Pay 付款 (DET03 = 'L') -->
             <div v-if="selectedGroup === 'L'">
                 <div class="w-full border-others-gray8 border-2 rounded-[10px] p-6">
                     <h2 class="font-bold text-primary-gold">LINE Pay 付款方式</h2>
 
+                    <!-- LINE Pay 選項 (DET04) -->
                     <div v-if="selectedGroupOptions.length > 0" class="mt-5">
                         <div class="flex gap-3 flex-wrap">
                             <label
@@ -121,16 +139,19 @@
                     </div>
                 </div>
 
+                <!-- LINE Pay 說明 (DET04D) -->
                 <div v-if="currentOptionNote" class="w-full mt-4 border-others-gray8 border-2 rounded-[10px] p-6">
                     <h2 class="font-bold text-primary-gold">LINE Pay 付款說明</h2>
                     <div class="mt-4 text-others-gray1 text-sm" v-html="currentOptionNote"></div>
                 </div>
             </div>
 
+            <!-- 匯款付款 (DET03 = 'B') -->
             <div v-if="selectedGroup === 'B'">
                 <div class="w-full border-others-gray8 border-2 rounded-[10px] p-6">
                     <h2 class="font-bold text-primary-gold">銀行匯款資訊</h2>
 
+                    <!-- 匯款選項 (DET04) -->
                     <div v-if="selectedGroupOptions.length > 0" class="mt-5">
                         <div class="flex gap-3 flex-wrap">
                             <label
@@ -157,12 +178,14 @@
                     </div>
                 </div>
 
+                <!-- 匯款說明 (DET04D) -->
                 <div v-if="currentOptionNote" class="w-full mt-4 border-others-gray8 border-2 rounded-[10px] p-6">
                     <h2 class="font-bold text-primary-gold">匯款注意事項</h2>
                     <div class="mt-4 text-others-gray1 text-sm" v-html="currentOptionNote"></div>
                 </div>
             </div>
 
+            <!-- 下一步按鈕 -->
             <div class="flex justify-center mt-8">
                 <button
                     @click="handleNextStep"
@@ -186,18 +209,17 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { getSupportedPaymentTypes } from '@/api'
 import { useBookingStore } from '@/stores/booking'
-import { LiyiFP02, LiyiFP03, LiyiPAYTYPE } from '@/api';
-import { useToast } from 'vue-toastification';
 
-const toast = useToast()
-
+// Props for when used from order query page
 const props = defineProps<{
   orderNumber?: string
   orderUniqId?: string
   totalAmount?: number
 }>()
 
+// Emits
 const emit = defineEmits<{
   (e: 'update:step', v: number): void
   (e: 'payment-completed'): void
@@ -228,44 +250,59 @@ interface PaymentGroup {
 
 const bookingStore = useBookingStore()
 
+// Reactive state
 const allPaymentMethods = ref<PaymentMethod[]>([])
 const selectedGroup = ref<string>('A') // Default to 信用卡
 const selectedOption = ref<string>('')  // DET04 code
 const selectedInstallment = ref<number>(1) // DET06 periods
 
+// Loading state
 const isProcessing = ref<boolean>(false)
 
+// A4 IFRAME 付款相關
 const showIframePayment = ref<boolean>(false)
 const iframeUrl = ref<string>('')
 const iframeKey = ref<string>('')
 
+// 處理 iframe 載入和跳轉偵測
 const handleIframeLoad = () => {
+  // 嘗試偵測 iframe 是否跳轉回到 galilee 網址
   try {
     const iframe = document.querySelector('iframe')
     if (iframe && iframe.contentWindow) {
       const iframeLocation = iframe.contentWindow.location.href
       
+      // 檢查是否跳轉回到 galilee 網址（表示付款完成）
       if (iframeLocation.includes("galilee")) {
-        toast.success('Payment completed, redirecting to Step 4')
+        console.log('Payment completed, redirecting to Step 4')
         
+        // 如果在對話框中，發送完成事件
         if (props.orderNumber) {
           emit('payment-completed')
         } else {
-          const orderBasicInfo = localStorage.getItem('ORDER_BASIC_INFO')
+          // 取得訂單資訊
+          const orderBasicInfo = sessionStorage.getItem('orderBasicInfo')
           if (orderBasicInfo) {
+            // 導向 Step 4
             emit('update:step', 4)
           }
         }
       }
     }
   } catch (error) {
+    // 跨域限制會導致錯誤，這是正常的
+    // 可以使用 message 事件來監聽
     console.log('Iframe cross-origin check (expected)')
   }
 }
 
+// 監聽來自 iframe 的 message 事件（用於 A4 付款完成通知）
 if (typeof window !== 'undefined') {
   window.addEventListener('message', (event) => {
+    // 驗證來源（根據實際銀行網址調整）
     if (event.data && event.data.paymentCompleted) {
+      console.log('Payment completed message received')
+      // 如果在對話框中，發送完成事件
       if (props.orderNumber) {
         emit('payment-completed')
       } else {
@@ -324,6 +361,11 @@ const installmentOptions = computed(() => {
   }))
 })
 
+// Get current installment info
+const currentInstallment = computed(() => {
+  return installmentOptions.value.find(opt => opt.periods === selectedInstallment.value)
+})
+
 // Get current option note (DET04D)
 const currentOptionNote = computed(() => {
   const option = allPaymentMethods.value.find(
@@ -355,6 +397,11 @@ const calculatedAmount = computed(() => {
   }, 0)
 })
 
+// Format price with thousand separators
+const formatPrice = (price: number) => {
+  return price.toLocaleString('zh-TW')
+}
+
 // Initialize first option when group changes
 watch(selectedGroup, () => {
   const options = selectedGroupOptions.value
@@ -364,10 +411,13 @@ watch(selectedGroup, () => {
   }
 }, { immediate: true })
 
+// Handle next step button click
 const handleNextStep = async () => {
+  // 開始處理，顯示 loading
   isProcessing.value = true
   
   try {
+    // 1. 取得選中的付款方式完整資訊
     const selectedMethod = allPaymentMethods.value.find(
       m => m.DET03 === selectedGroup.value && 
            m.DET04 === selectedOption.value && 
@@ -376,58 +426,60 @@ const handleNextStep = async () => {
     
     if (!selectedMethod) {
       console.error('Selected payment method not found')
-      toast.error('請選擇付款方式')
+      alert('請選擇付款方式')
       isProcessing.value = false
       return
     }
     
+    // 2. 檢查並取得訂票資料
     console.log('Booking store data:', {
       bookingResult: bookingStore.bookingResult,
       searchParams: bookingStore.searchParams,
       props: { orderNumber: props.orderNumber, orderUniqId: props.orderUniqId }
     })
     
+    // 優先使用傳入的 props (for order query page)
     let orderNumber = props.orderNumber
     let orderUniqId = props.orderUniqId
     
+    // 如果沒有傳入 props，則從 bookingStore 取得
     if (!orderNumber || !orderUniqId) {
       const bookingResult = bookingStore.bookingResult
       if (!bookingResult || !bookingResult.bookingData) {
         console.error('Booking result not found')
-        toast.error('訂票資料不存在，請重新訂票')
+        alert('訂票資料不存在，請重新訂票')
         isProcessing.value = false
         return
       }
       
+      // 從 bookingData 取得訂單資訊 (根據 API 文件：api_booking)
+      // bookingData 包含: pnrCode, orderNumber, totalAmount, orderUniqId, details[]
       orderNumber = bookingResult.bookingData.orderNumber
       orderUniqId = bookingResult.bookingData.orderUniqId  // 用於 FP03 的 PAR02
     }
     
     if (!orderNumber || !orderUniqId) {
       console.error('Missing required booking data:', { orderNumber, orderUniqId })
-      toast.error('訂單資料不完整，請重新訂票')
+      alert('訂單資料不完整，請重新訂票')
       isProcessing.value = false
       return
     }
     
+    // 3. 呼叫 FP02 取得訂單詳細資料 (包含 cust_list)
     console.log('Calling FP02 to get order details...')
-    const fp02Response = await LiyiFP02({
-        PAR01: orderNumber,
-        PAR02: orderUniqId,
-        PAR03: '',
-        from_ip: '',
-        from_url: window.location.href
-    })
+    const { viewOrder } = await import('@/api')
+    const fp02Response = await viewOrder(orderNumber, orderUniqId)
     
     console.log('FP02 Response:', fp02Response.data)
     
     if (fp02Response.data?.status != 1) {
       console.error('FP02 failed:', fp02Response.data?.msg)
-      toast.error(`無法取得訂單資料：${fp02Response.data?.msg || '未知錯誤'}`)
+      alert(`無法取得訂單資料：${fp02Response.data?.msg || '未知錯誤'}`)
       isProcessing.value = false
       return
     }
     
+    // 從 FP02 回應中取得 cust_list
     const custList = fp02Response.data.cust_list
     if (!custList || custList.length === 0) {
       console.error('No cust_list found in FP02 response')
@@ -436,6 +488,7 @@ const handleNextStep = async () => {
       return
     }
     
+    // 建立 item_list - 使用 FP02 回傳的 FPC01 作為 PAT01
     const itemList = custList.map((cust: any) => ({
       PAT01: cust.FPC01,                     // 使用 FP02 的 FPC01 (例如: F2510210012A001)
       PAT05: parseInt(cust.FPC54) || parseInt(cust.FPC52) || 0  // 應付金額
@@ -443,6 +496,7 @@ const handleNextStep = async () => {
     
     console.log('Item list from FP02 cust_list:', itemList)
     
+    // 根據範例格式建立付款請求 - 只使用必要欄位
     const paymentRequest = {
       PAR01: orderNumber,                    // 訂單號碼
       PAR02: orderUniqId,                    // 訂單 UNIQ_ID
@@ -454,27 +508,34 @@ const handleNextStep = async () => {
     console.log('Creating payment with request:', paymentRequest)
     
     // 4. 呼叫 FP03 API 建立付款單
-    const response = await LiyiFP03(paymentRequest)
+    const { createPayment } = await import('@/api')
+    const response = await createPayment(paymentRequest)
     
     console.log('Payment creation response:', response.data)
     
     if (response.data?.status != "1") {
       console.error('Payment creation failed:', response.data?.msg)
-      toast.error(`付款單建立失敗：${response.data?.msg || '未知錯誤'}`)
+      alert(`付款單建立失敗：${response.data?.msg || '未知錯誤'}`)
       isProcessing.value = false
       return
     }
     
+    // 5. 根據 PEP04 決定導向方式
     let { PEP04, KEY11, KEY12, KEY21 } = response.data
     
+    // 處理 API 回傳資料有誤的情況：
+    // A1 使用 KEY11/KEY12 (form POST)
+    // A4/A5 都使用 KEY21，差別在於 A4 用 iframe，A5 用新視窗
+    // 若 A4 但 KEY21 沒有值，視為資料錯誤
     if (PEP04 === 'A4' && !KEY21) {
       console.error('A4 data error: KEY21 is required for iframe payment')
-      toast.error('付款資料錯誤：缺少付款網址')
+      alert('付款資料錯誤：缺少付款網址')
       isProcessing.value = false
       return
     }
     
-    localStorage.setItem('PAYMENT_INFO', JSON.stringify({
+    // 儲存付款資訊到 sessionStorage 供回傳時使用
+    sessionStorage.setItem('paymentInfo', JSON.stringify({
       paymentOrderId: response.data.PEP01,     // 付款單號
       paymentNumber: response.data.PEP02,      // 付款序號
       amount: response.data.PEP05,             // 付款金額
@@ -483,7 +544,8 @@ const handleNextStep = async () => {
       pep04: PEP04
     }))
     
-    localStorage.setItem('ORDER_BASIC_INFO', JSON.stringify({
+    // 儲存基本訂單資訊供 Step 4 使用
+    sessionStorage.setItem('orderBasicInfo', JSON.stringify({
       orderNumber,
       orderUniqId,
       paymentOrderId: response.data.PEP01,
@@ -494,70 +556,67 @@ const handleNextStep = async () => {
       pep04: PEP04
     }))
     
+    // 根據付款介面類型處理
     switch (PEP04) {
-      case 'A1': {
+      case 'A1': { // 聯合信用卡中心 - 使用 KEY11/KEY12，Form POST 到銀行刷卡頁（新視窗）
         console.log('A1 payment: Opening bank payment in new window with KEY11/KEY12')
         handleCreditCardPayment(KEY12, KEY11)
-
+        // 如果在對話框中，發送完成事件
         if (props.orderNumber) {
           emit('payment-completed')
         }
-
+        // 不重置 loading，因為會跳轉到 Step 4
         break
       }
         
-      case 'A4': {
+      case 'A4': { // 內嵌式 IFRAME - 使用 KEY21，在當前頁面顯示 iframe
         console.log('A4 payment: Showing iframe payment with KEY21')
         showIframePayment.value = true
         iframeUrl.value = KEY21
-        iframeKey.value = ''
-
-        localStorage.setItem('iframePaymentData', JSON.stringify({
+        iframeKey.value = '' // A4 不需要 KEY，直接使用 KEY21 URL
+        // 儲存資訊供 iframe 完成後使用
+        sessionStorage.setItem('iframePaymentData', JSON.stringify({
           url: KEY21,
           key: '',
           orderNumber,
           orderUniqId
         }))
-
+        // 完成處理，顯示 iframe
         isProcessing.value = false
+        // 不跳轉到 Step 4，停留在當前頁面顯示 iframe
         return
       }
         
-      case 'A5': {
+      case 'A5': { // 外部導向 (如 LINE Pay) - 使用 KEY21，瀏覽器導向（新視窗），適用不允許 IFRAME 的銀行
         console.log('A5 payment: Opening external payment with KEY21')
-
         handleExternalPayment(KEY21)
-        
+        // 如果在對話框中，發送完成事件
         if (props.orderNumber) {
           emit('payment-completed')
         }
-        
+        // 不重置 loading，因為會跳轉到 Step 4
         break
       }
         
-      case 'B1': {
+      case 'B1': { // 虛擬匯款帳號 - 呼叫 FP02 取得完整資料後進入 Step 4
         console.log('B1 payment: Getting transfer account info')
-
-        const fp02AfterPayment = await LiyiFP02({
-          PAR01: orderNumber,
-          PAR02: orderUniqId,
-          PAR03: '',
-          from_ip: '',
-          from_url: window.location.href
-        })
+        const fp02AfterPayment = await viewOrder(orderNumber, orderUniqId)
         
         if (fp02AfterPayment.data?.status != 1) {
           console.error('FP02 after payment failed:', fp02AfterPayment.data?.msg)
-          toast.error(`無法取得訂單資料：${fp02AfterPayment.data?.msg || '未知錯誤'}`)
+          alert(`無法取得訂單資料：${fp02AfterPayment.data?.msg || '未知錯誤'}`)
           isProcessing.value = false
           return
         }
         
-        localStorage.setItem('ORDER_DATA', JSON.stringify(fp02AfterPayment.data))
+        // 儲存完整的 FP02 回應（包含 pay_list）到 sessionStorage
+        sessionStorage.setItem('orderDataWithPayment', JSON.stringify(fp02AfterPayment.data))
         
+        // 如果在對話框中，發送完成事件
         if (props.orderNumber) {
           emit('payment-completed')
         } else {
+          // 導向 Step 4（不重置 loading，因為會跳轉）
           emit('update:step', 4)
         }
         break
@@ -565,27 +624,29 @@ const handleNextStep = async () => {
         
       default:
         console.warn('Unknown payment interface type:', PEP04)
-        
+        // 如果在對話框中，發送完成事件
         if (props.orderNumber) {
           emit('payment-completed')
         } else {
+          // 預設行為：導向 Step 4（不重置 loading）
           emit('update:step', 4)
         }
     }
     
   } catch (error) {
     console.error('Payment process error:', error)
-
-    toast.error('付款處理失敗，請稍後再試')
+    alert('付款處理失敗，請稍後再試')
     isProcessing.value = false
   }
 }
 
+// 處理信用卡付款 (A1) - Post 到新視窗，原視窗跳轉 Step 4
 const handleCreditCardPayment = (bankUrl: string, key: string) => {
+  // 建立隱藏表單並自動提交到銀行
   const form = document.createElement('form')
   form.method = 'POST'
   form.action = bankUrl
-  form.target = '_blank'
+  form.target = '_blank' // 在新視窗開啟
   
   const keyInput = document.createElement('input')
   keyInput.type = 'hidden'
@@ -597,19 +658,26 @@ const handleCreditCardPayment = (bankUrl: string, key: string) => {
   form.submit()
   document.body.removeChild(form)
   
-  toast.info('即將跳轉至銀行付款頁面，完成付款後請關閉付款視窗，系統將自動更新訂單狀態')
+  // 顯示提示訊息
+  alert('即將跳轉至銀行付款頁面，完成付款後請關閉付款視窗，系統將自動更新訂單狀態')
   
+  // 原視窗導向 Step 4，並開始定時查詢訂單狀態
   emit('update:step', 4)
 }
 
+// 處理外部導向付款 (A5 - LINE Pay 等) - 開新視窗，原視窗跳轉 Step 4
 const handleExternalPayment = (externalUrl: string) => {
+  // 開啟新視窗到外部付款頁面
   window.open(externalUrl, '_blank', 'width=800,height=600')
   
-  toast.info('即將開啟外部付款頁面，完成付款後請關閉付款視窗，系統將自動更新訂單狀態')
+  // 顯示提示訊息
+  // alert('即將開啟外部付款頁面，完成付款後請關閉付款視窗，系統將自動更新訂單狀態')
   
+  // 原視窗導向 Step 4，並開始定時查詢訂單狀態
   emit('update:step', 4)
 }
 
+// Get button label based on selected group
 const buttonLabel = computed(() => {
   if (selectedGroup.value === 'A') return '使用信用卡付款'
   if (selectedGroup.value === 'L') return '使用 LINE Pay 付款'
@@ -617,15 +685,17 @@ const buttonLabel = computed(() => {
   return '下一步'
 })
 
+// Load payment methods on mount
 onMounted(async () => {
     try {
-        const totalAmount = calculatedAmount.value
-        const response = await LiyiPAYTYPE({totalAmount: totalAmount})
+        const totalAmount = calculatedAmount.value || 10000 // Use calculated or default
+        const response = await getSupportedPaymentTypes(totalAmount)
         
+        // Response format: { RET01, method_list }
         if (response.data?.method_list) {
             allPaymentMethods.value = response.data.method_list
             console.log('Loaded payment methods:', allPaymentMethods.value)
-            
+            // Initialize first option
             if (paymentGroups.value.length > 0) {
                 selectedGroup.value = paymentGroups.value[0].code
             }

@@ -1,4 +1,5 @@
 import { getAirlineAlliance, getAirlines } from '@/api'
+import type { Airline } from '@/utils/types'
 import { defineStore } from 'pinia'
 
 export const useAirlineStore = defineStore('airline', {
@@ -19,6 +20,8 @@ export const useAirlineStore = defineStore('airline', {
             try {
                 const res = await getAirlines()
                 this.airlines = res.data.data
+
+                console.log(this.airlines)
             } catch (err: any) {
                 this.error = err.response?.data?.message || 'Login failed'
                 console.log(err)
@@ -36,6 +39,7 @@ export const useAirlineStore = defineStore('airline', {
                 this.error = err.response?.data?.message || 'AirlineAlliance Loading failed.'
                 console.log(err)
             }
+            this.loading = false
         }
     }
 })

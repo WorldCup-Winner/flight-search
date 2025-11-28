@@ -26,7 +26,7 @@
 
                     <div class="mb-4 w-full">
                       <label class="block mb-1 text-others-gray1 text-sm">手機號碼</label>
-                      <PhoneField v-model="form.phoneNumber" v-model:countryCode="code" />
+                      <PhoneField v-model="form.phoneNumber" v-model:countryCode="code" :show-eye="true" />
                     </div>
                     <!-- Submit -->
                     <button
@@ -51,13 +51,11 @@
 <script setup lang="ts">
 import { ref, defineProps, defineEmits } from "vue";
 import { useRouter } from "vue-router"
-import { useToast } from "vue-toastification"
+import { queryOrder, viewOrder } from '@/api'
 
 import PhoneField from '@/components/ui/PhoneField.vue'
-import { LiyiFP02, LiyiFP04 } from "@/api";
 
 const router = useRouter()
-const toast = useToast()
 
 const props = defineProps<{
   open: boolean;
@@ -88,18 +86,18 @@ const handleSearch = async () => {
     
     console.log('Searching order with:', form.value)
     
-    const fp04Response = await LiyiFP04({
-        PAR01: form.value.bookingId,
-        PAR02: form.value.phoneNumber,
-        from_ip: '',
-        from_url: window.location.href
-    })
+    // 移除國碼前綴（如果有）
+    const mobileNumber = form.value.phoneNumber.replace(/^\+886/, '0').replace(/\s/g, '')
+    
+    // 第一步：呼叫 FP04 查詢訂單，取得 UNIQ_ID (RET02)
+    const fp04Response = await queryOrder(form.value.bookingId, mobileNumber)
     
     console.log('FP04 Response:', fp04Response.data)
     
+    // 檢查 status（可能是字串 "1" 或數字 1）
     if (fp04Response.data.status != 1) {
       searchError.value = fp04Response.data.msg || '查無此訂單或手機號碼不符'
-      toast.error(searchError.value)
+      alert(searchError.value)
       return
     }
     
@@ -109,19 +107,14 @@ const handleSearch = async () => {
     console.log('Order found:', { orderNumber, uniqId, passengerSeq })
     
     // 第二步：呼叫 FP02 取得訂單詳細內容
-    const fp02Response = await LiyiFP02({
-        PAR01: orderNumber,
-        PAR02: uniqId,
-        PAR03: passengerSeq || '',
-        from_ip: '',
-        from_url: window.location.href
-    })
+    const fp02Response = await viewOrder(orderNumber, uniqId, passengerSeq)
     
     console.log('FP02 Response:', fp02Response.data)
     
+    // 檢查 status（可能是字串 "1" 或數字 1）
     if (fp02Response.data.status != 1) {
       searchError.value = fp02Response.data.msg || '無法取得訂單詳細資料'
-      toast.error(searchError.value)
+      alert(searchError.value)
       return
     }
     
@@ -139,7 +132,7 @@ const handleSearch = async () => {
   } catch (error: any) {
     console.error('Search order error:', error)
     searchError.value = error.response?.data?.msg || '查詢失敗，請稍後再試'
-    toast.error(searchError.value)
+    alert(searchError.value)
   } finally {
     isSearching.value = false
   }

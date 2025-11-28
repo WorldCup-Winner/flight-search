@@ -154,6 +154,16 @@
           </ul>
         </section>
       </div>
+
+      <!-- Action Button -->
+      <div class="mt-6 text-center">
+        <button
+          class="px-8 py-3 rounded-md border-none bg-others-original text-white hover:bg-others-hover transition font-semibold"
+          @click="close"
+        >
+          接受
+        </button>
+      </div>
     </div>
   </div>
 </template>

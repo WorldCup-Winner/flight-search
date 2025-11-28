@@ -3,7 +3,9 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-4">
       <h2 class="font-semibold text-primary-gold">機票商品資料</h2>
-      <p v-if="orderNumber" href="#" class="text-others-original font-semibold whitespace-nowrap"><span class="text-others-gray7">訂單編號</span>&nbsp;&nbsp;{{ orderNumber }}</p>
+      <p v-if="orderNumber" href="#" class="text-others-original font-semibold whitespace-nowrap">
+        <span class="text-others-gray7">訂單編號</span>&nbsp;&nbsp;{{ orderNumber }}
+      </p>
     </div>
 
     <!-- Flight table -->
@@ -20,12 +22,12 @@
         <tbody class="divide-y">
           <tr v-for="(f, i) in flights" :key="i" class="bg-white border-2 border-t-none">
             <td class="px-4 py-3 align-top">
-              <div class="font-medium text-others-gray1">{{ f.departureTime }}</div>
-              <div class="text-others-gray1">{{ f.departureAirportName }}</div>
+              <div class="font-medium text-others-gray1">{{ f.departTime }}</div>
+              <div class="text-others-gray1">{{ f.departAirport }}</div>
             </td>
             <td class="px-4 py-3 align-top">
-              <div class="font-medium text-others-gray1">{{ f.arrivalTime }}</div>
-              <div class="text-others-gray1">{{ f.arrivalAirportName }}</div>
+              <div class="font-medium text-others-gray1">{{ f.arriveTime }}</div>
+              <div class="text-others-gray1">{{ f.arriveAirport }}</div>
             </td>
             <td class="px-4 py-3 align-top">
               <div class="font-medium text-others-gray1">{{ f.flight }}</div>
@@ -85,14 +87,14 @@
             </td>
             <td class="px-4 py-3 text-center text-others-gray1 border-t-2 border-b-2">
               <div>含稅金</div>
-              <div class="tabular-nums font-bold">{{ formatPrice(it.fare) }}</div>
-              <div class="tabular-nums">{{ formatPrice(it.tax) }}</div>
+              <div class="tabular-nums font-bold">{{ formatPrice(it.totalWithTax) }}</div>
+              <div class="tabular-nums text-sm text-others-gray5">稅金: {{ formatPrice(it.tax) }}</div>
             </td>
             <td class="px-4 py-3 text-center tabular-nums text-others-gray1 border-t-2 border-b-2">
               {{ formatPrice(it.paid) }}
             </td>
-            <td class="px-4 py-3 text-center tabular-nums text-others-gray1 font-bold border-t-2 border-b-2">
-              {{ formatPrice(Math.max(it.fare - it.paid, 0)) }}
+            <td class="px-4 py-3 text-center text-others-gray1 font-bold border-t-2 border-b-2">
+              {{ formatPrice(Math.max(it.totalWithTax - it.paid, 0)) }}
             </td>
             <td class="px-4 py-3 text-center text-others-original whitespace-nowrap border-t-2 border-b-2">
               {{ it.deadline }}
@@ -113,9 +115,8 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed, ref } from "vue";
+import { computed } from "vue";
 import { formatPrice } from "@/utils";
-import type { Sector, Flight, Item } from '@/utils/types'
 import { useBookingStore } from "@/stores/booking";
 
 const bookingStore = useBookingStore();
@@ -124,47 +125,62 @@ const orderNumber = computed(() => {
     return bookingStore.bookingResult?.bookingData?.orderNumber || null
 });
 
+type Flight = {
+  departTime: string;
+  departAirport: string;
+  arriveTime: string;
+  arriveAirport: string;
+  flight: string;
+  cabin: string;
+  status: string;
+};
+
+type Item = {
+  checked: boolean;
+  name: string;
+  productName: string;
+  totalWithTax: number; // 含稅總價 (price field from API)
+  tax: number;          // 稅金 (taxAmount field from API)
+  paid: number;
+  deadline: string;
+};
+
 const flights = computed<Flight[]>(() => {
     if (!bookingStore.bookingResult?.itineraries || bookingStore.bookingResult.itineraries.length === 0) {
-      const segments = []
+        // Fallback: Use outbound and return segments from booking store
+        const segments = []
         if (bookingStore.outboundSegment) {
             segments.push(...bookingStore.outboundSegment.sectors.map((sector: any) => ({
-                departureTime: `${sector.departureDate} ${sector.departureTime}`,
-                arrivalTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
-                departureAirportCode: sector.departureAirportCode,
-                departureAirportName: sector.departureAirportName,
-                arrivalAirportCode: sector.arrivalAirportCode,
-                arrivalAirportName: sector.arrivalAirportName,
-                flight: `${sector.marketingAirlineName} ${sector.flightNo}`,
+                departTime: `${sector.departureDate} ${sector.departureTime}`,
+                departAirport: sector.departureAirportCode,
+                arriveTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
+                arriveAirport: sector.arrivalAirportCode,
+                flight: `${sector.marketingAirlineCode} ${sector.flightNo}`,
                 cabin: sector.bookingClass || 'Y',
                 status: "處理中",
             })))
         }
         if (bookingStore.returnSegment) {
             segments.push(...bookingStore.returnSegment.sectors.map((sector: any) => ({
-                departureTime: `${sector.departureDate} ${sector.departureTime}`,
-                arrivalTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
-                departureAirportCode: sector.departureAirportCode,
-                departureAirportName: sector.departureAirportName,
-                arrivalAirportCode: sector.arrivalAirportCode,
-                arrivalAirportName: sector.arrivalAirportName,
-                flight: `${sector.marketingAirlineName} ${sector.flightNo}`,
+                departTime: `${sector.departureDate} ${sector.departureTime}`,
+                departAirport: sector.departureAirportCode,
+                arriveTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
+                arriveAirport: sector.arrivalAirportCode,
+                flight: `${sector.marketingAirlineCode} ${sector.flightNo}`,
                 cabin: sector.bookingClass || 'Y',
                 status: "處理中",
             })))
-      }
+        }
         return segments
     }
     
     return bookingStore.bookingResult.itineraries.flatMap(itinerary => 
         itinerary.sectors.map((sector: any) => ({
-            departureTime: `${sector.departureDate} ${sector.departureTime}`,
-            arrivalTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
-            departureAirportCode: sector.departureAirportCode,
-            departureAirportName: sector.departureAirportName,
-            arrivalAirportCode: sector.arrivalAirportCode,
-            arrivalAirportName: sector.arrivalAirportName,
-            flight: `${sector.marketingAirlineName} ${sector.flightNo}`,
+            departTime: `${sector.departureDate} ${sector.departureTime}`,
+            departAirport: sector.departureAirportCode,
+            arriveTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
+            arriveAirport: sector.arrivalAirportCode,
+            flight: `${sector.marketingAirlineCode} ${sector.flightNo}`,
             cabin: sector.bookingClass,
             status: "處理中",
         }))
@@ -197,8 +213,8 @@ const items = computed<Item[]>(() => {
                     checked: true,
                     name: `乘客 ${itemIndex + 1} (${passengerLabel})`,
                     productName: `${searchParams.departureCityCode}/${searchParams.arrivalCityCode}`,
-                    fare: summary.price,
-                    tax: summary.taxAmount,
+                    totalWithTax: summary.price,     // price 已經是含稅總價
+                    tax: summary.taxAmount,          // 稅金部分
                     paid: 0,
                     deadline: "2025/12/31 23:59",
                 })
@@ -219,8 +235,8 @@ const items = computed<Item[]>(() => {
             productName: itinerary 
                 ? `${itinerary.departureAirportCode}/${itinerary.arrivalAirportCode}`
                 : `${bookingStore.searchParams?.departureCityCode || ''}/${bookingStore.searchParams?.arrivalCityCode || ''}`,
-            fare: detail?.amountWithTax || 0,
-            tax: detail?.tax || 0,
+            totalWithTax: detail?.amountWithTax || 0,  // 含稅總價
+            tax: detail?.tax || 0,                     // 稅金
             paid: 0,
             deadline: detail?.paymentDeadline?.split('T')[0] || "2025/12/31",
         }
@@ -230,7 +246,7 @@ const items = computed<Item[]>(() => {
 const total = computed(() =>
   items.value
     .filter((i) => i.checked)
-    .reduce((sum, i) => sum + i.fare - i.paid, 0)
+    .reduce((sum, i) => sum + i.totalWithTax - i.paid, 0)
 );
 </script>
 

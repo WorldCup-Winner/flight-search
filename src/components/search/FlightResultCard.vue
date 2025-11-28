@@ -3,16 +3,16 @@
     class="relative z-[50] hover:z-[999] rounded-[10px] bg-white drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] overflow-visible"
   >
     <!-- HEADER (always visible) -->
-    <div class="flex items-center gap-5 px-4 py-4">
+    <div class="flex items-center gap-4 px-5 py-4">
       <!-- Airlines block -->
       <div
-        class="relative group flex items-center gap-3 min-w-[160px]"
+        class="relative group flex items-center gap-2 min-w-[150px]"
         @mouseenter="onMouseEnter"
         @mouseleave="onMouseLeave"
       >
         <img
           v-if="airlines.length <= 1"
-          :src="airlineLogoForWithCode(airlines[0].code)"
+          :src="airlines[0].logo"
           :alt="airlines[0]?.name || 'airline'"
           class="w-10 h-10 object-contain"
           @error="onImageError"
@@ -52,7 +52,7 @@
                     <img 
                       v-if="a.logo"
                       class="w-6 h-6 object-contain rounded-sm" 
-                      :src="airlineLogoForWithCode(a.code)"
+                      :src="a.logo"
                       :alt="a.name"
                       @error="onImageError"
                     />
@@ -67,13 +67,13 @@
       </div>
 
       <!-- Times -->
-      <div class="flex items-center gap-6 flex-1 justify-between">
-        <div class="text-center">
+      <div class="flex items-center gap-3 flex-1 justify-between min-w-0">
+        <div class="text-center flex-shrink-0">
           <div class="text-[24px] text-others-gray7 tracking-wide font-bold">{{ departureTime }}</div>
           <div class="text-sm text-others-gray1">{{ departureAirportCode }} {{ departureTerminal }}</div>
         </div>
 
-        <div class="relative flex flex-col items-center">
+        <div class="relative flex flex-col items-center flex-shrink-0">
           <div class="relative w-10 h-10 flex items-center justify-center">
             <img class="absolute w-10" src="@/assets/imgs/arrow-right.svg"  />
             <div v-if="stopsCount >= 1" class="absolute top-[17px] border-2 border-primary-gold bg-white rounded-full w-3 h-3"></div>
@@ -83,17 +83,20 @@
           </p>
         </div>
 
-        <div class="text-center">
-          <div class="text-[24px] text-others-gray7 tracking-wide font-bold">{{ arrivalTime }}</div>
+        <div class="text-center flex-shrink-0">
+          <div class="text-[24px] text-others-gray7 tracking-wide font-bold relative inline-block">
+            {{ arrivalTime }}
+            <span v-if="crossDays && crossDays > 0" class="absolute -top-1 -right-4 text-[12px] text-others-original font-normal">+{{ crossDays }}</span>
+          </div>
           <div class="text-sm text-others-gray1">{{ arrivalAirportCode }} {{ arrivalTerminal }}</div>
         </div>
 
-        <div class="ml-4 text-right">
-          <div class="text-[14px] text-others-gray1">{{ totalDurationText }}</div>
+        <div class="ml-2 text-right flex-shrink-0 min-w-[90px]">
+          <div class="text-[14px] text-others-gray1 whitespace-nowrap">{{ totalDurationText }}</div>
 
           <!-- toggle -->
           <button
-            class="text-[16px] font-bold text-primary-gold hover:opacity-80 inline-flex items-center gap-1"
+            class="text-[16px] font-bold text-primary-gold hover:opacity-80 inline-flex items-center gap-1 whitespace-nowrap"
             @click="expanded = !expanded"
             :aria-expanded="expanded"
             type="button"
@@ -106,33 +109,33 @@
         </div>
 
         <!-- Price & CTA -->
-        <div class="flex items-center gap-4">
-          <div class="text-right" :class="[expanded1 ? 'invisible' : 'block']">
-            <div class="flex items-end font-bold">
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <div class="text-right min-w-[170px]" :class="{ 'invisible': leg === 'return' && expanded1 }">
+            <div class="flex items-end justify-end font-bold whitespace-nowrap">
               <div class="text-[12px] text-others-original">{{ currencyDisplay }}</div>
               <div class="text-[28px] text-others-original leading-none">{{ formatPrice(priceTotal) }}</div>
               <div class="text-[12px] text-others-gray1">&nbsp; 起</div>
             </div>
-            <div v-if="taxMode == 'in'" class="text-[12px] pt-1 text-others-gray1">{{ '來回含稅價'  }}</div>
-            <div v-else class="text-[12px] pt-1 text-others-gray1">{{ '參考稅費'  }}&nbsp;{{ currencyDisplay }}&nbsp;{{ formatPrice(taxAmount ?? 0) }}</div>
+            <div v-if="taxMode == 'in'" class="text-[12px] pt-1 text-others-gray1 whitespace-nowrap text-right">每人均價(含稅及附加費)</div>
+            <div v-else class="text-[12px] pt-1 text-others-gray1 whitespace-nowrap text-right">{{ '參考稅費'  }}&nbsp;{{ currencyDisplay }}&nbsp;{{ formatPrice(taxAmount ?? 0) }}</div>
           </div>
 
           <button
             v-if="leg === 'outbound'"
-            class="min-w-[98px] px-6 py-3 rounded-[15px] text-white bg-primary-gold font-bold hover:bg-primary-gold1"
+            class="min-w-[98px] px-5 py-3 rounded-[15px] text-white bg-primary-gold font-bold hover:bg-primary-gold1 flex-shrink-0"
             @click="goReturn"
             type="button"
           >
-            <p>選擇</p>
+            <p class="whitespace-nowrap">選擇</p>
           </button>
           <button
             v-if="leg === 'return'"
-            class="flex items-center gap-2 min-w-[98px] px-6 py-3 rounded-[15px] text-white font-bold"
+            class="flex items-center gap-2 min-w-[98px] px-5 py-3 rounded-[15px] text-white font-bold flex-shrink-0"
             :class="expanded1 ? 'bg-others-gray3 hover:bg-others-gray5' : 'bg-primary-gold hover:bg-primary-gold3'"
             @click="handleExpanded1"
             type="button"
           >
-            <p>{{ expanded1 ? '收起' : '選擇' }}</p>
+            <p class="whitespace-nowrap">{{ expanded1 ? '收起' : '選擇' }}</p>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path :d="!expanded1 ? 'M18 10l-6 6-6-6' : 'M6 14l6-6 6 6'" />
             </svg>
@@ -156,7 +159,10 @@
               <div class="text-others-gray1">{{ toDuration(sec.durationMinutes) }}</div>
               <div class="flex items-center justify-between gap-6">
                 <div class="text-others-gray1">{{ formatDateToChinese(sec.arrivalDate) }}</div>
-                <div class="font-bold text-others-gray7">{{ sec.arrivalTime }}</div>
+                <div class="font-bold text-others-gray7 relative">
+                  {{ sec.arrivalTime }}
+                  <span v-if="sec.crossDays && sec.crossDays > 0" class="absolute -top-1 -right-4 text-[10px] text-others-original font-normal">+{{ sec.crossDays }}</span>
+                </div>
               </div>
             </div>
 
@@ -170,7 +176,7 @@
             <!-- right info -->
             <div class="col-span-12 md:col-span-8 space-y-2">
               <div class="font-bold text-others-gray7">
-                {{ sec.departureAirportCode }} {{ sec.departureAirportName }} {{ sec.departureTerminal }} {{  sec.departureCityName }}
+                {{ sec.departureAirportCode }} {{ sec.departureAirportName }} {{ sec.departureTerminal }} {{ sec.departureCityName }}
               </div>
               <div class="flex items-center gap-2 text-others-gray1">
                 <img
@@ -182,7 +188,7 @@
                 />
                 <span class="font-semibold">{{ sec.flightNo || sec.operatingFlightNo }}</span>
                 <span class="text-others-gray1">{{ sec.marketingAirlineName || sec.operatingAirlineName }}</span>
-                <span v-if="sec.craft?.craftName != '未知機型'" class="text-others-gray1">{{ sec.craft?.craftName ? ' ' + sec.craft.craftName : '' }}</span>
+                <span class="text-others-gray1">{{ sec.craft?.craftName ? ' ' + sec.craft.craftName : '' }}</span>
               </div>
               <div class="font-bold text-others-gray7">
                 {{ sec.arrivalAirportCode }} {{ sec.arrivalAirportName }} {{ sec.arrivalTerminal }} {{ sec.arrivalCityName }}
@@ -193,14 +199,25 @@
           <!-- transfer chips (between legs) -->
           <div v-if="i < sectors.length - 1 && sec.transfer" class="mx-10 my-2 text-others-gray1">
             <div class="inline-flex items-center gap-2 bg-white rounded-[10px] px-6 py-2">
-              <span>於{{ sec.arrivalCityName }}轉機</span>
+              <!-- 使用前一航段的到達城市作為轉機城市 -->
+              <span>於{{ sec.arrivalCityName || sec.transfer.transferCity }}轉機</span>
               <span class="text-others-gray3">|</span>
               <span class="text-others-original">{{ toDuration(sec.transfer.transferStayMinutes) }}</span>
-              <span class="text-others-gray3" v-if="sec.transfer.isChangeTerminal">|</span>
-              <span v-if="sec.transfer.isChangeTerminal" class="text-others-original">不同航廈</span>
-              <span class="text-others-gray3" v-if="sec.transfer.isChangeAirport">|</span>
-              <span v-if="sec.transfer.isChangeAirport" class="text-others-original">不同機場</span>
-              <span v-if="sec.baggageStraight > 0">｜ 行李直掛</span>
+              <!-- 只有在真的不同航廈時才顯示 -->
+              <template v-if="sec.transfer.isChangeTerminal">
+                <span class="text-others-gray3">|</span>
+                <span class="text-others-original">不同航廈</span>
+              </template>
+              <!-- 只有在真的不同機場（機場代碼不同）時才顯示 -->
+              <template v-if="shouldShowDifferentAirport(i)">
+                <span class="text-others-gray3">|</span>
+                <span class="text-others-original">不同機場</span>
+              </template>
+              <!-- 行李直掛 -->
+              <template v-if="sec.baggageStraight > 0">
+                <span class="text-others-gray3">|</span>
+                <span class="text-others-original">行李直掛</span>
+              </template>
             </div>
           </div>
         </div>
@@ -213,7 +230,7 @@
         <!-- Loading state with skeleton -->
         <div v-if="fareRuleLoading" class="bg-white rounded-b-[10px] overflow-hidden">
           <!-- Skeleton fare options (show 2-3 placeholder rows) -->
-          <div v-for="n in 1" :key="`skeleton-${n}`" class="relative grid grid-cols-12 gap-4 p-5 border-b border-others-gray3">
+          <div v-for="n in 2" :key="`skeleton-${n}`" class="relative grid grid-cols-12 gap-4 p-5 border-b border-others-gray3">
             <!-- Cabin skeleton -->
             <div class="col-span-12 md:col-span-2 flex items-center justify-center">
               <div class="skel h-6 w-20 rounded"></div>
@@ -270,11 +287,18 @@
               <div class="text-right">
                 <div class="flex items-end font-bold">
                   <div class="text-[12px] text-others-original">{{ currencyDisplay }}</div>
-                  <div class="text-[28px] text-others-original leading-none">{{ formatPrice(priceTotal) }}</div>
-                  <div class="text-[12px] text-others-gray1">&nbsp; 起</div>
+                  <div class="text-[28px] text-others-original leading-none">
+                    {{ formatPrice(taxMode === 'in' ? (price ?? 0) : (price ?? 0) - (taxAmount ?? 0)) }}
+                  </div>
                 </div>
-                <div v-if="taxMode == 'in'" class="text-[12px] pt-1 text-others-gray1">{{ '來回含稅價'  }}</div>
-                <div v-else class="text-[12px] pt-1 text-others-gray1">{{ '參考稅費'  }}&nbsp;{{ currencyDisplay }}&nbsp;{{ formatPrice(taxAmount ?? 0) }}</div>
+                <div class="text-[12px] pt-2 text-others-gray1">
+                  <template v-if="taxMode === 'in'">
+                    每人均價(含稅及附加費)
+                  </template>
+                  <template v-else>
+                    參考稅費&nbsp;{{ currencyDisplay }}&nbsp;{{ formatPrice(taxAmount ?? 0) }}
+                  </template>
+                </div>
               </div>
               <button class="bg-others-original hover:bg-others-hover min-w-[98px] text-white font-bold rounded-[10px] px-6 py-3" @click="goBooking(fare)" type="button">
                 訂購
@@ -325,15 +349,14 @@
 <script setup lang="ts">
 import { inject, computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { airlineLogoFor, airlineLogoForWithCode, formatDateToChinese, formatPrice, noteIcon, onImageError, resolveAirlineLogo, toDuration } from '@/utils'
+import { formatDateToChinese, formatPrice, noteIcon, toDuration } from '@/utils'
+import { fareRule } from '@/api'
+import type { FareRuleResponse, FareRuleRequest, SegmentPick, PaxMix } from '@/utils/types'
 
 // Icons
 import AirlineTwo from '@/assets/imgs/airlines/airline-two.svg'
-import type { CardRow, FareIconType, FareNoteType, FareOption, FareRuleRequest, FareRuleResponse, FareSegment, Pax, Sector } from '@/utils/types'
-import { fareRule } from '@/api'
-
-const router = useRouter()
-const route = useRoute()
+import AirlineDefault from '@/assets/imgs/airlines/airline-default.svg'
+import type { FareIconType, FareNoteType, FareOption, Sector } from '@/utils/types'
 
 const props = defineProps<{
   tripType: string
@@ -382,7 +405,37 @@ const props = defineProps<{
   babyCount?: number
   
   /** Previously selected segments (for fare-rule API) */
-  previousSegments?: CardRow[]
+  previousSegments?: Array<{ sectors: Sector[] }>
+  
+  /** New fields from flight-search response */
+  validatingAirlineCode?: string
+  itineraryRBDs?: string
+}>()
+
+/** Emits (new-shape payload, richer)**/
+const emit = defineEmits<{
+  (e: 'select', payload: {
+    refNumber?: number
+    sectors: Sector[]
+    totalMinutes: number
+    stopsCount: number
+    totalPrice: number
+    currency: string
+    roundTripIncluded?: boolean
+    header: {
+      departureTime: string
+      arrivalTime: string
+      departureAirportCode: string
+      arrivalAirportCode: string
+      departureTerminal: string
+      arrivalTerminal: string
+    }
+  }): void
+  (e: 'purchase', payload: { 
+    fare: FareOption; 
+    refNumber?: number;
+    fareRuleData?: any;
+  }): void
 }>()
 
 /** -------------------- State -------------------- */
@@ -391,6 +444,17 @@ const expanded1 = ref(!!props.defaultOpen1)
 const fareShow = ref(2)
 const showTooltip = ref(false)
 const tooltipStyle = ref<{ top: string; left: string }>({ top: '0px', left: '0px' })
+
+// Fare rule data
+const fareRuleData = ref<FareRuleResponse['data'] | null>(null)
+const fareRuleLoading = ref(false)
+const fareRuleError = ref<string | null>(null)
+const dynamicFareOptions = ref<FareOption[]>([])
+const show404Dialog = ref(false)
+
+// Router
+const router = useRouter()
+const route = useRoute()
 
 /** -------------------- Derived -------------------- */
 const sectors = computed<Sector[]>(() => props.sectors ?? [])
@@ -425,29 +489,68 @@ const stopsCount = computed(() => Math.max(0, sectors.value.length - 1))
 
 const currencyDisplay = computed(() => props.currency ?? 'TWD')
 const priceTotal = computed(() => (props.priceFrom ?? 0))
-const taxMode = computed(() => props.taxMode ?? "來回含稅價")
-const fareRuleData = ref<FareRuleResponse['data'] | null>(null)
-const fareRuleLoading = ref(false)
-const fareRuleError = ref<string | null>(null)
-const show404Dialog = ref(false)
-const dynamicFareOptions = ref<FareOption[]>([])
+const taxMode = computed(() => props.taxMode ?? 'in')
 const visibleFares = computed(() => {
   const options = dynamicFareOptions.value.length > 0 ? dynamicFareOptions.value : (props.fareOptions ?? [])
   return options.slice(0, fareShow.value)
 })
 
+// Import all airline logos at build time using Vite's glob import
+const airlineLogosModules = import.meta.glob('@/assets/imgs/airlines/*.png', { eager: true, import: 'default' })
+
+function resolveAirlineLogo(code?: string): string {
+  if (!code) return AirlineDefault;
+  
+  // Try to find the airline logo from the imported modules
+  const fullPath = Object.keys(airlineLogosModules).find(path => path.includes(`/${code}.png`))
+  
+  if (fullPath && airlineLogosModules[fullPath]) {
+    return airlineLogosModules[fullPath] as string
+  }
+  
+  // Fallback to default logo if not found
+  return AirlineDefault;
+}
+
+/** -------------------- Image error handler -------------------- */
+const onImageError = (event: Event) => {
+  const target = event.target as HTMLImageElement;
+  target.src = AirlineDefault;  // Fallback to default logo when image fails to load
+}
+
+function airlineLogoFor(sec: Sector) {
+  const code = sec.marketingAirlineCode || sec.operatingAirlineCode
+  return resolveAirlineLogo(code)
+}
+
+/** -------------------- Transfer logic -------------------- */
+/**
+ * 判斷是否應該顯示「不同機場」標記
+ * 只有當前航段的出發機場代碼與前一航段的抵達機場代碼不同時才顯示
+ */
+function shouldShowDifferentAirport(sectorIndex: number): boolean {
+  if (sectorIndex >= sectors.value.length - 1) return false
+  
+  const currentSector = sectors.value[sectorIndex]
+  const nextSector = sectors.value[sectorIndex + 1]
+  
+  // 比較當前航段的抵達機場與下一航段的出發機場
+  // 如果機場代碼不同，表示真的是不同機場
+  return currentSector.arrivalAirportCode !== nextSector.departureAirportCode
+}
+
 /** -------------------- Shared actions -------------------- */
-interface SharedData {
-  isOpenBaggageInfoAndFeeRule?: boolean;
+interface SharedData { 
+  isOpenBaggageInfoAndFeeRule?: boolean; 
   isSearch?: boolean;
   fareRuleData?: any;
 }
 const updateValue = inject<(val: SharedData) => void>('updateValue')
-function openBaggageInfoAndFeeRule() {
-  updateValue?.({
+function openBaggageInfoAndFeeRule() { 
+  updateValue?.({ 
     isOpenBaggageInfoAndFeeRule: true,
     fareRuleData: fareRuleData.value 
-  })
+  }) 
 }
 
 /** -------------------- UI handlers -------------------- */
@@ -459,31 +562,6 @@ function onMouseEnter(e: MouseEvent) {
 function onMouseLeave() { showTooltip.value = false }
 
 /** -------------------- Emits -------------------- */
-const emit = defineEmits<{
-  (e: 'select', payload: {
-    refNumber?: number
-    sectors: Sector[]
-    totalMinutes: number
-    stopsCount: number
-    totalPrice: number
-    currency: string
-    roundTripIncluded?: boolean
-    header: {
-      departureTime: string
-      arrivalTime: string
-      departureAirportCode: string
-      arrivalAirportCode: string
-      departureTerminal: string
-      arrivalTerminal: string
-    }
-  }): void
-  (e: 'purchase', payload: { 
-    fare: FareOption; 
-    refNumber?: number;
-    fareRuleData?: any;
-  }): void
-}>()
-
 function goReturn() {
   emit('select', {
     refNumber: props.refNumber,
@@ -515,10 +593,12 @@ async function handleExpanded1() {
   console.log('handleExpanded1 called, current expanded1:', expanded1.value)
   console.log('leg:', props.leg)
   console.log('fareRuleData:', fareRuleData.value)
-
+  console.log('dynamicFareOptions:', dynamicFareOptions.value)
+  
   if (!expanded1.value) {
     // Expanding - first expand immediately to show skeleton
     expanded1.value = true
+    console.log('Expanded immediately, will fetch fare rule...')
     
     // Then fetch fare-rule API if we haven't loaded data yet
     if (!fareRuleData.value && !fareRuleLoading.value) {
@@ -529,6 +609,7 @@ async function handleExpanded1() {
     // Collapsing
     expanded1.value = false
   }
+  console.log('After toggle, expanded1:', expanded1.value)
 }
 
 async function fetchFareRule() {
@@ -537,25 +618,38 @@ async function fetchFareRule() {
     return
   }
 
+  console.log('Starting fetchFareRule...')
+  console.log('Current flight sectors:', props.sectors)
+  console.log('Previous segments:', props.previousSegments)
+  
   fareRuleLoading.value = true
   fareRuleError.value = null
 
   try {
     // Combine previous segments with current flight sectors
+    // previousSegments contains segment objects, each with a sectors array
     const allSectors = [
       ...(props.previousSegments?.flatMap(seg => seg.sectors) ?? []),
       ...props.sectors
     ]
     
-    const segments: FareSegment[] = allSectors.map(sector => {
+    console.log('All sectors for fare-rule API:', allSectors)
+    
+    const segments: SegmentPick[] = allSectors.map(sector => {
+      // Remove airline prefix from flight number
+      // Example: "7C6101" -> "6101", "CI607" -> "607"
       const airlineCode = sector.marketingAirlineCode || sector.operatingAirlineCode
-      let flightNumber = sector.flightNo
+      let flightNumber = sector.flightNo || ''
       
-      if (airlineCode && flightNumber.startsWith(airlineCode)) {
+      if (airlineCode && flightNumber && flightNumber.startsWith(airlineCode)) {
+        // Remove the airline code prefix
         flightNumber = flightNumber.substring(airlineCode.length)
-      } else {
+      } else if (flightNumber) {
+        // Fallback: remove leading letters (but keep letters that are part of the number)
         flightNumber = flightNumber.replace(/^[A-Z]+/, '')
       }
+      
+      console.log(`Flight number transformation: ${sector.flightNo} -> ${flightNumber}`)
       
       return {
         marketingCarrier: sector.marketingAirlineCode,
@@ -565,24 +659,45 @@ async function fetchFareRule() {
         toAirport: sector.arrivalAirportCode,
         departureDateLocal: sector.departureDate,
         departureTimeLocal: sector.departureTime,
-        rbd: sector.bookingClass
+        rbd: sector.bookingClass,
+        cabinType: sector.cabinType
       }
     })
 
-    const pax: Pax = {
+    const pax: PaxMix = {
       adt: props.adultCount ?? 1,
       cnn: props.childCount ?? 0,
       inf: props.babyCount ?? 0
     }
 
-    const request: FareRuleRequest = { segments, pax }
-    const response = await fareRule(request)
+    // 判斷行程類型：1=單程, 2=往返, 3=多行程
+    let itineraryType = 1 // 預設單程
+    if (props.tripType === 'roundtrip') {
+      itineraryType = 2
+    } else if (props.tripType === 'multi') {
+      itineraryType = 3
+    }
 
+    const request: FareRuleRequest = { 
+      segments, 
+      pax,
+      itineraryType,
+      validatingAirlineCode: props.validatingAirlineCode,
+      itineraryRBDs: props.itineraryRBDs
+    }
+    
+    console.log('Fare rule request:', JSON.stringify(request, null, 2))
+    
+    const response = await fareRule(request)
+    
+    console.log('Fare rule response:', response)
+    
     if (response.data.head.code === 0) {
       fareRuleData.value = response.data.data
       
       console.log('Fare rule data received:', fareRuleData.value)
       
+      // Transform fare rule data into fare options for display
       dynamicFareOptions.value = transformFareRuleToOptions(response.data.data)
       
       console.log('Dynamic fare options generated:', dynamicFareOptions.value)
@@ -655,6 +770,7 @@ function handle404Confirm() {
 }
 
 function transformFareRuleToOptions(data: FareRuleResponse['data']): FareOption[] {
+  // 根據展開的航段方向（props.leg）決定要顯示哪一組 baggage
   let baggageGroup = null;
   if (Array.isArray(data.baggage)) {
     if (props.leg === 'outbound') {
@@ -666,6 +782,7 @@ function transformFareRuleToOptions(data: FareRuleResponse['data']): FareOption[
     }
   }
 
+  // 合併所有乘客類型的 notes
   const notes: { type: FareNoteType; icon: FareIconType; text: string }[] = [];
   const passengerTypes = [...new Set(data.fareSummary.map(f => f.passengerType))];
   for (const ptc of passengerTypes) {
@@ -685,54 +802,84 @@ function transformFareRuleToOptions(data: FareRuleResponse['data']): FareOption[
       if (baggageText) {
         notes.push({ type: 'allowed', icon: 'suitcase', text: baggageText });
       }
-    } else {
-      let baggageText = '無免費託運行李';
-      notes.push({ type: 'notallowed', icon: 'suitcase', text: baggageText })
     }
 
-    for (const rule of rules.slice(0, rules.length)) {
+    // 顯示所有規則（退票、去程改期、回程改期...）
+    for (const rule of rules) {
       let label = rule.type;
       if (rule.type.includes('去程')) label = '去程改期費';
       if (rule.type.includes('回程')) label = '回程改期費';
       if (rule.type.includes('退票')) label = '退票費';
       const fee = rule.before !== null ? rule.before : 0;
+      
+      // 處理費用顯示文字
+      let feeText = '';
+      if (fee === -1) {
+        feeText = '不可退改';
+      } else if (fee === 0) {
+        feeText = '免費';
+      } else {
+        feeText = `${rule.currency} ${fee.toLocaleString()}起`;
+      }
+      
       notes.push({
-        type: 'allowed',
+        type: fee === 0 ? 'allowed' : 'permitted',
         icon: rule.type.includes('退票') ? 'ticket' : 'calendar',
-        text: `${label}${rule.currency} ${fee.toLocaleString()}起${rule.passengerTypeDisplay ? '（' + rule.passengerTypeDisplay + '）' : ''}`
+        text: `${label}${feeText}${rule.passengerTypeDisplay ? '（' + rule.passengerTypeDisplay + '）' : ''}`
       });
     }
   }
-  
-  const seen = new Set();
-  const filteredNotes: { type: FareNoteType; icon: FareIconType; text: string }[] = notes.filter(note => {
-    if (seen.has(note.icon)) return false;
-    seen.add(note.icon);
-    return true;
-  });
 
-  console.log("FilteredNotes:", filteredNotes)
-
-  filteredNotes.push(
-    {
-      type: 'allowed',
-      icon: 'clock',
-      text: '付款後48小時出票'
-    }
-  )
-
+  // 只顯示一個艙等
   const cabinDesc = sectors.value[0]?.cabinDesc || '經濟艙';
-  const price = data.fareSummary[0]?.price ?? 0;
+  
+  // 計算總價：需要根據每個乘客類型的價格和數量加總
+  // 注意：fare-rule API 的 price 是「單一旅客含稅總價」，taxAmount 是「單一旅客總稅額」
+  let totalPriceWithTax = 0;
+  let totalTaxAmount = 0;
+  
+  for (const summary of data.fareSummary) {
+    const priceWithTax = summary.price ?? 0;  // 單一旅客含稅總價
+    const taxAmount = summary.taxAmount ?? 0;  // 單一旅客總稅額
+    
+    // 根據乘客類型取得對應的數量
+    let passengerCount = 0;
+    if (summary.passengerType === 'ADT') {
+      passengerCount = props.adultCount ?? 1;
+    } else if (summary.passengerType === 'CNN') {
+      passengerCount = props.childCount ?? 0;
+    } else if (summary.passengerType === 'INF') {
+      passengerCount = props.babyCount ?? 0;
+    }
+    
+    // 加總：單人含稅價 × 人數
+    totalPriceWithTax += priceWithTax * passengerCount;
+    totalTaxAmount += taxAmount * passengerCount;
+    
+    console.log(`Passenger type ${summary.passengerType}: price(含稅)=${priceWithTax}, tax=${taxAmount}, count=${passengerCount}, subtotal=${priceWithTax * passengerCount}`);
+  }
+  
+  // 計算未稅價 = 含稅總價 - 稅費總額
+  const totalPriceWithoutTax = totalPriceWithTax - totalTaxAmount;
+  
+  console.log(`Total price (with tax): ${totalPriceWithTax}, Total tax: ${totalTaxAmount}, Total (without tax): ${totalPriceWithoutTax}`);
+  
   return [{
     id: `fare-0`,
     cabin: cabinDesc,
-    price,
-    notes: filteredNotes
+    price: totalPriceWithoutTax,  // 儲存總未稅價（含稅價 - 稅費）
+    taxAmount: totalTaxAmount,     // 儲存總稅費（已乘以人數）
+    notes
   }];
 }
 </script>
 
 <style scoped>
+/* .fade-scale-enter-active,
+.fade-scale-leave-active { transition: all 0.18s ease; }
+.fade-scale-enter-from,
+.fade-scale-leave-to { transform: translateY(4px) scale(0.95); } */
+
 /* Skeleton loading animation */
 .skel {
   position: relative;
@@ -756,13 +903,11 @@ function transformFareRuleToOptions(data: FareRuleResponse['data']): FareOption[
   100% { transform: translateX(100%); }
 }
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s;
+/* Fade transition for 404 dialog */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
 }
-
-.fade-enter-from,
-.fade-leave-to {
+.fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
 </style>

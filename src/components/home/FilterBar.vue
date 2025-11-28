@@ -6,10 +6,10 @@
                 <span>自訂篩選</span>
                 <button class="text-orange-500 hover:underline">清除全部</button>
             </div>
-            <label class="flex items-center mt-2 space-x-2 text-sm">
+            <!-- <label class="flex items-center mt-2 space-x-2 text-sm">
                 <input type="checkbox" class="form-checkbox" />
                 <span>提供學生航班</span>
-            </label>
+            </label> -->
         </div>
 
         <!-- 直飛 / 轉機 -->

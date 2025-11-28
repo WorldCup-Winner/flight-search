@@ -7,10 +7,16 @@ export type Airline = {
 
 export type Location = {
   region: string;
-  airports: Array<{
+  cities: Array<{
     iataCode: string;
     cityNameZhTw: string;
-    airportNameZh: string;
+    cityDisplayOrder?: number;
+  }>;
+  // 保留 airports 以便向下兼容（實際指向 cities）
+  airports?: Array<{
+    iataCode: string;
+    cityNameZhTw: string;
+    airportNameZh?: string;
     cityDisplayOrder?: number;
   }>;
 }
@@ -43,6 +49,7 @@ export type FareOption = {
   id: string
   cabin: string
   price: number
+  taxAmount: number
   notes: { type: FareNoteType; icon: FareIconType; text: string }[]
 }
 
@@ -70,6 +77,8 @@ export interface CardRow {
   airlineCode: string[]
   seats: any[] // can type later if you have structure
   sectors: Sector[]
+  validatingAirlineCode?: string // 新增：驗證航空公司代碼
+  itineraryRBDs?: string // 新增：航程 RBD 代碼
 }
 
 export type Craft = {
@@ -126,135 +135,30 @@ export interface AirlineAlliance {
   airlines: Array<Airline>
 }
 
-export interface FareSegment {
-  marketingCarrier: string;
-  operatingCarrier?: string;
-  flightNumber: string;
-  fromAirport: string;
-  toAirport: string;
-  departureDateLocal: string; // Format: YYYY-MM-DD
-  departureTimeLocal: string; // Format: HH:MM (24-hour)
-  rbd?: string;
-}
-
-export interface NamedPassenger {
-  ptc: 'ADT' | 'CNN' | 'INF';
-  age: number;
-}
-
-export interface Pax {
-  adt: number;
-  cnn: number;
-  inf: number;
-  named?: NamedPassenger[];
-}
-
-export interface FlightRequest {
-  segments: FareSegment[];
-  pax: Pax;
-}
-
-export interface ContactInfo {
-  firstNameOfContactPerson: string
-  lastNameOfContactPerson: string
-  genderOfContactPerson: number
-  mobileNumberCountryCode: string
-  contactMobileNumber: string
-  contactEmail: string
-  orderMethod?: number
-  registrationIdType?: number
-  registrationIdNumber?: string
-  registrationPassword?: string
-  mobileVerificationId?: string
-  memberId?: string
-  lineId?: string
-  preferredContactMethod?: number
-  assignedLocationCode?: string
-  assignedConsultantId?: string
-}
-
-export interface ReceiptInfo {
-  isNeedReceipt: boolean
-  receiptTitle?: string
-  uniformNumber?: string
-  isNeedFlightList: boolean
-}
-
-export interface AssistanceInfo {
-  isNeedAssistance: boolean
-  description?: string
-}
-
-export interface ItinerarySector {
-  order: number;
-  departureAirportCode: string;
-  arrivalAirportCode: string;
-  departureDate: string;
-  departureTime: string;
-  arrivalDate: string;
-  arrivalTime: string;
-  marketingAirlineCode: string;
-  flightNo: string;
-  bookingClass: string;
-}
-
-export interface Itinerary {
-  order: number;
-  departureAirportCode: string;
-  arrivalAirportCode: string;
-  sectors: ItinerarySector[];
-}
-
-export interface PassengerDetail {
-  passengerSequence: string;
-  passengerName: string;
-  pnrSequence: string;
-  amountWithTax: number;
-  tax: number;
-  paymentDeadline: string;
-}
-
-export interface Order {
-  pnrCode: string;
-  totalAmount: number;
-  orderNumber: string;
-  orderUniqId: string;
-  details: PassengerDetail[];
-}
-
-export interface Flight {
-  departureTime: string
-  departureAirportCode: string
-  departureAirportName: string
-  arrivalTime: string
-  arrivalAirportCode: string
-  arrivalAirportName: string
-  flight: string
-  cabin: string
-  status: string
-};
-
-export interface Item {
-  checked: boolean
-  name: string
-  productName: string
-  fare: number
-  tax: number
-  paid: number
-  deadline: string
-};
-
-export interface OrderResult {
-  msg_code: string
-  msg: string
-  RET01: string
-  RET02: string
-  RET03: string
-}
-
 export interface FareRuleRequest {
-  segments: FareSegment[]
-  pax: Pax
+  segments: SegmentPick[]
+  pax: PaxMix
+  itineraryType?: number // 新增：1=單程, 2=往返, 3=多行程
+  validatingAirlineCode?: string // 新增：驗證航空公司代碼
+  itineraryRBDs?: string // 新增：航程 RBD 代碼
+}
+
+export interface SegmentPick {
+  marketingCarrier: string
+  operatingCarrier?: string
+  flightNumber: string
+  fromAirport: string
+  toAirport: string
+  departureDateLocal: string
+  departureTimeLocal: string
+  rbd?: string
+  cabinType?: string
+}
+
+export interface PaxMix {
+  adt: number
+  cnn?: number
+  inf?: number
 }
 
 export interface FareRuleResponse {
@@ -307,7 +211,7 @@ export interface FareRuleSummaryData {
   taxAmount: number
 }
 
-
+// Booking API Types
 export interface BookingRequestViewModel {
   itineraries: BookingItinerary[]
   passengers: PassengerInfo[]
@@ -315,6 +219,8 @@ export interface BookingRequestViewModel {
   receiptInfo?: ReceiptInfo | null
   assistanceInfo?: AssistanceInfo | null
   isAgreedToTheTerms: boolean
+  validatingAirlineCode?: string // 新增：驗證航空公司代碼
+  itineraryRBDs?: string // 新增：航程 RBD 代碼
 }
 
 export interface BookingItinerary {
@@ -335,9 +241,11 @@ export interface BookingSector {
   marketingAirlineCode: string
   flightNo: string
   bookingClass: string
+  cabinType?: string
 }
 
 export interface PassengerInfo {
+  order: number
   firstName: string
   lastName: string
   gender: number // 0 = female, 1 = male
@@ -388,45 +296,4 @@ export interface ReceiptInfo {
 export interface AssistanceInfo {
   isNeedAssistance: boolean
   description?: string
-}
-
-export interface PaymentMethod {
-  DET01: string;        // 付款方式代碼
-  DET02: string;        // 排序 (API 回傳字串)
-  DET03: string;        // 群組一代號 (A=信用卡, B=匯款, L=LINE Pay)
-  DET03S: string;       // 群組一頁籤名稱
-  DET04: string;        // 群組二代號 (信用卡類型等)
-  DET04S: string;       // 群組二選項名稱
-  DET04D: string;       // 群組二備註
-  DET05?: string;       // 付款方式說明（選填）
-  DET06: number;        // 分期期數
-  DET07: number;        // 總金額
-  DET08: number;        // 每期金額
-  DET09?: string;       // 付款類型代碼（選填）
-  DET09S?: string;      // 付款類型說明（選填）
-}
-
-export interface PaymentGroup {
-  code: string;   // DET03 code
-  name: string;   // DET03S name
-  options: PaymentMethod[];
-}
-
-
-export type Contact = {
-  name: string;
-  number: string;
-  mail: string;
-}
-
-export type Receipt = {
-  type: string;
-  name: string;
-  number: string;
-  summary: string;
-}
-
-export type SpecialCooperation = {
-  type: string;
-  detail: string;
 }
