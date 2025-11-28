@@ -314,30 +314,31 @@ const isAirlineOpen = ref(false)
 const isCabinClassOpen = ref(false)
 
 // Triggers
-const depTriggerRefs = reactive({})
-const depPopoverRefs = reactive({})
-const destTriggerRefs = reactive({})
-const destPopoverRefs = reactive({})
-const dateTriggerRefs = reactive({})
-const datePopoverRefs = reactive({})
+type ElementMap = Record<number, HTMLElement | null>
+const depTriggerRefs = reactive<ElementMap>({})
+const depPopoverRefs = reactive<ElementMap>({})
+const destTriggerRefs = reactive<ElementMap>({})
+const destPopoverRefs = reactive<ElementMap>({})
+const dateTriggerRefs = reactive<ElementMap>({})
+const datePopoverRefs = reactive<ElementMap>({})
 
-const passTriggerRef = ref(null)
-const passPopoverRef = ref(null)
-const airlineTriggerRef = ref(null)
-const airlinePopoverRef = ref(null)
-const cabinClassTriggerRef = ref(null)
-const cabinClassPopoverRef = ref(null)
+const passTriggerRef = ref<HTMLElement | null>(null)
+const passPopoverRef = ref<HTMLElement | null>(null)
+const airlineTriggerRef = ref<HTMLElement | null>(null)
+const airlinePopoverRef = ref<HTMLElement | null>(null)
+const cabinClassTriggerRef = ref<HTMLElement | null>(null)
+const cabinClassPopoverRef = ref<HTMLElement | null>(null)
 
-const setDepTriggerRef = i => el => { if (el) depTriggerRefs[i] = el }
-const setDepPopoverRef = i => el => { if (el) depPopoverRefs[i] = el }
-const setArrTriggerRef = i => el => { if (el) destTriggerRefs[i] = el }
-const setArrPopoverRef = i => el => { if (el) destPopoverRefs[i] = el }
-const setDateTriggerRef = i => el => { if (el) dateTriggerRefs[i] = el }
-const setDatePopoverRef = i => el => { if (el) datePopoverRefs[i] = el }
+const setDepTriggerRef = (i: number) => (el: HTMLElement | null) => { if (el) depTriggerRefs[i] = el }
+const setDepPopoverRef = (i: number) => (el: HTMLElement | null) => { if (el) depPopoverRefs[i] = el }
+const setArrTriggerRef = (i: number) => (el: HTMLElement | null) => { if (el) destTriggerRefs[i] = el }
+const setArrPopoverRef = (i: number) => (el: HTMLElement | null) => { if (el) destPopoverRefs[i] = el }
+const setDateTriggerRef = (i: number) => (el: HTMLElement | null) => { if (el) dateTriggerRefs[i] = el }
+const setDatePopoverRef = (i: number) => (el: HTMLElement | null) => { if (el) datePopoverRefs[i] = el }
 
 // Methods
-function toggleDeparture(i) { openDepIndex.value = openDepIndex.value === i ? -1 : i }
-function toggleArrival(i) { 
+function toggleDeparture(i: any) { openDepIndex.value = openDepIndex.value === i ? -1 : i }
+function toggleArrival(i: any) { 
     // 點擊目的地時，確保選擇「日韓」區域
     if (openArrIndex.value !== i && locationStore.locations) {
         const japanKorea = locationStore.locations.find(loc => loc.region === '日韓')
@@ -347,7 +348,7 @@ function toggleArrival(i) {
     }
     openArrIndex.value = openArrIndex.value === i ? -1 : i 
 }
-function toggleDate(i) { openDateIndex.value = openDateIndex.value === i ? -1 : i }
+function toggleDate(i: any) { openDateIndex.value = openDateIndex.value === i ? -1 : i }
 function togglePassengers() { isPassengersOpen.value = !isPassengersOpen.value }
 function toggleCabinClass() { isCabinClassOpen.value = !isCabinClassOpen.value }
 function toggleAirline() {
@@ -378,7 +379,7 @@ function addSegment() {
     newSegment.departureCity = lastSegment.arrivalCity
     // Also set the location if available
     if (lastSegment.arrivalLocation) {
-      newSegment.departureLocation = lastSegment.arrivalLocation
+      newSegment.departureLocation = lastSegment.arrivalLocation ?? ""
     }
   }
   
@@ -389,17 +390,17 @@ function addSegment() {
     startDate: false,
   })
 }
-function removeSegment(idx) {
+function removeSegment(idx: any) {
   if (segments.value.length <= 2) return
   segments.value.splice(idx, 1)
   errors.value.splice(idx, 1)
 }
 
-function selectDepartureCity(i, city) {
+function selectDepartureCity(i:any, city:any) {
   segments.value[i].departureCity = city
   openDepIndex.value = -1
 }
-function selectArrivalCity(i, city) {
+function selectArrivalCity(i:any, city:any) {
   segments.value[i].arrivalCity = city
   openArrIndex.value = -1
   
@@ -411,11 +412,11 @@ function selectArrivalCity(i, city) {
     // Also update the location if available
     const currentSegment = segments.value[i]
     if (currentSegment.arrivalLocation) {
-      nextSegment.departureLocation = currentSegment.arrivalLocation
+      nextSegment.departureLocation = currentSegment.arrivalLocation ?? ""
     }
   }
 }
-function selectCabinClass(v) {
+function selectCabinClass(v: any) {
   selectedCabinClass.value = v
   isCabinClassOpen.value = false
 }
@@ -424,14 +425,14 @@ function onPassengerUpdate(payload: { adults: number; children: number }) {
   adultCount.value = payload.adults
   childrenCount.value = payload.children
 }
-function onDateUpdate(i, d) {
+function onDateUpdate(i: any, d: any) {
   // Update the date for UI feedback while selecting
   segments.value[i].departureDate = d
   // Validate immediately
   validateSegmentDate(i)
 }
 
-function onDateApply(i, d) {
+function onDateApply(i: any, d: any) {
   // Validate that this date is >= previous segment's date
   if (!validateSegmentDate(i, d)) {
     // Validation failed - don't close the picker
@@ -531,18 +532,18 @@ function isDateBeforePrevious(idx: number): boolean {
   
   return currentDate < prevDate
 }
-function swapCities(i) {
+function swapCities(i: any) {
   const s = segments.value[i]
 
   let temp = s.departureLocation
-  s.departureLocation = s.arrivalLocation
+  s.departureLocation = s.arrivalLocation ?? ""
   s.arrivalLocation = temp
 
   temp = s.departureCity
   s.departureCity = s.arrivalCity
   s.arrivalCity = temp
 }
-function selectAirline(airline) {
+function selectAirline(airline: any) {
   selectedAirline.value = airline
   isAirlineOpen.value = false
   airlineSearchTerm.value = ''
@@ -555,7 +556,7 @@ const passengerDisplayText = computed(
 )
 const filteredAirlines = computed(() => {
   const s = airlineSearchTerm.value.toLowerCase()
-  return airlineStore.airlines.filter(a => a.iataCode.toLowerCase().includes(s) || a.nameZhTw.toLowerCase().includes(s))
+  return airlineStore.airlines.filter((a: any) => a.iataCode.toLowerCase().includes(s) || a.nameZhTw.toLowerCase().includes(s))
 })
 
 // 最大日期：從今天起算 350 天
@@ -707,9 +708,9 @@ const segments = ref([makeSeg(), makeSeg()])
 // Others
 const hasSearched = ref(false)
 
-function onDocClick(e) {
+function onDocClick(e: any) {
   const t = e.target
-  const closeIfOutside = (openIdxRef, popRefs, trigRefs) => {
+  const closeIfOutside = (openIdxRef: any, popRefs: any, trigRefs: any) => {
     const i = openIdxRef.value
     if (i < 0) return
     const pop = popRefs[i], trig = trigRefs[i]
@@ -739,7 +740,7 @@ function onDocClick(e) {
     isCabinClassOpen.value = false
   }
 }
-function onKey(e) {
+function onKey(e: any) {
   if (e.key === 'Escape') {
     openDepIndex.value = -1
     openArrIndex.value = -1
@@ -795,7 +796,7 @@ function onSearch() {
   }
 
   const payload = {
-    flightSegments: segments.value.map((s, idx) => ({
+    flightSegments: segments.value.map((s: any, idx: any) => ({
       order: idx + 1,
       departureLocation: s.departureCity?.iataCode || 'TPE',
       arrivalLocation: s.arrivalCity?.iataCode || '',
