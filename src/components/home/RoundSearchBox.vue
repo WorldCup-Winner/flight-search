@@ -439,11 +439,6 @@ function findAirportByCode(code: string): { location: Location; airport: Airport
     return null
 }
 
-onBeforeUnmount(() => {
-    document.removeEventListener('click', onDocClick)
-    document.removeEventListener('keydown', onKey)
-})
-
 // Methods
 function selectDepartureCity(city: Airport) {
     selectedDepartureCity.value = city
@@ -461,10 +456,6 @@ function selectAirline(airline: Airline) {
 function selectCabinClass(v: CabinClassOption) {
     selectedCabinClass.value = v
     isCabinClassOpen.value = false
-}
-
-function isCabinClassOption(v: string): v is CabinClassOption {
-    return cabinClassOptions.includes(v as CabinClassOption)
 }
 
 function onPassengerUpdate(payload: { adults: number; children: number }) {
