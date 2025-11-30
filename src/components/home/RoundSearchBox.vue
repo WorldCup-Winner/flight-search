@@ -414,7 +414,7 @@ function restoreFromParams(params: any) {
     if (params.adults) adultCount.value = params.adults
     if (params.children) childrenCount.value = params.children
     
-    // Restore filters
+    // Restore filters  
     if (params.airlineCode && params.airlineName) {
         selectedAirline.value = {
             iataCode: params.airlineCode,
@@ -515,13 +515,13 @@ function handleDateApply(range: RangeSelection) {
     }
 }
 function swapCities() {
-    let temp = selectedDepartureLocation.value
+    const tempLocation = selectedDepartureLocation.value
     selectedDepartureLocation.value = selectedArrivalLocation.value
-    selectedArrivalLocation.value = temp
+    selectedArrivalLocation.value = tempLocation
 
-    temp = selectedDepartureCity.value
+    const tempCity = selectedDepartureCity.value
     selectedDepartureCity.value = selectedArrivalCity.value
-    selectedArrivalCity.value = temp
+    selectedArrivalCity.value = tempCity
 }
 
 const errors = ref({
