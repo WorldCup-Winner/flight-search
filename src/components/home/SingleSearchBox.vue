@@ -534,8 +534,8 @@ function onSearch() {
     flightSegments: [
       {
         order: 1,
-        departureLocation: selectedDepartureCity.value.iataCode || 'TPE',
-        arrivalLocation: selectedArrivalCity.value.iataCode || '',
+        departureLocation: selectedDepartureCity.value?.iataCode || 'TPE',
+        arrivalLocation: selectedArrivalCity.value?.iataCode || '',
         departureDate: startDate.value ? formatDateToYYYYMMDD(startDate.value) : null,
         returnDate: null
       }
