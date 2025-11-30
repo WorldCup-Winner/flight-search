@@ -314,26 +314,27 @@ const isAirlineOpen = ref(false)
 const isCabinClassOpen = ref(false)
 
 // Triggers
-const depTriggerRefs = reactive({})
-const depPopoverRefs = reactive({})
-const destTriggerRefs = reactive({})
-const destPopoverRefs = reactive({})
-const dateTriggerRefs = reactive({})
-const datePopoverRefs = reactive({})
+type ElementMap = Record<number, HTMLElement | null>
+const depTriggerRefs = reactive<ElementMap>({})
+const depPopoverRefs = reactive<ElementMap>({})
+const destTriggerRefs = reactive<ElementMap>({})
+const destPopoverRefs = reactive<ElementMap>({})
+const dateTriggerRefs = reactive<ElementMap>({})
+const datePopoverRefs = reactive<ElementMap>({})
 
-const passTriggerRef = ref(null)
-const passPopoverRef = ref(null)
-const airlineTriggerRef = ref(null)
-const airlinePopoverRef = ref(null)
-const cabinClassTriggerRef = ref(null)
-const cabinClassPopoverRef = ref(null)
+const passTriggerRef = ref<HTMLElement | null>(null)
+const passPopoverRef = ref<HTMLElement | null>(null)
+const airlineTriggerRef = ref<HTMLElement | null>(null)
+const airlinePopoverRef = ref<HTMLElement | null>(null)
+const cabinClassTriggerRef = ref<HTMLElement | null>(null)
+const cabinClassPopoverRef = ref<HTMLElement | null>(null)
 
-const setDepTriggerRef = i => el => { if (el) depTriggerRefs[i] = el }
-const setDepPopoverRef = i => el => { if (el) depPopoverRefs[i] = el }
-const setArrTriggerRef = i => el => { if (el) destTriggerRefs[i] = el }
-const setArrPopoverRef = i => el => { if (el) destPopoverRefs[i] = el }
-const setDateTriggerRef = i => el => { if (el) dateTriggerRefs[i] = el }
-const setDatePopoverRef = i => el => { if (el) datePopoverRefs[i] = el }
+const setDepTriggerRef = (i: number) => (el: HTMLElement | null) => { if (el) depTriggerRefs[i] = el }
+const setDepPopoverRef = (i: number) => (el: HTMLElement | null) => { if (el) depPopoverRefs[i] = el }
+const setArrTriggerRef = (i: number) => (el: HTMLElement | null) => { if (el) destTriggerRefs[i] = el }
+const setArrPopoverRef = (i: number) => (el: HTMLElement | null) => { if (el) destPopoverRefs[i] = el }
+const setDateTriggerRef = (i: number) => (el: HTMLElement | null) => { if (el) dateTriggerRefs[i] = el }
+const setDatePopoverRef = (i: number) => (el: HTMLElement | null) => { if (el) datePopoverRefs[i] = el }
 
 // Methods
 function toggleDeparture(i) { openDepIndex.value = openDepIndex.value === i ? -1 : i }

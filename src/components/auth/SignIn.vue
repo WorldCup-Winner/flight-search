@@ -309,7 +309,7 @@ const handleCodeSMS = async () => {
     }
 }
 
-let timerId = null
+let timerId: ReturnType<typeof setInterval> | null = null
 watch(isCodeSent, (newVal) => {
   if (newVal) {
     codeLeftTime.value = 300;
@@ -334,7 +334,10 @@ const startTimer = () => {
 
 const stopTimer = () => {
   if (timerRunning.value) {
-    clearInterval(timerId);
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
     timerRunning.value = false;
   }
 };
