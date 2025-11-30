@@ -354,8 +354,8 @@ const setDateTriggerRef = (i: number) => (el: VNodeRef) => { if (el && el instan
 const setDatePopoverRef = (i: number) => (el: VNodeRef) => { if (el && el instanceof HTMLElement) datePopoverRefs[i] = el }
 
 // Methods
-function toggleDeparture(i) { openDepIndex.value = openDepIndex.value === i ? -1 : i }
-function toggleArrival(i) { 
+function toggleDeparture(i: number) { openDepIndex.value = openDepIndex.value === i ? -1 : i }
+function toggleArrival(i: number) { 
     // 點擊目的地時，確保選擇「日韓」區域
     if (openArrIndex.value !== i && locationStore.locations) {
         const japanKorea = locationStore.locations.find(loc => loc.region === '日韓')
@@ -365,7 +365,7 @@ function toggleArrival(i) {
     }
     openArrIndex.value = openArrIndex.value === i ? -1 : i 
 }
-function toggleDate(i) { openDateIndex.value = openDateIndex.value === i ? -1 : i }
+function toggleDate(i: number) { openDateIndex.value = openDateIndex.value === i ? -1 : i }
 function togglePassengers() { isPassengersOpen.value = !isPassengersOpen.value }
 function toggleCabinClass() { isCabinClassOpen.value = !isCabinClassOpen.value }
 function toggleAirline() {
@@ -407,7 +407,7 @@ function addSegment() {
     startDate: false,
   })
 }
-function removeSegment(idx) {
+function removeSegment(idx: number) {
   if (segments.value.length <= 2) return
   segments.value.splice(idx, 1)
   errors.value.splice(idx, 1)
@@ -448,14 +448,14 @@ function onPassengerUpdate(payload: { adults: number; children: number }) {
   adultCount.value = payload.adults
   childrenCount.value = payload.children
 }
-function onDateUpdate(i, d) {
+function onDateUpdate(i: number, d: Date | null) {
   // Update the date for UI feedback while selecting
   segments.value[i].departureDate = d
   // Validate immediately
   validateSegmentDate(i)
 }
 
-function onDateApply(i, d) {
+function onDateApply(i: number, d: Date | null) {
   // Validate that this date is >= previous segment's date
   if (!validateSegmentDate(i, d)) {
     // Validation failed - don't close the picker
@@ -555,16 +555,16 @@ function isDateBeforePrevious(idx: number): boolean {
   
   return currentDate < prevDate
 }
-function swapCities(i) {
+function swapCities(i: number) {
   const s = segments.value[i]
 
-  let temp = s.departureLocation
+  const tempLocation = s.departureLocation
   s.departureLocation = s.arrivalLocation
-  s.arrivalLocation = temp
+  s.arrivalLocation = tempLocation
 
-  temp = s.departureCity
+  const tempCity = s.departureCity
   s.departureCity = s.arrivalCity
-  s.arrivalCity = temp
+  s.arrivalCity = tempCity
 }
 function selectAirline(airline: Airline) {
   selectedAirline.value = airline
@@ -578,8 +578,12 @@ const passengerDisplayText = computed(
   () => `${adultCount.value}成人 / ${childrenCount.value}孩童`
 )
 const filteredAirlines = computed(() => {
-  const s = airlineSearchTerm.value.toLowerCase()
-  return airlineStore.airlines.filter(a => a.iataCode.toLowerCase().includes(s) || a.nameZhTw.toLowerCase().includes(s))
+  const term = airlineSearchTerm.value.trim().toLowerCase()
+  return airlineStore.airlines.filter((airline: Airline) => {
+    const code = airline.iataCode?.toLowerCase() ?? ''
+    const name = airline.nameZhTw?.toLowerCase() ?? ''
+    return code.includes(term) || name.includes(term)
+  })
 })
 
 // 最大日期：從今天起算 350 天
@@ -731,14 +735,17 @@ const segments = ref([makeSeg(), makeSeg()])
 // Others
 const hasSearched = ref(false)
 
-function onDocClick(e) {
-  const t = e.target
-  const closeIfOutside = (openIdxRef, popRefs, trigRefs) => {
+function onDocClick(e: MouseEvent) {
+  const target = e.target
+  if (!(target instanceof Node)) return
+  
+  const closeIfOutside = (openIdxRef: { value: number }, popRefs: ElementMap, trigRefs: ElementMap) => {
     const i = openIdxRef.value
     if (i < 0) return
-    const pop = popRefs[i], trig = trigRefs[i]
+    const pop = popRefs[i]
+    const trig = trigRefs[i]
     if (!pop || !trig) return
-    if (!pop.contains(t) && !trig.contains(t)) openIdxRef.value = -1
+    if (!pop.contains(target) && !trig.contains(target)) openIdxRef.value = -1
   }
   closeIfOutside(openDepIndex, depPopoverRefs, depTriggerRefs)
   closeIfOutside(openArrIndex, destPopoverRefs, destTriggerRefs)
@@ -746,24 +753,24 @@ function onDocClick(e) {
 
   // bottom popovers
   if (isPassengersOpen.value && passPopoverRef.value && passTriggerRef.value &&
-    !passPopoverRef.value.contains(t) && !passTriggerRef.value.contains(t)) {
+    !passPopoverRef.value.contains(target) && !passTriggerRef.value.contains(target)) {
     isPassengersOpen.value = false
   }
   if (isAirlineOpen.value && airlinePopoverRef.value && airlineTriggerRef.value &&
-    !airlinePopoverRef.value.contains(t) && !airlineTriggerRef.value.contains(t)) {
+    !airlinePopoverRef.value.contains(target) && !airlineTriggerRef.value.contains(target)) {
     isAirlineOpen.value = false
   }
   if (
     isCabinClassOpen.value &&
     cabinClassPopoverRef.value &&
     cabinClassTriggerRef.value &&
-    !cabinClassPopoverRef.value.contains(t) &&
-    !cabinClassTriggerRef.value.contains(t)
+    !cabinClassPopoverRef.value.contains(target) &&
+    !cabinClassTriggerRef.value.contains(target)
   ) {
     isCabinClassOpen.value = false
   }
 }
-function onKey(e) {
+function onKey(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     openDepIndex.value = -1
     openArrIndex.value = -1
