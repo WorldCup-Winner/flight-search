@@ -457,12 +457,19 @@ function onDateUpdate(i: number, d: Date | null) {
 
 function onDateApply(i: number, d: Date | null) {
   // Validate that this date is >= previous segment's date
-  if (!validateSegmentDate(i, d)) {
+  if (!d) {
+    return
+  }
+  
+  // At this point, d is definitely Date (not null)
+  const date: Date = d
+  
+  if (!validateSegmentDate(i, date)) {
     // Validation failed - don't close the picker
     return
   }
   
-  segments.value[i].departureDate = d
+  segments.value[i].departureDate = date
   errors.value[i].startDate = false
   openDateIndex.value = -1
   
@@ -472,12 +479,12 @@ function onDateApply(i: number, d: Date | null) {
     if (nextSegment.departureDate) {
       const nextDate = new Date(nextSegment.departureDate)
       nextDate.setHours(0, 0, 0, 0)
-      const currentDate = new Date(d)
+      const currentDate = new Date(date)
       currentDate.setHours(0, 0, 0, 0)
       
       if (nextDate < currentDate) {
         // Next segment's date is before this one - update it
-        nextSegment.departureDate = d
+        nextSegment.departureDate = date
         errors.value[i + 1].startDate = false
       }
     }
@@ -485,7 +492,7 @@ function onDateApply(i: number, d: Date | null) {
 }
 
 // Validate a segment's date against the previous segment
-function validateSegmentDate(idx: number, dateToValidate?: Date): boolean {
+function validateSegmentDate(idx: number, dateToValidate?: Date | null): boolean {
   if (idx === 0) {
     // First segment is always valid (only needs to be >= today, which is handled by min date)
     errors.value[idx].startDate = false
@@ -493,7 +500,7 @@ function validateSegmentDate(idx: number, dateToValidate?: Date): boolean {
   }
   
   const segment = segments.value[idx]
-  const date = dateToValidate || segment.departureDate
+  const date = dateToValidate ?? segment.departureDate
   if (!date) {
     errors.value[idx].startDate = false
     return true
