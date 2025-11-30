@@ -19,7 +19,11 @@ export function signIn(req: any) {
 }
 
 export function sendSMS(req: any) {
-    return axios.post(`${API_URL}/Liyi/FA01B`, req)
+    return axios.post(`${API_URL}/Liyi/FP01B`, req)
+}
+
+export function verifySMS(req: any) {
+    return axios.post(`${API_URL}/Liyi/SMSCHK`, req)
 }
 
 export function getAirlineAlliance() {

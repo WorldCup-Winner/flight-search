@@ -223,6 +223,7 @@
                                                     :min="datePickerMinDate"
                                                     :max="datePickerMaxDate"
                                                     :singleMonth="true"
+                                                    :compact="true"
                                                     @update:modelValue="handleSingleDateApply"
                                                     @apply="handleSingleDateApply"
                                                     @close="closeDatePicker"
@@ -294,7 +295,11 @@
                                 v-model="contactLastName"
                                 type="text" 
                                 placeholder="中文姓 例：王"
-                                class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
+                                :disabled="isContactInfoLocked"
+                                :class="[
+                                    'w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none',
+                                    isContactInfoLocked ? 'bg-gray-100 cursor-not-allowed' : ''
+                                ]" />
                         </div>
                         <div class="relative grid-cols-12 md:col-span-4 mb-4">
                             <label class="block mb-1 text-others-gray1">聯絡人名字</label>
@@ -302,7 +307,11 @@
                                 v-model="contactFirstName"
                                 type="text" 
                                 placeholder="中文名 例：小明"
-                                class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
+                                :disabled="isContactInfoLocked"
+                                :class="[
+                                    'w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none',
+                                    isContactInfoLocked ? 'bg-gray-100 cursor-not-allowed' : ''
+                                ]" />
                         </div>
                         <div class="relative grid-cols-12 md:col-span-4 mb-4">
                             <label class="block mb-1 text-others-gray1">聯絡人性別</label>
@@ -310,7 +319,11 @@
                                 <select
                                     v-model="contactGender"
                                     placeholder="請選擇"
-                                    class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none appearance-none bg-transparent cursor-pointer"
+                                    :disabled="isMemberInfoLocked"
+                                    :class="[
+                                        'w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none appearance-none bg-transparent',
+                                        isMemberInfoLocked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
+                                    ]"
                                     aria-label="Contact Gender"
                                     >
                                     <option value="male">
@@ -333,6 +346,8 @@
                                 v-model:countryCode="code"
                                 :codes="phoneCodes" 
                                 :show-eye="false"
+                                :default-visible="true"
+                                :disabled="isContactInfoLocked"
                                 @blur="handlePhoneBlur"
                             />
                             <p v-if="phoneError" class="absolute left-0 top-full mt-1 text-text-error text-sm">
@@ -345,11 +360,13 @@
                                 v-model="contactEmail"
                                 type="text" 
                                 placeholder="必填"
+                                :disabled="isMemberInfoLocked"
                                 :class="[
                                     'w-full px-4 py-2 border rounded-md focus:ring-2 focus:outline-none',
                                     emailError
                                         ? 'border-text-error focus:ring-text-error'
-                                        : 'border-primary-gold focus:ring-others-original'
+                                        : 'border-primary-gold focus:ring-others-original',
+                                    isMemberInfoLocked ? 'bg-gray-100 cursor-not-allowed' : ''
                                 ]"
                                 @blur="handleEmailBlur"
                             />
@@ -555,7 +572,7 @@
                 <!-- Agreement -->
                 <div class="mt-10 flex gap-2 items-start text-sm text-slate-600 select-none">                        
                     <label class="flex mt-[3px] items-center cursor-pointer relative">
-                    <input type="checkbox" checked
+                    <input type="checkbox"
                         class="peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-primary-gold"
                         id="check" v-model="agreed" />
                         <span
@@ -577,7 +594,7 @@
                 <!-- Submit button -->
                 <button
                     class="mt-6 w-full rounded-[10px] bg-others-original py-3 font-semibold text-white hover:bg-others-hover disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    :disabled="!agreed || isSubmitting"
+                    :disabled="isSubmitting"
                     @click="emitSubmit"
                     >
                     <svg v-if="isSubmitting" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -1058,6 +1075,35 @@ const contactLastName = ref('')
 const contactGender = ref('male')
 const contactEmail = ref('')
 
+// Computed properties to determine if fields should be disabled
+const isContactInfoLocked = computed(() => authStore.isAuthenticated)
+const isMemberInfoLocked = computed(() => authStore.isMember)
+const isGuestInfoLocked = computed(() => authStore.isGuest)
+
+// Function to auto-fill contact info from auth store
+function fillContactInfoFromAuth() {
+    if (!authStore.isAuthenticated) return
+    
+    const user = authStore.user
+    
+    // For members: fill all fields (姓氏、名字、性別、手機、email)
+    if (authStore.isMember) {
+        if (user.firstName) contactFirstName.value = user.firstName
+        if (user.lastName) contactLastName.value = user.lastName
+        if (user.gender) contactGender.value = user.gender
+        if (user.phone) phoneNumber.value = user.phone
+        if (user.countryCode) code.value = user.countryCode
+        if (user.email) contactEmail.value = user.email
+    }
+    // For guests: fill only (姓氏、名字、手機)
+    else if (authStore.isGuest) {
+        if (user.firstName) contactFirstName.value = user.firstName
+        if (user.lastName) contactLastName.value = user.lastName
+        if (user.phone) phoneNumber.value = user.phone
+        if (user.countryCode) code.value = user.countryCode
+    }
+}
+
 // 發票資訊
 const companyName = ref('')
 const taxId = ref('')
@@ -1392,10 +1438,8 @@ function emitSubmit() {
   
   // 驗證必填欄位
   if (!agreed.value) {
-    bookingError.value = {
-      title: '訂單提交失敗',
-      message: '請先閱讀並同意訂購須知'
-    };
+    // Show ThankYou dialog to remind user to agree to terms
+    showThankYouDialog.value = true
     return
   }
 
@@ -1824,30 +1868,26 @@ function proceedWithBooking() {
       showBookingInProgress.value = false;
     });
 }
-watch(
-  () => agreed.value,
-  (newValue) => {
-    if (newValue) {
-      showThankYouDialog.value = true
-    }
-  },
-  { immediate: false }
-)
 
 // Watch for authentication state changes - if user logs in while pending booking, proceed
 watch(
   () => authStore.isAuthenticated,
   (isAuthenticated) => {
-    if (isAuthenticated && pendingBookingAfterLogin.value) {
-      // Close login dialog
-      closeDialog()
-      // Reset pending flag
-      pendingBookingAfterLogin.value = false
-      // Automatically proceed with booking submission
-      // Use nextTick to ensure dialog is closed first
-      setTimeout(() => {
-        emitSubmit()
-      }, 100)
+    if (isAuthenticated) {
+      // Auto-fill contact info when user logs in
+      fillContactInfoFromAuth()
+      
+      if (pendingBookingAfterLogin.value) {
+        // Close login dialog
+        closeDialog()
+        // Reset pending flag
+        pendingBookingAfterLogin.value = false
+        // Automatically proceed with booking submission
+        // Use nextTick to ensure dialog is closed first
+        setTimeout(() => {
+          emitSubmit()
+        }, 100)
+      }
     }
   }
 )
@@ -1878,6 +1918,9 @@ function formatBirthDate(input: string): string {
 onMounted(async () => {
   // 載入 localStorage 中的訂票資料
   bookingStore.getBookingData()
+  
+  // Auto-fill contact info if user is already authenticated
+  fillContactInfoFromAuth()
   
   try {
     const response = await getPhoneCodes()

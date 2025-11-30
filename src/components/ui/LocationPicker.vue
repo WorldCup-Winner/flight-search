@@ -41,24 +41,112 @@
 
             <!-- Search Results (when searching) -->
             <template v-else-if="searchKeyword.trim() && hasSearchResults">
-                <div class="grid grid-cols-3 md:grid-cols-7 gap-2 md:gap-0 md:gap-y-5">
-                    <button
-                        v-for="item in flattenedSearchResults"
-                        :key="`${item.type}-${item.iataCode}`"
-                        class="px-2 py-1.5 rounded-lg md:rounded-none text-sm text-center transition-colors
-                               border border-gray-200 md:border-0"
-                        :class="[
-                            localSelectedCity?.iataCode === item.iataCode
-                                ? 'text-others-original bg-others-gray9 md:bg-transparent'
-                                : 'text-others-gray1 hover:text-others-original'
-                        ]"
-                        @click="onCityClick(item)"
+                <div class="space-y-6">
+                    <!-- Country matches -->
+                    <div
+                        v-for="country in countryResults"
+                        :key="'country-' + country.name"
+                        class="space-y-1"
                     >
-                        {{ item.displayName }}
-                        <span v-if="item.type === 'airport' && item.cityName" class="block text-xs opacity-75">
-                            ({{ item.cityName }})
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="border-2 border-others-original text-others-original rounded-xl font-medium py-1 px-1 text-base leading-none transition-colors">
+                                國家
+                            </span>
+                            <span
+                                class="text-others-gray7"
+                                v-html="highlightMatch(country.name)"
+                            />
+                        </div>
+                        <div
+                            v-for="airport in country.airports"
+                            :key="'country-airport-' + country.name + '-' + airport.iataCode"
+                            class="flex items-center gap-2 text-sm pl-10"
+                        >
+                            <span class="text-others-gray3">→</span>
+                            <button
+                                type="button"
+                                class="text-left text-others-gray7 hover:text-others-original transition-colors"
+                                @click="onCityClick({
+                                    type: 'airport',
+                                    iataCode: airport.iataCode,
+                                    displayName: airport.name,
+                                    countryName: country.name,
+                                    cityDisplayOrder: 0
+                                })"
+                            >
+                                <span v-html="highlightMatch(airport.name)" />
+                                <span class="ml-1 text-xs text-others-gray5">{{ airport.iataCode }}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- City matches -->
+                    <div
+                        v-for="city in cityResults"
+                        :key="'city-' + city.cityName + '-' + city.countryName"
+                        class="space-y-1"
+                    >
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="border-2 border-others-original text-others-original rounded-xl font-medium py-1 px-1 text-base leading-none transition-colors">
+                                城市
+                            </span>
+                            <span class="text-others-gray7">
+                                <span v-html="highlightMatch(city.cityName)" />
+                                <span class="ml-1 text-xs text-others-gray5">{{ city.countryName }}</span>
+                            </span>
+                        </div>
+                        <div
+                            v-for="airport in city.airports"
+                            :key="'city-airport-' + city.cityName + '-' + airport.iataCode"
+                            class="flex items-center gap-2 text-sm pl-10"
+                        >
+                            <span class="text-others-gray3">→</span>
+                            <button
+                                type="button"
+                                class="text-left text-others-gray7 hover:text-others-original transition-colors"
+                                @click="onCityClick({
+                                    type: 'airport',
+                                    iataCode: airport.iataCode,
+                                    displayName: airport.name,
+                                    countryName: city.countryName,
+                                    cityName: city.cityName,
+                                    cityDisplayOrder: 0
+                                })"
+                            >
+                                <span v-html="highlightMatch(airport.name)" />
+                                <span class="ml-1 text-xs text-others-gray5">{{ airport.iataCode }}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Airport matches -->
+                    <div v-if="airportResults.length > 0" class="flex items-start gap-2 text-sm">
+                        <span class="border-2 border-others-original text-others-original rounded-xl font-medium py-1 px-1 text-base leading-none transition-colors">
+                            機場
                         </span>
-                    </button>
+                        <div class="space-y-1">
+                            <div
+                                v-for="airport in airportResults"
+                                :key="'airport-' + airport.iataCode"
+                                class="flex items-center gap-2 text-sm"
+                            >
+                                <span class="text-others-gray3">→</span>
+                                <button
+                                    type="button"
+                                    class="text-left text-others-gray7 hover:text-others-original transition-colors"
+                                    @click="onCityClick({
+                                        type: 'airport',
+                                        iataCode: airport.iataCode,
+                                        displayName: airport.name,
+                                        cityDisplayOrder: 0
+                                    })"
+                                >
+                                    <span v-html="highlightMatch(airport.name)" />
+                                    <span class="ml-1 text-xs text-others-gray5">{{ airport.iataCode }}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </template>
 
@@ -179,39 +267,138 @@ const handleSearchInput = () => {
     }, 300)
 }
 
-// Flatten autocomplete results for display
-const flattenedSearchResults = computed<AutocompleteItem[]>(() => {
-    if (!locationStore.autocompleteResults || locationStore.autocompleteResults.length === 0) {
-        return []
-    }
+// Structures for categorized search results
+interface CountryResult {
+    name: string
+    airports: { name: string; iataCode: string }[]
+}
 
-    const results: AutocompleteItem[] = []
-    
+interface CityResult {
+    cityName: string
+    countryName: string
+    airports: { name: string; iataCode: string }[]
+}
+
+interface AirportResult {
+    name: string
+    iataCode: string
+}
+
+const keywordLower = computed(() => searchKeyword.value.trim().toLowerCase())
+
+// Country-level matches: country name contains keyword
+const countryResults = computed<CountryResult[]>(() => {
+    const kw = keywordLower.value
+    if (!kw || !locationStore.autocompleteResults?.length) return []
+
+    const results: CountryResult[] = []
+
     locationStore.autocompleteResults.forEach((country: any) => {
-        if (country.data) {
+        const countryName = country.displayNameZh || ''
+        if (!countryName.toLowerCase().includes(kw)) return
+
+        const airports: { name: string; iataCode: string; cityDisplayOrder?: number }[] = []
+        if (Array.isArray(country.data)) {
             country.data.forEach((city: any) => {
-                // Add city (only if it has an iataCode, skip country-level items)
-                if (city.iataCode) {
-                    results.push({
-                        type: 'city',
-                        iataCode: city.iataCode,
-                        displayName: city.displayNameZh || city.cityNameZhTw || '',
-                        countryName: country.displayNameZh,
-                        cityDisplayOrder: city.cityDisplayOrder || 0
-                    })
-                }
-                
-                // Add airports under this city
-                if (city.data && Array.isArray(city.data)) {
+                if (Array.isArray(city.data)) {
                     city.data.forEach((airport: any) => {
                         if (airport.iataCode) {
-                            results.push({
-                                type: 'airport',
+                            airports.push({
+                                name: airport.displayNameZh || airport.airportNameZh || '',
                                 iataCode: airport.iataCode,
-                                displayName: airport.displayNameZh || airport.airportNameZh || '',
-                                countryName: country.displayNameZh,
-                                cityName: city.displayNameZh || city.cityNameZhTw,
-                                cityDisplayOrder: airport.cityDisplayOrder || city.cityDisplayOrder || 0
+                                cityDisplayOrder: airport.cityDisplayOrder ?? city.cityDisplayOrder ?? 0
+                            })
+                        }
+                    })
+                }
+            })
+        }
+
+        airports.sort(
+            (a, b) => (a.cityDisplayOrder || 0) - (b.cityDisplayOrder || 0)
+        )
+
+        if (airports.length > 0) {
+            results.push({
+                name: countryName,
+                airports: airports.map(a => ({ name: a.name, iataCode: a.iataCode }))
+            })
+        }
+    })
+
+    return results
+})
+
+// City-level matches: city name contains keyword
+const cityResults = computed<CityResult[]>(() => {
+    const kw = keywordLower.value
+    if (!kw || !locationStore.autocompleteResults?.length) return []
+
+    const results: CityResult[] = []
+
+    locationStore.autocompleteResults.forEach((country: any) => {
+        const countryName = country.displayNameZh || ''
+
+        if (Array.isArray(country.data)) {
+            country.data.forEach((city: any) => {
+                const cityName =
+                    city.displayNameZh || city.cityNameZhTw || ''
+
+                if (!cityName.toLowerCase().includes(kw)) return
+
+                const airports: { name: string; iataCode: string; cityDisplayOrder?: number }[] = []
+
+                if (Array.isArray(city.data)) {
+                    city.data.forEach((airport: any) => {
+                        if (airport.iataCode) {
+                            airports.push({
+                                name: airport.displayNameZh || airport.airportNameZh || '',
+                                iataCode: airport.iataCode,
+                                cityDisplayOrder: airport.cityDisplayOrder ?? city.cityDisplayOrder ?? 0
+                            })
+                        }
+                    })
+                }
+
+                airports.sort(
+                    (a, b) => (a.cityDisplayOrder || 0) - (b.cityDisplayOrder || 0)
+                )
+
+                if (airports.length > 0) {
+                    results.push({
+                        cityName,
+                        countryName,
+                        airports: airports.map(a => ({ name: a.name, iataCode: a.iataCode }))
+                    })
+                }
+            })
+        }
+    })
+
+    return results
+})
+
+// Airport-level matches: airport name contains keyword
+const airportResults = computed<AirportResult[]>(() => {
+    const kw = keywordLower.value
+    if (!kw || !locationStore.autocompleteResults?.length) return []
+
+    const results: AirportResult[] = []
+
+    locationStore.autocompleteResults.forEach((country: any) => {
+        if (Array.isArray(country.data)) {
+            country.data.forEach((city: any) => {
+                if (Array.isArray(city.data)) {
+                    city.data.forEach((airport: any) => {
+                        const name =
+                            airport.displayNameZh || airport.airportNameZh || ''
+                        if (
+                            airport.iataCode &&
+                            name.toLowerCase().includes(kw)
+                        ) {
+                            results.push({
+                                name,
+                                iataCode: airport.iataCode
                             })
                         }
                     })
@@ -219,12 +406,16 @@ const flattenedSearchResults = computed<AutocompleteItem[]>(() => {
             })
         }
     })
-    
-    // Sort by cityDisplayOrder
-    return results.sort((a, b) => (a.cityDisplayOrder || 0) - (b.cityDisplayOrder || 0))
+
+    return results
 })
 
-const hasSearchResults = computed(() => flattenedSearchResults.value.length > 0)
+const hasSearchResults = computed(
+    () =>
+        countryResults.value.length > 0 ||
+        cityResults.value.length > 0 ||
+        airportResults.value.length > 0
+)
 
 const loading = computed(() => locationStore.loading)
 
@@ -245,6 +436,28 @@ watch(() => searchKeyword.value, (newVal) => {
         locationStore.clearAutocompleteResults()
     }
 })
+
+// Highlight matched keyword in search results
+function escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function highlightMatch(text: string): string {
+    const keyword = searchKeyword.value.trim()
+    if (!keyword) return text
+
+    try {
+        const regex = new RegExp(escapeRegExp(keyword), 'gi')
+        return text.replace(
+            regex,
+            (match) =>
+                `<span class="text-others-original">${match}</span>`
+        )
+    } catch {
+        // Fallback: return original text if regex fails
+        return text
+    }
+}
 
 // Check if we're on mobile
 function isMobile(): boolean {

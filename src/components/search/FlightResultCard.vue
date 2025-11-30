@@ -116,7 +116,9 @@
               <div class="text-[28px] text-others-original leading-none">{{ formatPrice(priceTotal) }}</div>
               <div class="text-[12px] text-others-gray1">&nbsp; 起</div>
             </div>
-            <div v-if="taxMode == 'in'" class="text-[12px] pt-1 text-others-gray1 whitespace-nowrap text-right">每人均價(含稅及附加費)</div>
+            <div v-if="taxMode == 'in'" class="text-[12px] pt-1 text-others-gray1 whitespace-nowrap text-right">
+              <span class="font-bold text-[14px]">每人均價</span>(含稅及附加費)
+            </div>
             <div v-else class="text-[12px] pt-1 text-others-gray1 whitespace-nowrap text-right">{{ '參考稅費'  }}&nbsp;{{ currencyDisplay }}&nbsp;{{ formatPrice(taxAmount ?? 0) }}</div>
           </div>
 
@@ -293,7 +295,7 @@
                 </div>
                 <div class="text-[12px] pt-2 text-others-gray1">
                   <template v-if="taxMode === 'in'">
-                    每人均價(含稅及附加費)
+                    <span class="font-bold text-[14px]">每人均價</span>(含稅及附加費)
                   </template>
                   <template v-else>
                     參考稅費&nbsp;{{ currencyDisplay }}&nbsp;{{ formatPrice(taxAmount ?? 0) }}
@@ -626,10 +628,18 @@ async function fetchFareRule() {
   fareRuleError.value = null
 
   try {
+    // For round trips on return leg, only include the outbound segment (first one)
+    // For other cases (multi-trip, outbound leg), include all previous segments
+    let segmentsToInclude = props.previousSegments
+    if (props.tripType === 'roundtrip' && props.leg === 'return' && props.previousSegments && props.previousSegments.length > 0) {
+      // Only include the first segment (outbound) for round trip return leg
+      segmentsToInclude = [props.previousSegments[0]]
+    }
+    
     // Combine previous segments with current flight sectors
     // previousSegments contains segment objects, each with a sectors array
     const allSectors = [
-      ...(props.previousSegments?.flatMap(seg => seg.sectors) ?? []),
+      ...(segmentsToInclude?.flatMap(seg => seg.sectors) ?? []),
       ...props.sectors
     ]
     

@@ -87,7 +87,7 @@
                     <div class="mb-4 w-full">
                         <label class="block mb-1 text-others-gray1 text-sm">手機號碼</label>
                         <div class="relative flex items-center justify-between gap-4">
-                            <PhoneField v-model:model-value="form1.phone" v-model:countryCode="form1.code" :showEye="true" />
+                            <PhoneField v-model="form1.phone" v-model:countryCode="form1.code" :showEye="true" />
                             <button
                                 v-if="!isCodeSent || codeLeftTime == 0"
                                 class="flex-none inline-flex items-center justify-center w-fit whitespace-nowrap
@@ -97,8 +97,7 @@
                             </button>
                             <button
                                 v-else
-                                class="flex-none inline-flex items-center justify-center w-fit whitespace-nowrap
-                                    bg-primary-gold text-white px-5 py-2 rounded-[10px] hover:bg-primary-gold1 transition">
+                                class="flex-none inline-flex items-center justify-center w-fit whitespace-nowrap bg-primary-gold text-white px-5 py-2 rounded-[10px] hover:bg-primary-gold1 transition">
                                 等待{{codeLeftTime}}秒
                             </button>
                         </div>
@@ -146,9 +145,11 @@
         </div>
     </div>
 </template>
-<script setup>
+<script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useToast } from 'vue-toastification';
+import { sendSMS, verifySMS } from '@/api';
 
 import PhoneField from '@/components/ui/PhoneField.vue'
 import CodeField from '@/components/ui/CodeField.vue'
@@ -170,13 +171,15 @@ const form1 = ref({
     phone: ''
 })
 
-
 const showUsername = ref(false)
 const showPassword = ref(false)
 const activeTab = ref('login-member')
 const isCodeSent = ref(false)
+const smsId = ref('') // Store RET04 (SMS ID) from FA01B response
+const agreed = ref(false)
 
 const authStore = useAuthStore()
+const toast = useToast()
 
 const togglePassword = () => {
     showPassword.value = !showPassword.value
@@ -186,23 +189,124 @@ const toggleUsername = () => {
     showUsername.value = !showUsername.value
 }
 
-const handleLogin = () => {
-    console.log('Login with:', form.value)
-    // Your login logic here
-    authStore.login({
-        "PAR01": form.value.username,
-        "PAR02": form.value.password
-    })
-    emit('close')
+const handleLogin = async () => {
+    // Check if it's guest purchase (訪客購買)
+    if (activeTab.value === 'login-guest') {
+        // Validate required fields
+        if (!form1.value.firstname || !form1.value.lastname || !form1.value.phone) {
+            toast.warning('請填寫完整的姓名和手機號碼')
+            return
+        }
+        
+        if (!isCodeSent.value) {
+            toast.warning('請先發送驗證簡訊')
+            return
+        }
+        
+        if (!verificationCode.value) {
+            toast.warning('請輸入驗證碼')
+            return
+        }
+        
+        if (!agreed.value) {
+            toast.warning('請同意隱私權政策')
+            return
+        }
+        
+        // Call SMSCHK API
+        try {
+            const fullName = `${form1.value.firstname}${form1.value.lastname}`
+            // For Taiwan (+886), send phone number as-is. For other countries, combine code and phone
+            const phoneNumber = form1.value.code === '+886' 
+                ? form1.value.phone 
+                : `${form1.value.code.replace('+', '')}${form1.value.phone}`
+            
+            const response = await verifySMS({
+                PAR01: phoneNumber, // Phone number
+                PAR02: smsId.value, // SMS ID (RET04) from FA01B response
+                PAR03: verificationCode.value, // SMS verification code
+                PAR04: fullName // Full name (姓 + 名字)
+            })
+            
+            const data = response.data
+            
+            if (data.status === '1' || data.status === 1) {
+                // Success - proceed with guest authentication
+                toast.success(data.msg || '驗證成功')
+                // Set authenticated state with guest info
+                authStore.setGuestInfo({
+                    name: fullName,
+                    firstName: form1.value.firstname,
+                    lastName: form1.value.lastname,
+                    phone: form1.value.phone,
+                    countryCode: form1.value.code,
+                    isMember: false,
+                })
+                emit('close')
+            } else if (data.status === '0' || data.status === 0) {
+                // Failed
+                toast.warning(data.msg || '驗證失敗')
+            } else {
+                // Unknown status - show message anyway
+                toast.info(data.msg || '驗證完成')
+            }
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.msg || error.response?.data?.message || error.message || '驗證失敗'
+            toast.error(errorMsg)
+            console.error('SMS verification error:', error)
+        }
+    } else {
+        // Member login
+        console.log('Login with:', form.value)
+        authStore.login({
+            "PAR01": form.value.username,
+            "PAR02": form.value.password
+        })
+        emit('close')
+    }
 }
 
-const handleCodeSMS = () => {
-    isCodeSent.value = true
-    authStore.sendSMS({
-        "PAR01": form1.value.firstname,
-        "PAR02": form1.value.lastname,
-        "PAR03": form1.value.phone
-    })
+const handleCodeSMS = async () => {
+    // Validate required fields
+    if (!form1.value.firstname || !form1.value.lastname || !form1.value.phone) {
+        toast.warning('請填寫完整的姓名和手機號碼')
+        return
+    }
+    
+    try {
+        // For Taiwan (+886), send phone number as-is. For other countries, combine code and phone
+        const phoneNumber = form1.value.code === '+886' 
+            ? form1.value.phone 
+            : `${form1.value.code.replace('+', '')}${form1.value.phone}`
+        
+        const response = await sendSMS({
+            PAR02: phoneNumber, // Phone number
+            PAR03: form1.value.firstname, // 姓
+            PAR04: form1.value.lastname // 名字
+        })
+        
+        const data = response.data
+        
+        if (data.status === '1' || data.status === 1) {
+            // Success - store SMS ID and start countdown
+            smsId.value = data.RET04 || ''
+            isCodeSent.value = true
+            toast.success(data.msg || '驗證簡訊已發送')
+        } else if (data.status === '0' || data.status === 0) {
+            // Failed - reset button state
+            isCodeSent.value = false
+            toast.warning(data.msg || '發送失敗')
+        } else {
+            // Unknown status - show message anyway
+            toast.info(data.msg || '簡訊已發送')
+        }
+    } catch (error: any) {
+        // On error, reset button state
+        isCodeSent.value = false
+        const errorMsg = error.response?.data?.msg || error.response?.data?.message || error.message || '發送失敗'
+        toast.error(errorMsg)
+        console.error('SMS send error:', error)
+    }
 }
 
 let timerId = null

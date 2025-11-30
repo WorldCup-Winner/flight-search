@@ -1,14 +1,19 @@
 <template>
   <div
-    class="inline-flex w-full rounded-[10px] border bg-white
-           border-primary-gold overflow-hidden "
+    :class="[
+      'inline-flex w-full rounded-[10px] border overflow-hidden',
+      disabled ? 'border-gray-300 bg-gray-100' : 'border-primary-gold bg-white'
+    ]"
     >
     <!-- Country code -->
     <div class="relative flex items-center shrink-0">
       <select
         v-model="code"
-        class="appearance-none bg-transparent pl-3 pr-7 py-2.5 text-sm
-               text-others-gray1 focus:outline-none cursor-pointer w-[100px] text-transparent"
+        :disabled="disabled"
+        :class="[
+          'appearance-none bg-transparent pl-3 pr-7 py-2.5 text-sm text-others-gray1 focus:outline-none w-[100px] text-transparent',
+          disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+        ]"
         style="text-shadow: 0 0 0 transparent;"
         aria-label="Country code"
       >
@@ -39,9 +44,13 @@
       autocomplete="tel"
       :placeholder="placeholder"
       :value="modelValue"
+      :disabled="disabled"
       @input="onInput"
       @blur="$emit('blur')"
-      class="min-w-0 flex-1 px-5 py-2 text-sm text-others-gray1 focus:outline-none"
+      :class="[
+        'min-w-0 flex-1 px-5 py-2 text-sm text-others-gray1 focus:outline-none',
+        disabled ? 'cursor-not-allowed opacity-60 bg-gray-100' : ''
+      ]"
       aria-label="Phone number"
     />
 
@@ -92,6 +101,8 @@ const props = defineProps<{
   placeholder?: string
   codes?: Code[]
   showEye?: boolean
+  disabled?: boolean
+  defaultVisible?: boolean // If true, phone number is visible by default
 }>()
 
 const emit = defineEmits<{
@@ -101,7 +112,7 @@ const emit = defineEmits<{
   (e: 'blur'): void
 }>()
 
-const show = ref(false) // Start with hidden (password mode)
+const show = ref(props.defaultVisible ?? false) // Start with visible if defaultVisible is true, otherwise hidden
 
 // 使用 computed 讓 codes 能響應 props 的變化
 const codes = computed<Code[]>(() => props.codes ?? [

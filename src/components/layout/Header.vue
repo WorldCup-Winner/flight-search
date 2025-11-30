@@ -65,7 +65,7 @@
 
         <!-- Auth buttons -->
         <div 
-          v-if="authStore.name == null || authStore.name == undefined" 
+          v-if="!authStore.isAuthenticated" 
           class="flex items-center gap-2 md:gap-6"
         >
           <button
@@ -74,13 +74,13 @@
           >
             登入
           </button>
-          <button
+          <!-- <button
             class="hidden md:block px-4 py-1 w-[93px] h-[40px] rounded-md border border-none hover:bg-others-gray2 hover:text-others-gray1 transition"
             :class="[isOrderPage ? 'bg-others-gray4 text-others-gray1' : 'bg-white text-others-original']"
             @click="openDialog('signup')"
           >
             註冊
-          </button>
+          </button> -->
         </div>
         <div v-else class="flex items-center gap-2 md:gap-6">
           <div 
@@ -100,8 +100,8 @@
                   [-webkit-mask-image:url('@/assets/imgs/icon-avatar.svg')]"
               :class="[isOrderPage ? 'bg-others-gray4' : 'bg-white']"
             ></div>
-            <span class="hidden md:inline">Hi, {{ authStore.name }}</span>
-            <span class="md:hidden text-base">{{ authStore.name }}</span>
+            <span class="hidden md:inline">Hi, {{ authStore.user.name }}</span>
+            <span class="md:hidden text-base">{{ authStore.user.name }}</span>
           </div>
           <button
             class="px-3 md:px-4 py-1 w-[70px] md:w-[93px] h-[38px] md:h-[40px] rounded-md border border-none hover:bg-others-gray2 hover:text-others-gray1 transition text-base md:text-base"

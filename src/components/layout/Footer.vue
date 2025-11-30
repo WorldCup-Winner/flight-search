@@ -40,21 +40,21 @@
                 <div class="flex flex-col">
                     <!-- Social Icons: order-last on mobile, order-first on desktop -->
                     <div class="flex space-x-8 md:space-x-[25px] order-last md:order-first mt-10 md:mt-0 md:mb-6">
-                        <a href="#" aria-label="Facebook">
+                        <a href="https://www.facebook.com/galileetours/" aria-label="Facebook">
                             <div class="w-8 h-8 bg-white hover:bg-others-gray9
                                 [mask-image:url('@/assets/imgs/icon-facebook.svg')] 
                                 [mask-repeat:no-repeat] [mask-position:center] [mask-size:contain] 
                                 [-webkit-mask-image:url('@/assets/imgs/icon-facebook.svg')]">
                             </div>
                         </a>
-                        <a href="#" aria-label="Instagram">
+                        <a href="https://www.instagram.com/galileetours/" aria-label="Instagram" target="_blank">
                             <div class="w-8 h-8 bg-white hover:bg-others-gray9
                                 [mask-image:url('@/assets/imgs/icon-instagram.svg')] 
                                 [mask-repeat:no-repeat] [mask-position:center] [mask-size:contain] 
                                 [-webkit-mask-image:url('@/assets/imgs/icon-instagram.svg')]">
                             </div>
                         </a>
-                        <a href="#" aria-label="Line">
+                        <a href="https://lin.ee/dcxSgYk" aria-label="Line" target="_blank">
                             <div class="w-8 h-8 bg-white hover:bg-others-gray9
                                 [mask-image:url('@/assets/imgs/icon-line.svg')] 
                                 [mask-repeat:no-repeat] [mask-position:center] [mask-size:contain] 
@@ -65,9 +65,9 @@
                     
                     <!-- Links -->
                     <div class="flex flex-col space-y-2 text-sm md:text-base">
-                        <a href="#" class="hover:underline">機票訂購常見問題Q&A</a>
-                        <a href="#" class="hover:underline">Virtuoso奢華飯店預訂</a>
-                        <a href="#" class="hover:underline">旅遊顧問線上諮詢</a>
+                        <a href="https://www.galilee.com.tw/fitsupport#faq" class="hover:underline" target="_blank">機票訂購常見問題Q&A</a>
+                        <a href="https://www.galilee.com.tw/virtuoso_luxury_hotel" class="hover:underline" target="_blank">Virtuoso奢華飯店預訂</a>
+                        <a href="https://lin.ee/dcxSgYk" class="hover:underline" target="_blank">旅遊顧問線上諮詢</a>
                     </div>
                 </div>
             </div>

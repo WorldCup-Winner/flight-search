@@ -9,7 +9,7 @@
             <label class="text-sm md:text-h5 text-primary-gold font-bold col-start-1 row-start-1 md:mb-2 md:block">出發地</label>
             <div class="cursor-pointer col-start-1 row-start-2 md:row-auto" @click="toggleDeparture">
               <div class="text-sm md:text-base text-others-gray1">
-                {{ selectedDepartureCity?.cityNameZhTw || 'TPE 台北(任何)' }}
+                {{ selectedDepartureCity?.cityNameZhTw || '台北/桃園' }}
               </div>
             </div>
             <!-- Departure Popover -->
@@ -147,7 +147,7 @@
             <div class="relative flex-1 md:flex-none" ref="airlineTriggerRef">
                 <button @click="toggleAirline"
                     class="flex items-center justify-between w-full md:min-w-[200px] bg-divider-soft text-primary-gold px-3 md:px-4 py-2 md:py-3 rounded-xl text-xs md:text-sm font-medium transition-colors duration-200">
-                    <span class="truncate">{{ selectedAirline?.nameZhTw?.trim() || "航空公司偏好" }}</span>
+                    <span class="truncate">{{ selectedAirline.nameZhTw?.trim() || "航空公司偏好" }}</span>
                     <svg class="w-3 h-3 md:w-4 md:h-4 ml-2 flex-shrink-0 transition-transform duration-200"
                         :class="{ 'rotate-180': isAirlineOpen }" fill="currentColor" viewBox="0 0 12 12">
                         <path d="M6 9L2 4h8l-4 5z" />
@@ -228,7 +228,6 @@
 import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useLocationStore } from '@/stores/location'
 import { useAirlineStore } from '@/stores/airline'
-import type { Location, Airline } from '@/utils/types'
 
 import DatePicker from '@/components/ui/DatePicker.vue'
 import LocationPicker from '@/components/ui/LocationPicker.vue'
@@ -236,13 +235,6 @@ import AirlinePicker from '@/components/ui/AirlinePicker.vue'
 import CabinClassPicker from '@/components/ui/CabinClassPicker.vue'
 import PassengerPicker from '@/components/ui/PassengerPicker.vue'
 import { formatDate, formatDateToYYYYMMDD } from '@/utils'
-
-interface Airport {
-    iataCode: string
-    cityNameZhTw: string
-    airportNameZh?: string
-    cityDisplayOrder?: number
-}
 
 // Props
 const props = defineProps<{
@@ -254,18 +246,18 @@ const airlineStore = useAirlineStore()
 const locationStore = useLocationStore()
 
 // Location (Departure and Arrival)
-const selectedDepartureLocation = ref<Location | null>(locationStore.locations[0] ?? null)
-const selectedDepartureCity = ref<Airport | null>(locationStore.locations[0]?.airports?.[0] ?? null)
+const selectedDepartureLocation = ref(locationStore.locations?.[0] || null)
+const selectedDepartureCity = ref(locationStore.locations?.[0]?.["airports"]?.[0] || null)
 // 目的地預設選擇「日韓」區域
-const selectedArrivalLocation = ref<Location | null>(
-    locationStore.locations.find(loc => loc.region === '日韓') ??
-    locationStore.locations[0] ??
+const selectedArrivalLocation = ref(
+    (locationStore.locations && locationStore.locations.find(loc => loc.region === '日韓')) || 
+    locationStore.locations?.[0] || 
     null
 )
-const selectedArrivalCity = ref<Airport | null>(null)
+const selectedArrivalCity = ref(null)
 
 // Date Range
-const startDate = ref<Date | null>(null)
+const startDate = ref('')
 
 // Adults and Children
 const adultCount = ref(1)
@@ -280,27 +272,28 @@ const isAirlineOpen = ref(false)
 const isCabinClassOpen = ref(false)
 
 // Triggers
-const depTriggerRef = ref<HTMLElement | null>(null)
-const depPopoverRef = ref<HTMLElement | null>(null)
-const destTriggerRef = ref<HTMLElement | null>(null)
-const arrPopoverRef = ref<HTMLElement | null>(null)
-const dateTriggerRef = ref<HTMLElement | null>(null)
-const datePopoverRef = ref<HTMLElement | null>(null)
-const passTriggerRef = ref<HTMLElement | null>(null)
-const passPopoverRef = ref<HTMLElement | null>(null)
-const airlineTriggerRef = ref<HTMLElement | null>(null)
-const airlinePopoverRef = ref<HTMLElement | null>(null)
-const cabinClassTriggerRef = ref<HTMLElement | null>(null)
-const cabinClassPopoverRef = ref<HTMLElement | null>(null)
+const depTriggerRef = ref(null)
+const depPopoverRef = ref(null)
+const destTriggerRef = ref(null)
+const arrPopoverRef = ref(null)
+const dateTriggerRef = ref(null)
+const datePopoverRef = ref(null)
+const passTriggerRef = ref(null)
+const passPopoverRef = ref(null)
+const airlineTriggerRef = ref(null)
+const airlinePopoverRef = ref(null)
+const cabinClassTriggerRef = ref(null)
+const cabinClassPopoverRef = ref(null)
 
 // Filter Options
 const airlineSearchTerm = ref('')
-const selectedAirline = ref<Airline | null>(null)
-const cabinClassOptions = ['艙等不限', '經濟艙', '豪華經濟艙', '商務艙', '頭等艙'] as const
-type CabinClassOption = typeof cabinClassOptions[number]
-const selectedCabinClass = ref<CabinClassOption>('艙等不限')
+const selectedAirline = ref({
+    iataCode: null,
+    nameZhTw: null
+})
+const selectedCabinClass = ref('艙等不限')
 const isNonStopFlight = ref(false)
-const cabinClassMap: Record<CabinClassOption, string | null> = {
+const cabinClassMap = {
     '艙等不限': null,
     '經濟艙': 'M',
     '豪華經濟艙': 'W',
@@ -310,15 +303,11 @@ const cabinClassMap: Record<CabinClassOption, string | null> = {
 
 // Computed
 const filteredAirlines = computed(() => {
-    const term = airlineSearchTerm.value.trim().toLowerCase()
-    return airlineStore.airlines.filter((airline: Airline) => {
-        const code = airline.iataCode?.toLowerCase() ?? ''
-        const name = airline.nameZhTw?.toLowerCase() ?? ''
-        return code.includes(term) || name.includes(term)
-    })
+    const s = airlineSearchTerm.value.toLowerCase()
+    return airlineStore.airlines.filter(a => a.iataCode.toLowerCase().includes(s) || a.nameZhTw.toLowerCase().includes(s))
 })
 const passengerDisplayText = computed(() => `${adultCount.value}成人 / ${childrenCount.value}孩童`)
-const outboundDateText = computed(() => formatDate(startDate.value))
+const outboundDateText = computed(() => (startDate.value ? formatDate(startDate.value) : ''))
 
 // 最大日期：從今天起算 350 天
 const maxDate = computed(() => {
@@ -416,7 +405,7 @@ function restoreFromParams(params: any) {
       nameZhTw: params.airlineName
     }
   }
-  if (params.cabinClass && isCabinClassOption(params.cabinClass)) {
+  if (params.cabinClass) {
     selectedCabinClass.value = params.cabinClass
   }
   if (params.nonStop) {
@@ -424,9 +413,9 @@ function restoreFromParams(params: any) {
   }
 }
 
-function findAirportByCode(code: string): { location: Location; airport: Airport } | null {
+function findAirportByCode(code: string) {
   for (const location of locationStore.locations) {
-    const airport = location.airports?.find((a: Airport) => a.iataCode === code)
+    const airport = location.airports?.find((a: any) => a.iataCode === code)
     if (airport) {
       return { location, airport }
     }
@@ -435,22 +424,22 @@ function findAirportByCode(code: string): { location: Location; airport: Airport
 }
 
 // Methods
-function selectDepartureCity(city: Airport) {
+function selectDepartureCity(city) {
     selectedDepartureCity.value = city
     isDepartureOpen.value = false
 }
-function selectArrivalCity(city: Airport) {
+function selectArrivalCity(city) {
     selectedArrivalCity.value = city
     isArrivalOpen.value = false
 }
 function swapCities() {
-    const tempLocation = selectedDepartureLocation.value
+    let temp = selectedDepartureLocation.value
     selectedDepartureLocation.value = selectedArrivalLocation.value
-    selectedArrivalLocation.value = tempLocation
+    selectedArrivalLocation.value = temp
 
-    const tempCity = selectedDepartureCity.value
+    temp = selectedDepartureCity.value
     selectedDepartureCity.value = selectedArrivalCity.value
-    selectedArrivalCity.value = tempCity
+    selectedArrivalCity.value = temp
 }
 function incrementAdults() { 
     const totalPassengers = adultCount.value + childrenCount.value
@@ -480,20 +469,15 @@ function toggleAirline() {
   isAirlineOpen.value = !isAirlineOpen.value
   if (isAirlineOpen.value) airlineSearchTerm.value = ''
 }
-function selectAirline(airline: Airline) {
+function selectAirline(airline) {
   selectedAirline.value = airline
   isAirlineOpen.value = false
   airlineSearchTerm.value = ''
 }
-function selectCabinClass(v: string) {
-  if (isCabinClassOption(v)) {
-    selectedCabinClass.value = v
-  }
+const cabinClassOptions = ['艙等不限', '經濟艙', '豪華經濟艙', '商務艙', '頭等艙']
+function selectCabinClass(v) {
+  selectedCabinClass.value = v
   isCabinClassOpen.value = false
-}
-
-function isCabinClassOption(v: string): v is CabinClassOption {
-  return cabinClassOptions.includes(v as CabinClassOption)
 }
 
 function onPassengerUpdate(payload: { adults: number; children: number }) {
@@ -507,12 +491,12 @@ const errors = ref({
 })
 
 // 👀 Watch arrival
-watch(selectedArrivalCity, (newVal: Airport | null) => {
+watch(selectedArrivalCity, (newVal) => {
   errors.value.arrival = !newVal
 })
 
 // 👀 Watch start date
-watch(startDate, (newVal: Date | null) => {
+watch(startDate, (newVal) => {
   errors.value.startDate = !newVal
 })
 
@@ -533,15 +517,15 @@ function onSearch() {
     flightSegments: [
       {
         order: 1,
-        departureLocation: selectedDepartureCity.value?.iataCode || 'TPE',
-        arrivalLocation: selectedArrivalCity.value?.iataCode || '',
+        departureLocation: selectedDepartureCity.value.iataCode || 'TPE',
+        arrivalLocation: selectedArrivalCity.value.iataCode || '',
         departureDate: startDate.value ? formatDateToYYYYMMDD(startDate.value) : null,
         returnDate: null
       }
     ],
     adultCount: adultCount.value,
     childCount: childrenCount.value,
-    carrierId: selectedAirline.value?.iataCode || null,
+    carrierId: selectedAirline.value.iataCode || null,
     cabinId: cabinClassMap[selectedCabinClass.value] || null,
     isNonStopFlight: isNonStopFlight.value,
     selectedRefNumbers: []
@@ -554,30 +538,21 @@ function handleSingleDateApply() {
 }
 
 // Others
-type BooleanRef = { value: boolean }
-type ElementRef = { value: HTMLElement | null }
-
-function onDocClick(e: MouseEvent) {
-  const target = e.target
-  if (!(target instanceof Node)) return
-
-  const closeIfOutside = (openRef: BooleanRef, popRef: ElementRef, trigRef: ElementRef) => {
+function onDocClick(e) {
+  const t = e.target
+  const closeIfOutside = (openRef, popRef, trigRef, setter) => {
     if (!openRef.value) return
-    const pop = popRef.value
-    const trig = trigRef.value
-    if (pop && !pop.contains(target) && trig && !trig.contains(target)) {
-      openRef.value = false
-    }
+    if (popRef.value && !popRef.value.contains(t) && trigRef.value && !trigRef.value.contains(t)) setter(false)
   }
 
-  closeIfOutside(isDepartureOpen, depPopoverRef, depTriggerRef)
-  closeIfOutside(isArrivalOpen, arrPopoverRef, destTriggerRef)
-  closeIfOutside(isDatePickerOpen, datePopoverRef, dateTriggerRef)
-  closeIfOutside(isPassengersOpen, passPopoverRef, passTriggerRef)
-  closeIfOutside(isAirlineOpen, airlinePopoverRef, airlineTriggerRef)
-  closeIfOutside(isCabinClassOpen, cabinClassPopoverRef, cabinClassTriggerRef)
+  closeIfOutside(isDepartureOpen, depPopoverRef, depTriggerRef, v => (isDepartureOpen.value = v))
+  closeIfOutside(isArrivalOpen, arrPopoverRef, destTriggerRef, v => (isArrivalOpen.value = v))
+  closeIfOutside(isDatePickerOpen, datePopoverRef, dateTriggerRef, v => (isDatePickerOpen.value = v))
+  closeIfOutside(isPassengersOpen, passPopoverRef, passTriggerRef, v => (isPassengersOpen.value = v))
+  closeIfOutside(isAirlineOpen, airlinePopoverRef, airlineTriggerRef, v => (isAirlineOpen.value = v))
+  closeIfOutside(isCabinClassOpen, cabinClassPopoverRef, cabinClassTriggerRef, v => (isCabinClassOpen.value = v))
 }
-function onKey(e: KeyboardEvent) {
+function onKey(e) {
   if (e.key === 'Escape') {
     isDepartureOpen.value = false
     isArrivalOpen.value = false

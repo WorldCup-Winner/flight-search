@@ -12,9 +12,7 @@
         </button>
         <!-- Title -->
         <h3 class="text-h3 md:text-h3-d font-light text-primary-gold">訂購須知</h3>
-        <p class="mb-6 text-right text-sm text-text-error">
-            以下內容請務必詳細閱讀，另列條件
-        </p>
+        <br />
 
       <!-- Content -->
       <div class="space-y-6 h-[700px] overflow-y-scroll text-sm leading-relaxed text-gray-700

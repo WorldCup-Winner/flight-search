@@ -1,8 +1,11 @@
 <template>
     <div
-        class="shadow-2xl flex flex-col
-               w-full h-full bg-white
-               md:w-[730px] md:max-w-[95vw] md:h-auto md:rounded-2xl"
+        :class="[
+            'shadow-2xl flex flex-col bg-white',
+            props.compact
+                ? 'w-full h-[70vh] md:w-[560px] md:max-w-[90vw] md:h-auto md:rounded-2xl'
+                : 'w-full h-full md:w-[730px] md:max-w-[95vw] md:h-auto md:rounded-2xl'
+        ]"
     >
         <!-- Header -->
         <div
@@ -63,11 +66,16 @@
 
                 <!-- Navigation header with arrows -->
                 <div class="relative mb-8">
-                    <div class="grid grid-cols-2 items-center">
+                    <div
+                        :class="props.singleMonth ? 'flex items-center justify-center' : 'grid grid-cols-2 items-center'"
+                    >
                         <div class="text-center text-[18px] leading-8 font-semibold text-gray-500">
                             {{ monthLabel(leftMonth) }}
                         </div>
-                        <div class="text-center text-[18px] leading-8 font-semibold text-gray-500">
+                        <div
+                            v-if="!props.singleMonth"
+                            class="text-center text-[18px] leading-8 font-semibold text-gray-500"
+                        >
                             {{ monthLabel(rightMonth) }}
                         </div>
                     </div>
@@ -89,9 +97,13 @@
                     </button>
                 </div>
 
-                <!-- Desktop: Two months side-by-side (with DOW headers) -->
-                <div class="grid grid-cols-2 gap-12">
-                    <div v-for="month in [leftMonth, rightMonth]" :key="month.getTime()" class="w-full">
+                <!-- Desktop: One or two months (with DOW headers) -->
+                <div :class="props.singleMonth ? 'grid grid-cols-1 gap-12' : 'grid grid-cols-2 gap-12'">
+                    <div
+                        v-for="month in (props.singleMonth ? [leftMonth] : [leftMonth, rightMonth])"
+                        :key="month.getTime()"
+                        class="w-full"
+                    >
                         <!-- DOW header for desktop -->
                         <div class="grid grid-cols-7 text-center mb-4 text-[16px] leading-none">
                             <div
@@ -133,29 +145,43 @@
                     </div>
                 </div>
                 
-                <!-- First month (days only, label is in sticky header) -->
-                <div v-if="allMonths.length > 0">
+                <!-- Single month mode: only current month -->
+                <template v-if="props.singleMonth">
                     <MonthDays
-                        :month="allMonths[0]"
+                        :month="leftMonth"
                         :selected="localSelected"
                         :min="min"
                         :max="max"
                         @pick="onPickMobile"
                     />
-                </div>
-                <!-- Remaining months (with labels) -->
-                <div v-for="month in allMonths.slice(1)" :key="month.getTime()">
-                    <div class="text-center text-[18px] leading-8 font-semibold text-gray-500 mb-4">
-                        {{ monthLabel(month) }}
+                </template>
+
+                <!-- Default: multiple months -->
+                <template v-else>
+                    <!-- First month (days only, label is in sticky header) -->
+                    <div v-if="allMonths.length > 0">
+                        <MonthDays
+                            :month="allMonths[0]"
+                            :selected="localSelected"
+                            :min="min"
+                            :max="max"
+                            @pick="onPickMobile"
+                        />
                     </div>
-                    <MonthDays
-                        :month="month"
-                        :selected="localSelected"
-                        :min="min"
-                        :max="max"
-                        @pick="onPickMobile"
-                    />
-                </div>
+                    <!-- Remaining months (with labels) -->
+                    <div v-for="month in allMonths.slice(1)" :key="month.getTime()">
+                        <div class="text-center text-[18px] leading-8 font-semibold text-gray-500 mb-4">
+                            {{ monthLabel(month) }}
+                        </div>
+                        <MonthDays
+                            :month="month"
+                            :selected="localSelected"
+                            :min="min"
+                            :max="max"
+                            @pick="onPickMobile"
+                        />
+                    </div>
+                </template>
             </div>
         </div>
 
@@ -200,6 +226,10 @@ const props = defineProps<{
     modelValue?: Date | null
     min?: Date | null
     max?: Date | null
+    // When true, show only one month (used for birthday calendar in StepTwo)
+    singleMonth?: boolean
+    // When true, use a smaller dialog size (e.g., for birthday picker)
+    compact?: boolean
 }>()
 
 const emit = defineEmits<{
