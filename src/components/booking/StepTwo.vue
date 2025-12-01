@@ -295,10 +295,10 @@
                                 v-model="contactLastName"
                                 type="text" 
                                 placeholder="中文姓 例：王"
-                                :disabled="isContactInfoLocked"
+                                :disabled="isContactLastNameLocked"
                                 :class="[
                                     'w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none',
-                                    isContactInfoLocked ? 'bg-gray-100 cursor-not-allowed' : ''
+                                    isContactLastNameLocked ? 'bg-gray-100 cursor-not-allowed' : ''
                                 ]" />
                         </div>
                         <div class="relative grid-cols-12 md:col-span-4 mb-4">
@@ -307,10 +307,10 @@
                                 v-model="contactFirstName"
                                 type="text" 
                                 placeholder="中文名 例：小明"
-                                :disabled="isContactInfoLocked"
+                                :disabled="isContactFirstNameLocked"
                                 :class="[
                                     'w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none',
-                                    isContactInfoLocked ? 'bg-gray-100 cursor-not-allowed' : ''
+                                    isContactFirstNameLocked ? 'bg-gray-100 cursor-not-allowed' : ''
                                 ]" />
                         </div>
                         <div class="relative grid-cols-12 md:col-span-4 mb-4">
@@ -319,10 +319,10 @@
                                 <select
                                     v-model="contactGender"
                                     placeholder="請選擇"
-                                    :disabled="isMemberInfoLocked"
+                                    :disabled="isContactGenderLocked"
                                     :class="[
                                         'w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none appearance-none bg-transparent',
-                                        isMemberInfoLocked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
+                                        isContactGenderLocked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
                                     ]"
                                     aria-label="Contact Gender"
                                     >
@@ -347,7 +347,7 @@
                                 :codes="phoneCodes" 
                                 :show-eye="false"
                                 :default-visible="true"
-                                :disabled="isContactInfoLocked"
+                                :disabled="isContactPhoneLocked"
                                 @blur="handlePhoneBlur"
                             />
                             <p v-if="phoneError" class="absolute left-0 top-full mt-1 text-text-error text-sm">
@@ -360,13 +360,13 @@
                                 v-model="contactEmail"
                                 type="text" 
                                 placeholder="必填"
-                                :disabled="isMemberInfoLocked"
+                                :disabled="isContactEmailLocked"
                                 :class="[
                                     'w-full px-4 py-2 border rounded-md focus:ring-2 focus:outline-none',
                                     emailError
                                         ? 'border-text-error focus:ring-text-error'
                                         : 'border-primary-gold focus:ring-others-original',
-                                    isMemberInfoLocked ? 'bg-gray-100 cursor-not-allowed' : ''
+                                    isContactEmailLocked ? 'bg-gray-100 cursor-not-allowed' : ''
                                 ]"
                                 @blur="handleEmailBlur"
                             />
@@ -658,6 +658,21 @@
     <Transition name="fade">
         <BookingInProgress v-if="showBookingInProgress" :passengers="reviewPassengersList" />
     </Transition>
+    <transition name="fade">
+        <div v-if="bookingError" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" @click.self="bookingError = null">
+            <div class="flex flex-col items-center justify-center w-[400px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-16 py-8">
+                <img src="@/assets/imgs/alert-price-change.png" class="w-20 h-20 mb-4" />
+                <h3 class="text-others-gray1 text-h3 md:text-h3-d mb-2">{{ bookingError.title || '訂單提交失敗' }}</h3>
+                <p class="text-others-gray1 text-center mb-6">{{ bookingError.message }}</p>
+                <button
+                  class="mt-6 px-4 py-1 w-[93px] h-[40px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition"
+                  @click="bookingError = null"
+                >
+                  確認
+                </button>
+            </div>
+        </div>
+    </transition>
 </template>
 <script setup lang="ts">
 import { provide, computed, onBeforeUnmount, ref, onMounted, watch } from 'vue'
@@ -1062,7 +1077,7 @@ const isOpenBookingInstruction = ref(false)
 const code  = ref('+886')
 const phoneNumber  = ref('')
 const phoneCodes = ref<Array<{ label: string; value: string }>>([
-  { label: '台灣 (+886)', value: '+886' }, // 預設值
+  { label: '台灣 (+886)', value: '+886' },
 ])
 const nationalities = ref<Array<{
     countryCode: string,
@@ -1076,9 +1091,43 @@ const contactGender = ref('male')
 const contactEmail = ref('')
 
 // Computed properties to determine if fields should be disabled
-const isContactInfoLocked = computed(() => authStore.isAuthenticated)
-const isMemberInfoLocked = computed(() => authStore.isMember)
-const isGuestInfoLocked = computed(() => authStore.isGuest)
+// Only lock fields that have valid data from auth store
+const isContactFirstNameLocked = computed(() => {
+    if (!authStore.isAuthenticated) return false
+    const user = authStore.user
+    return !!(user.firstName && user.firstName.trim())
+})
+
+const isContactLastNameLocked = computed(() => {
+    if (!authStore.isAuthenticated) return false
+    const user = authStore.user
+    return !!(user.lastName && user.lastName.trim())
+})
+
+const isContactGenderLocked = computed(() => {
+    if (!authStore.isAuthenticated) return false
+    const user = authStore.user
+    // Only lock if gender is valid
+    const gender = user.gender
+    return gender === "1" || gender === "2" || gender === 1 || gender === 2
+})
+
+const isContactPhoneLocked = computed(() => {
+    if (!authStore.isAuthenticated) return false
+    const user = authStore.user
+    return !!(user.phone && user.phone.trim())
+})
+
+const isContactEmailLocked = computed(() => {
+    if (!authStore.isAuthenticated) return false
+    // Only lock email for members with valid email
+    if (!authStore.isMember) return false
+    const user = authStore.user
+    return !!(user.email && user.email.trim())
+})
+
+// Legacy computed for backward compatibility
+const isContactInfoLocked = computed(() => isContactPhoneLocked.value)
 
 // Function to auto-fill contact info from auth store
 function fillContactInfoFromAuth() {
@@ -1090,7 +1139,13 @@ function fillContactInfoFromAuth() {
     if (authStore.isMember) {
         if (user.firstName) contactFirstName.value = user.firstName
         if (user.lastName) contactLastName.value = user.lastName
-        if (user.gender) contactGender.value = user.gender
+        const gender = user.gender
+        if (gender === "1" || gender === 1) {
+            contactGender.value = 'male'
+        } else if (gender === "2" || gender === 2) {
+            contactGender.value = 'female'
+        }
+        // If gender is "0" or 0 or undefined, leave it editable (don't set)
         if (user.phone) phoneNumber.value = user.phone
         if (user.countryCode) code.value = user.countryCode
         if (user.email) contactEmail.value = user.email

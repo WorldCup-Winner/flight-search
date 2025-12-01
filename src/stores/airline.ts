@@ -1,13 +1,13 @@
 import { getAirlineAlliance, getAirlines } from '@/api'
-import type { Airline } from '@/utils/types'
+import type { Airline, AirlineAlliance } from '@/utils/types'
 import { defineStore } from 'pinia'
 
 export const useAirlineStore = defineStore('airline', {
     state: () => ({
-        airlines: [],
-        airlineAlliance: [],
+        airlines: [] as Airline[],
+        airlineAlliance: [] as AirlineAlliance[],
         loading: false,
-        error: null,
+        error: null as string | null,
     }),
     getters: {
         airlineCount(state) {

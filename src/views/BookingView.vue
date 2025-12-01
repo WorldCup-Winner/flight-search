@@ -7,19 +7,36 @@
   </main>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 
 import BookingProcessBar from '@/components/booking/BookingProcessBar.vue'
 import StepTwo from '@/components/booking/StepTwo.vue'
 import StepThree from '@/components/booking/StepThree.vue'
 import StepFour from '@/components/booking/StepFour.vue'
 
-const step = ref(2)
+const getStoredStep = (): number => {
+  const stored = sessionStorage.getItem('bookingStep')
+  if (stored) {
+    const stepNum = parseInt(stored, 10)
+    if (stepNum >= 2 && stepNum <= 4) {
+      return stepNum
+    }
+  }
+  return 2
+}
+
+const step = ref(getStoredStep())
+
+watch(step, (newStep) => {
+  sessionStorage.setItem('bookingStep', String(newStep))
+})
 
 // With options for smooth scrolling
-window.scrollTo({
-  top: 0,
-  left: 0,
-  behavior: 'smooth'
-});
+onMounted(() => {
+  window.scrollTo({
+    top: 0,
+    left: 0,
+    behavior: 'smooth'
+  })
+})
 </script>

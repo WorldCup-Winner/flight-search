@@ -12,6 +12,14 @@
           </div>
           <div class="mt-4 text-center text-others-gray7 text-sm">
               <p>請在上方視窗完成付款，完成後系統將自動跳轉到訂單確認頁面</p>
+              <p class="mt-2">
+                  如未自動跳轉, 請
+                  <span 
+                      class="text-others-original cursor-pointer hover:text-others-hover underline"
+                      @click="handleManualJumpToStep4">
+                      點此連結手動跳轉
+                  </span>
+              </p>
           </div>
       </div>
       
@@ -327,7 +335,18 @@ const paymentGroups = computed<PaymentGroup[]>(() => {
     groupMap.get(method.DET03)!.options.push(method)
   })
   
-  return Array.from(groupMap.values())
+  // Define custom order: L (LINE Pay) first, then A (Credit Card), then others
+  const orderMap: Record<string, number> = {
+    'L': 1,  // LINE Pay
+    'A': 2,  // Credit Card
+    'B': 3   // Bank Transfer
+  }
+  
+  return Array.from(groupMap.values()).sort((a, b) => {
+    const orderA = orderMap[a.code] || 999
+    const orderB = orderMap[b.code] || 999
+    return orderA - orderB
+  })
 })
 
 // Get options for currently selected group (DET04 choices)
@@ -675,6 +694,17 @@ const handleExternalPayment = (externalUrl: string) => {
   
   // 原視窗導向 Step 4，並開始定時查詢訂單狀態
   emit('update:step', 4)
+}
+
+// Handle manual jump to step 4
+const handleManualJumpToStep4 = () => {
+  // 如果在對話框中，發送完成事件
+  if (props.orderNumber) {
+    emit('payment-completed')
+  } else {
+    // 導向 Step 4
+    emit('update:step', 4)
+  }
 }
 
 // Get button label based on selected group

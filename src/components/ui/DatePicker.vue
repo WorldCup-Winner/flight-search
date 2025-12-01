@@ -208,6 +208,7 @@
                 確認
             </button>
         </div>
+        
     </div>
 </template>
 

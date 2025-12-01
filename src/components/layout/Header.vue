@@ -42,7 +42,9 @@
           <span class="md:hidden text-base">訂單</span>
         </div>
         
-        <div 
+        <a
+          href="https://www.galilee.com.tw/fitsupport"
+          target="_blank"
           :class="[
             linkCls, 
             'flex items-center cursor-pointer',
@@ -61,7 +63,7 @@
           ></div>
           <span class="hidden md:inline">客服中心</span>
           <span class="md:hidden">客服</span>
-        </div>
+      </a>
 
         <!-- Auth buttons -->
         <div 

@@ -18,6 +18,10 @@ export function signIn(req: any) {
     return axios.post(`${API_URL}/Liyi/FA01`, req)
 }
 
+export function getMemberInfo(req: any) {
+    return axios.post(`${API_URL}/Liyi/FA03`, req)
+}
+
 export function sendSMS(req: any) {
     return axios.post(`${API_URL}/Liyi/FP01B`, req)
 }

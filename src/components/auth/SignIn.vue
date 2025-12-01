@@ -334,10 +334,7 @@ const startTimer = () => {
 
 const stopTimer = () => {
   if (timerRunning.value) {
-    if (timerId) {
-      clearInterval(timerId);
-      timerId = null;
-    }
+    if (timerId !== null) clearInterval(timerId);
     timerRunning.value = false;
   }
 };
