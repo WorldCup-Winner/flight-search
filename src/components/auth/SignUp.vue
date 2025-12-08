@@ -19,9 +19,9 @@
                 <div class="mb-4 w-full">
                     <label class="block mb-1 text-others-gray1 text-sm">您的姓名</label>
                     <div class="relative flex flex-row justify-between text-others-gray1">
-                        <input v-model="form.firstname" type="text" placeholder="姓氏"
+                        <input v-model="form.lastname" type="text" placeholder="姓氏"
                             class="w-[190px] px-5 py-2 border rounded-md focus:ring-2 focus:ring-others-original focus:outline-none" />
-                        <input v-model="form.lastname" type="text" placeholder="名字"
+                        <input v-model="form.firstname" type="text" placeholder="名字"
                             class="w-[190px] px-5 py-2 border rounded-md focus:ring-2 focus:ring-others-original focus:outline-none" />
                     </div>
                 </div>

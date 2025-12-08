@@ -78,9 +78,9 @@
                         <p class="block mb-3 text-others-original text-sm">非本國籍請輸入護照英文拼音</p>
                         <label class="block mb-1 text-others-gray1 text-sm">您的姓名</label>
                         <div class="relative flex flex-row justify-between">
-                            <input v-model="form1.firstname" type="text" placeholder="姓氏"
+                            <input v-model="form1.lastname" type="text" placeholder="姓氏"
                                 class="w-[190px] px-5 py-2 border rounded-md border-primary-gold text-others-gray1 focus:ring-2 focus:ring-others-original focus:outline-none" />
-                            <input v-model="form1.lastname" type="text" placeholder="名字"
+                            <input v-model="form1.firstname" type="text" placeholder="名字"
                                 class="w-[190px] px-5 py-2 border rounded-md border-primary-gold text-others-gray1 focus:ring-2 focus:ring-others-original focus:outline-none" />
                         </div>
                     </div>
@@ -151,8 +151,8 @@ import { useAuthStore } from '@/stores/auth';
 import { useToast } from 'vue-toastification';
 import { sendSMS, verifySMS } from '@/api';
 
-import PhoneField from '@/components/ui/PhoneField.vue'
-import CodeField from '@/components/ui/CodeField.vue'
+import PhoneField from '@/components/ui/forms/PhoneField.vue'
+import CodeField from '@/components/ui/forms/CodeField.vue'
 
 import { goPrivacy, goMemberPage } from '@/utils';
 
@@ -215,7 +215,7 @@ const handleLogin = async () => {
         
         // Call SMSCHK API
         try {
-            const fullName = `${form1.value.firstname}${form1.value.lastname}`
+            const fullName = `${form1.value.lastname}${form1.value.firstname}`
             // For Taiwan (+886), send phone number as-is. For other countries, combine code and phone
             const phoneNumber = form1.value.code === '+886' 
                 ? form1.value.phone 
@@ -234,6 +234,7 @@ const handleLogin = async () => {
                 // Success - proceed with guest authentication
                 toast.success(data.msg || '驗證成功')
                 // Set authenticated state with guest info
+                // smsId.value 是 FA01B 回傳的 RET04，用於 booking API 的 mobileVerificationId
                 authStore.setGuestInfo({
                     name: fullName,
                     firstName: form1.value.firstname,
@@ -241,6 +242,7 @@ const handleLogin = async () => {
                     phone: form1.value.phone,
                     countryCode: form1.value.code,
                     isMember: false,
+                    mobileVerificationId: smsId.value, // FP01B RET04 - 手機驗證簡訊ID
                 })
                 emit('close')
             } else if (data.status === '0' || data.status === 0) {
@@ -258,11 +260,19 @@ const handleLogin = async () => {
     } else {
         // Member login
         console.log('Login with:', form.value)
-        authStore.login({
-            "PAR01": form.value.username,
-            "PAR02": form.value.password
-        })
-        emit('close')
+        try {
+            const success = await authStore.login({
+                "PAR01": form.value.username,
+                "PAR02": form.value.password
+            })
+            // Only close dialog on success
+            if (success) {
+                emit('close')
+            }
+        } catch (error) {
+            // Error already handled in authStore.login, just don't close dialog
+            console.error('Login error:', error)
+        }
     }
 }
 
@@ -281,8 +291,8 @@ const handleCodeSMS = async () => {
         
         const response = await sendSMS({
             PAR02: phoneNumber, // Phone number
-            PAR03: form1.value.firstname, // 姓
-            PAR04: form1.value.lastname // 名字
+            PAR03: form1.value.lastname, // 姓
+            PAR04: form1.value.firstname // 名字
         })
         
         const data = response.data

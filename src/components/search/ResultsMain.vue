@@ -1,8 +1,8 @@
 <template>
   <div class="mx-auto max-w-6xl pb-6">
     <div class="grid grid-cols-12 gap-3">
-      <!-- SIDEBAR -->
-      <aside class="col-span-12 md:col-span-3">
+      <!-- SIDEBAR (Desktop only) -->
+      <aside class="hidden md:block md:col-span-3">
         <FilterSideBar
           :stopsPricing="stopsPricing"
           :alliances="alliances"
@@ -15,124 +15,64 @@
 
       <!-- MAIN -->
       <section class="col-span-12 md:col-span-9">
-        <!-- HEADER STRIP -->
-        <div class="mb-4 bg-none">
-          <div class="relative rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] mb-4" :class="[ currentLeg === 'outbound' ? 'bg-primary-gold2' : 'bg-others-gray4' ]">
-            <!-- Left orange tab -->
-            <div class="absolute inset-y-0 left-0 w-28 bg-others-original text-white grid place-items-center rounded-l-[10px]">
-              <span class="text-[22px]">{{ segmentTitle }}</span>
-            </div>
-
-            <div class="pl-48 pr-6 py-5 text-white">
-              <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
-                <div class="text-[18px]">{{ formatDateToChinese(dateText) }}</div>
-                <div class="flex flex-row items-center gap-3 text-[18px]">
-                  <span>{{ origin.name }}({{ origin.code }})</span>
-                  <img src="@/assets/imgs/icon-arrow-right-white.svg" />
-                  <span>{{ destination.name }}({{ destination.code }})</span>
-                </div>
-              </div>
-              <div class="text-[15px] mt-1 text-others-gray7">
-                共找到 <span class="font-bold">{{ totalCount }}</span> 筆航班 以下皆為當地時間（24小時制），價格為每人均價(含稅及附加費)。
-              </div>
-            </div>
+        <!-- Round-trip mobile: HeaderStrip + HeaderStripSummary side by side -->
+        <div v-if="tripType === 'roundtrip'" class="md:hidden flex gap-2 mb-4 min-w-0">
+          <div :class="[currentLeg === 'outbound' ? 'order-1' : 'order-2', 'flex-1 min-w-0']">
+            <HeaderStrip
+              :current-leg="currentLeg"
+              :segment-title="segmentTitle"
+              :date-text="dateText"
+              :origin="origin"
+              :destination="destination"
+              :total-count="totalCount"
+              :no-margin="true"
+              @edit-segment="handleEditSegment"
+            />
           </div>
+          <HeaderStripSummary
+            :class="currentLeg === 'outbound' ? 'order-2' : 'order-1'"
+            :segment-title="summaryData?.segmentTitle || (currentLeg === 'outbound' ? '回程' : '去程')"
+            :time-range="summaryData?.timeRange || null"
+            :price="summaryData?.price || null"
+            :currency="summaryData?.currency || 'TWD'"
+            :no-margin="true"
+          />
+        </div>
 
-          <!-- SORT BAR -->
-          <div class="bg-white px-4 py-3 drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] rounded-[10px]">
-            <div class="flex flex-wrap items-center gap-4">
-              <button class="px-4 py-2 rounded-[10px]"
-                :class="sort.key === 'direct' ? 'text-others-original' : 'text-others-gray7'"
-                @click="setSort('direct', 'asc')">
-                直飛優先
-              </button>
+        <!-- HEADER STRIP (Desktop and non-roundtrip mobile) -->
+        <div
+          v-for="item in headerItems"
+          :key="item.key"
+          :class="[
+            tripType === 'roundtrip' ? 'hidden md:block' : '',
+            !item.showOnDesktop ? 'md:hidden' : '',
+            !item.showOnMobile ? 'hidden md:block' : ''
+          ]"
+        >
+          <HeaderStrip
+            :current-leg="item.currentLeg"
+            :segment-title="item.segmentTitle"
+            :date-text="item.dateText"
+            :origin="item.origin"
+            :destination="item.destination"
+            :total-count="totalCount"
+            @edit-segment="handleEditSegment"
+          />
+        </div>
 
-              <button class="px-3 py-2 rounded-[10px] flex items-center gap-1"
-                :class="sort.key === 'price' ? 'text-others-original' : 'text-others-gray7'"
-                @click="toggleSort('price')">
-                <span>價格</span>
-                <div class="space-y-[-5px]">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                      :class="sort.key === 'price' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray1'">
-                    <path d="M6 14l6-6 6 6" />
-                  </svg>
-
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                      :class="sort.key === 'price' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray1'">
-                    <path d="M18 10l-6 6-6-6"/>
-                  </svg>
-                </div>
-              </button>
-              <button class="px-3 py-2 rounded-[10px] flex items-center gap-1"
-                :class="sort.key === 'depTime' ? 'text-others-original' : 'text-others-gray7'"
-                @click="toggleSort('depTime')">
-                <span>出發時間</span>
-                <div class="space-y-[-5px]">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                      :class="sort.key === 'depTime' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray1'">
-                    <path d="M6 14l6-6 6 6" />
-                  </svg>
-
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                      :class="sort.key === 'depTime' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray1'">
-                    <path d="M18 10l-6 6-6-6"/>
-                  </svg>
-                </div>
-              </button>
-              <button class="px-3 py-2 rounded-[10px] flex items-center gap-1"
-                :class="sort.key === 'arrTime' ? 'text-others-original' : 'text-others-gray7'"
-                @click="toggleSort('arrTime')">
-                <span>抵達時間</span>
-                <div class="space-y-[-5px]">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                      :class="sort.key === 'arrTime' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray1'">
-                    <path d="M6 14l6-6 6 6" />
-                  </svg>
-
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                      :class="sort.key === 'arrTime' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray1'">
-                    <path d="M18 10l-6 6-6-6"/>
-                  </svg>
-                </div>
-              </button>
-              <button class="px-3 py-2 rounded-[10px] flex items-center gap-1"
-                :class="sort.key === 'duration' ? 'text-others-original' : 'text-others-gray7'"
-                @click="toggleSort('duration')">
-                <span>飛行總時間</span>
-                <div class="space-y-[-5px]">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                      :class="sort.key === 'duration' && sort.dir === 'asc' ? 'text-others-original' : 'text-others-gray1'">
-                    <path d="M6 14l6-6 6 6" />
-                  </svg>
-
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                      class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                      :class="sort.key === 'duration' && sort.dir === 'desc' ? 'text-others-original' : 'text-others-gray1'">
-                    <path d="M18 10l-6 6-6-6"/>
-                  </svg>
-                </div>
-              </button>
-
-              <div class="ml-auto">
-                <!-- Tax segmented control -->
-                <div class="rounded-[10px] p-2 inline-flex gap-2 border-[1.5px] border-primary-gold">
-                  <button class="px-6 py-1 rounded-md text-sm"
-                    :class="taxMode === 'in' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-white'"
-                    @click="taxMode = 'in'">含稅</button>
-                  <button class="px-6 py-1 rounded-md text-sm"
-                    :class="taxMode === 'ex' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-white'"
-                    @click="taxMode = 'ex'">未稅</button>
-                </div>
-              </div>
-            </div>
-          </div>
+        <!-- SORT BAR -->
+        <div class="mb-4">
+          <SortBar
+            :total-count="totalCount"
+            :active-filter-count="activeFilterCount"
+            :sort="sort"
+            :tax-mode="taxMode"
+            @sort-click="handleSortClick"
+            @filter-click="handleFilterClick"
+            @sort-change="setSort"
+            @sort-toggle="toggleSort"
+            @update:taxMode="taxMode = $event"
+          />
         </div>
         
         <!-- RESULTS LIST -->
@@ -151,9 +91,11 @@
               :child-count="searchRequest?.childCount ?? 0"
               :baby-count="searchRequest?.babyCount ?? 0"
               :previous-segments="props.selectedSegments"
+              :is-selected="selectedCardRefNumber !== null && selectedCardRefNumber === it.refNumber"
               currency="TWD"
               @select="handleSelect"
               @purchase="onPurchase"
+              @card-click="handleCardClick(it)"
             />
           </TransitionGroup>
         </div>
@@ -170,21 +112,103 @@
         </div>
       </section>
     </div>
+
+    <!-- Filter Modal (Mobile only) - Full height like DatePicker -->
+    <transition name="fade-scale">
+      <div
+        v-if="isFilterModalOpen"
+        class="fixed inset-0 z-[100] bg-black/40 md:hidden overflow-hidden"
+        @click.self="isFilterModalOpen = false"
+      >
+        <div class="flex flex-col h-full w-full bg-white overflow-hidden shadow-2xl">
+          <!-- Modal Header -->
+          <div class="bg-primary-gold text-white px-6 py-3 text-[18px] font-semibold flex items-center justify-between flex-shrink-0 z-20">
+            <span>篩選</span>
+            <button
+              class="text-white hover:opacity-80 transition"
+              @click="isFilterModalOpen = false"
+              aria-label="關閉"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- FilterSideBar Content -->
+          <div class="flex-1 overflow-y-auto min-h-0 px-4">
+            <FilterSideBar
+              :stopsPricing="stopsPricing"
+              :alliances="alliances"
+              :airlines="airlines"
+              :depAirports="depAirports"
+              :arrAirports="arrAirports"
+              :initial="filterInitialState"
+              @update:filters="onFiltersChange"
+            />
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Sort Modal (Mobile only) - Bottom sheet like LocationPicker -->
+    <SortModal
+      :open="isSortModalOpen"
+      :sort="sort"
+      @close="isSortModalOpen = false"
+      @select="handleSortOptionClick"
+    />
+
+    <!-- Mobile Card Click Modal (FlightActionModal - initial modal with price + buttons) -->
+    <FlightActionModal
+      v-if="selectedCardData"
+      :open="selectedCardRefNumber !== null && !isFlightInfoModalOpen"
+      :price-total="displayPrice(selectedCardData)"
+      :currency-display="'TWD'"
+      :tax-mode="taxMode"
+      :tax-amount="selectedCardData.taxAmount"
+      :is-last-step="isLastStep"
+      @close="selectedCardRefNumber = null; isFlightInfoModalOpen = false"
+      @flight-info="handleCardModalFlightInfo"
+      @next-step="handleFlightInfoNextStep"
+    />
+
+    <!-- Mobile Flight Info Modal (triggered by 航班資訊 button - shows full flight details) -->
+    <FlightInfoModal
+      v-if="selectedCardData"
+      :open="isFlightInfoModalOpen"
+      :sectors="selectedCardData.sectors || []"
+      :trip-type="tripType"
+      :price-total="displayPrice(selectedCardData)"
+      :currency-display="'TWD'"
+      :tax-mode="taxMode"
+      :tax-amount="selectedCardData.taxAmount"
+      @close="isFlightInfoModalOpen = false; selectedCardRefNumber = null"
+      @next-step="handleFlightInfoNextStep"
+    />
   </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, reactive, ref } from 'vue'
+import { computed, onMounted, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { timeToMin, inWindow, formatDateToChinese } from '@/utils'
+import { timeToMin, inWindow } from '@/utils'
 import type { CardRow } from '@/utils/types'
 
 import FlightResultCard from '@/components/search/FlightResultCard.vue'
 import FilterSideBar from '@/components/search/FilterSideBar.vue'
-import SorryNoData from '@/components/ui/SorryNoData.vue'
+import HeaderStrip from '@/components/search/HeaderStrip.vue'
+import HeaderStripSummary from '@/components/search/HeaderStripSummary.vue'
+import SortBar from '@/components/search/SortBar.vue'
+import SortModal from '@/components/ui/modals/SortModal.vue'
+import FlightActionModal from '@/components/ui/modals/FlightActionModal.vue'
+import FlightInfoModal from '@/components/ui/modals/FlightInfoModal.vue'
+import SorryNoData from '@/components/ui/feedback/SorryNoData.vue'
 import { useAirlineStore } from '@/stores/airline'
 import { useBookingStore } from '@/stores/booking'
 import { useLocationStore } from '@/stores/location'
+import { useRoundTripSummary } from '@/composables/useRoundTripSummary'
+import { useFlightFareRule } from '@/composables/useFlightFareRule'
 
 const airlineStore = useAirlineStore()
 const locationStore = useLocationStore()
@@ -267,24 +291,41 @@ const destination = computed(() => {
 
 const tripType = computed(() => props.tripType);
 
-// Determine current leg based on tripType and currentSegmentIndex
-const currentLeg = computed<'outbound' | 'return'>(() => {
-  const segmentIndex = props.currentSegmentIndex ?? 0
-  
+// Determine leg label for a given segment index
+function getLegForIndex(segmentIndex: number): 'outbound' | 'return' {
   if (props.tripType === 'roundtrip') {
     // For round trip: 0 = outbound, 1+ = return
     return segmentIndex === 0 ? 'outbound' : 'return'
   } else if (props.tripType === 'multi') {
-    // For multi-trip: always 'outbound' until the last segment
+    // For multi-trip: all but the last are outbound, last is return
     const totalSegments = props.searchRequest?.flightSegments?.length ?? 1
     return segmentIndex < totalSegments - 1 ? 'outbound' : 'return'
   } else {
-    // For one-way: always 'return' (last segment)
+    // For one-way: always treat as return (design choice)
     return 'return'
+  }
+}
+
+// Determine current leg based on tripType and currentSegmentIndex
+const currentLeg = computed<'outbound' | 'return'>(() => {
+  const segmentIndex = props.currentSegmentIndex ?? 0
+  return getLegForIndex(segmentIndex)
+})
+
+// Determine if this is the last step
+const isLastStep = computed(() => {
+  const segmentIndex = props.currentSegmentIndex ?? 0
+  if (tripType.value === 'roundtrip') {
+    return segmentIndex === 1
+  } else if (tripType.value === 'multi') {
+    const totalSegments = props.searchRequest?.flightSegments?.length ?? 1
+    return segmentIndex === totalSegments - 1
+  } else {
+    return true // Oneway: always last step
   }
 })
 
-// Generate segment title
+// Generate segment title (for current header)
 const segmentTitle = computed(() => {
   const segmentIndex = props.currentSegmentIndex ?? 0
   
@@ -297,6 +338,77 @@ const segmentTitle = computed(() => {
   }
 })
 
+interface HeaderItem {
+  key: string
+  currentLeg: 'outbound' | 'return'
+  segmentTitle: string
+  dateText: string
+  origin: { name: string; code: string }
+  destination: { name: string; code: string }
+  showOnMobile: boolean
+  showOnDesktop: boolean
+}
+
+const headerItems = computed<HeaderItem[]>(() => {
+  const items: HeaderItem[] = []
+  const currentIndex = props.currentSegmentIndex ?? 0
+
+  // Base header for current segment: used on desktop always,
+  // and on mobile for non-multi trip types.
+  items.push({
+    key: `current-${currentIndex}`,
+    currentLeg: currentLeg.value,
+    segmentTitle: segmentTitle.value,
+    dateText: dateText.value,
+    origin: origin.value,
+    destination: destination.value,
+    showOnDesktop: true,
+    showOnMobile: tripType.value !== 'multi',
+  })
+
+  // For multi-trip, build headers 1..currentIndex for mobile only
+  if (tripType.value === 'multi' && props.searchRequest?.flightSegments) {
+    const segmentsForHeader = props.searchRequest.flightSegments.slice(0, currentIndex + 1)
+
+    segmentsForHeader.forEach((seg: any, index: number) => {
+      if (!seg) return
+
+      const originInfo = seg.departureLocation
+        ? getCityInfoFromCode(seg.departureLocation)
+        : { code: '', name: '' }
+
+      const destInfo = seg.arrivalLocation
+        ? getCityInfoFromCode(seg.arrivalLocation)
+        : { code: '', name: '' }
+
+      items.push({
+        key: `multi-${index}`,
+        // Mobile multi-header design: always show the numbered tab on the left,
+        // so we treat all segments as "return" in this condensed list.
+        currentLeg: 'return',
+        segmentTitle: String(index + 1),
+        dateText: seg.departureDate || '',
+        origin: originInfo,
+        destination: destInfo,
+        showOnDesktop: false,
+        showOnMobile: true,
+      })
+    })
+  }
+
+  return items
+})
+
+// --- Mobile edit handler ---
+function handleEditSegment() {
+  // Close mobile modal when edit is clicked
+  selectedCardRefNumber.value = null
+  isFlightInfoModalOpen.value = false
+  emit('edit-search')
+}
+
+// (Other-leg summary logic removed for now; will be revisited later when UX is finalized)
+
 // State for managing selected flights (selectedRefNumbers)
 // Initialize from searchRequest if available (for subsequent segments in multi-trip)
 const selectedRefNumbers = ref<number[]>(props.searchRequest?.selectedRefNumbers ?? [])
@@ -304,12 +416,27 @@ const selectedRefNumbers = ref<number[]>(props.searchRequest?.selectedRefNumbers
 // Local copy of selected segments to accumulate during current session
 const accumulatedSegments = ref<any[]>([...(props.selectedSegments ?? [])])
 
-// Emit event to parent when need to search next segment
+// Emit events to parent
 const emit = defineEmits<{
   (e: 'searchNextSegment', payload: { selectedRefNumbers: number[]; selectedSegments: any[] }): void
+  (e: 'edit-search'): void
 }>()
 
-// ---------- Sidebar data (derived from props.data) ----------
+// Round-trip summary logic
+const roundTripSummary = useRoundTripSummary(
+  () => ({
+    tripType: tripType.value,
+    currentSegmentIndex: props.currentSegmentIndex,
+    outboundResults: props.data,
+    searchRequest: props.searchRequest,
+    selectedSegments: props.selectedSegments
+  })
+)
+
+// Extract summary data for template (handles null case)
+const summaryData = computed(() => roundTripSummary.summaryData.value)
+
+//---------- Sidebar data (derived from props.data) ----------
 type OptionItem = { id: string; name: string; price: number }
 const alliances = computed(() => airlineStore.airlineAlliance ?? [])
 
@@ -372,7 +499,6 @@ const router = useRouter()
 const bookingStore = useBookingStore()
 
 function onPurchase(payload: any) {
-  console.log('purchase', payload)
   
   // 收集訂票所需的所有資訊
   const { fare, refNumber, fareRuleData } = payload
@@ -443,7 +569,6 @@ function onPurchase(payload: any) {
     // 3. 使用 setSegments 一次性設定所有航段
     bookingStore.setSegments(allSegments)
     
-    console.log('Multi-trip: Set all segments:', allSegments)
   } else if (isReturnSegment) {
     // 來回票的回程
     bookingStore.setReturnSegment(currentSegment)
@@ -514,6 +639,8 @@ function onPurchase(payload: any) {
     })
   }
   
+  sessionStorage.setItem('bookingStep', '2')
+  
   // 導航到訂票頁面 - 保留 URL 查詢參數以支援瀏覽器返回功能
   router.push({
     path: '/booking',
@@ -522,7 +649,6 @@ function onPurchase(payload: any) {
 }
 
 const handleSelect = (payload: any) => {
-  console.log('HandleSelect:', payload)
   
   // Step 1: For non-final segments (outbound in round trip, or non-last in multi-trip)
   // Add the selected refNumber and trigger next search
@@ -532,7 +658,6 @@ const handleSelect = (payload: any) => {
     // Store the selected flight segments for later use in fare-rule API
     if (payload.sectors && payload.sectors.length > 0) {
       accumulatedSegments.value.push(payload)
-      console.log('Selected segments accumulated:', accumulatedSegments.value)
     }
     
     // Emit to parent to trigger next flight search with updated selectedRefNumbers and segments
@@ -582,7 +707,7 @@ function displayPrice(row: CardRow) {
   //含稅 = price + taxAmount?  If your API already returns "price" as tax-included, adjust here.
   //Below assumes price is base and taxAmount is taxes/fees.
   const total = row.price
-  return taxMode.value === 'in' ? total : (row.price - (row.taxAmount ?? 0))
+  return taxMode.value === 'in' ? row.price + (row.taxAmount ?? 0) : total
 }
 
 // ---------- Derived, filtered & sorted list ----------
@@ -619,6 +744,13 @@ const filteredFlights = computed(() => {
     inWindow(timeToMin(f.arrivalTime), arrWin)
   )
 
+  // Helper to get price for sorting (matches displayPrice logic)
+  const getPriceForSort = (row: CardRow) => {
+    return taxMode.value === 'in' 
+      ? row.price + (row.taxAmount ?? 0)  // When tax included, use price + tax
+      : row.price  // When tax excluded, use price only
+  }
+
   // sort
   arr.sort((a, b) => {
     const dir = sort.dir === 'asc' ? 1 : -1
@@ -626,11 +758,15 @@ const filteredFlights = computed(() => {
       const sa = Math.max(0, (a.sectors?.length ?? 1) - 1)
       const sb = Math.max(0, (b.sectors?.length ?? 1) - 1)
       if (sa !== sb) return (sa - sb)
-      return ( a.price - b.price ) * dir
+      // Use price with tax consideration for tiebreaker
+      const pa = getPriceForSort(a)
+      const pb = getPriceForSort(b)
+      return (pa - pb) * dir
     }
     if (sort.key === 'price') {
-      const pa = a.price
-      const pb = b.price
+      // Sort by price respecting tax mode (matches what user sees)
+      const pa = getPriceForSort(a)
+      const pb = getPriceForSort(b)
       return (pa - pb) * dir
     }
     if (sort.key === 'depTime') return (timeToMin(a.departureTime) - timeToMin(b.departureTime)) * dir
@@ -643,6 +779,234 @@ const filteredFlights = computed(() => {
 })
 
 const totalCount = computed(() => filteredFlights.value.length)
+
+// Count active filters
+const activeFilterCount = computed(() => {
+  let count = 0
+  
+  // Check stops filter
+  if (filters.stops.direct || filters.stops.oneStop) {
+    count++
+  }
+  
+  // Check alliances filter
+  if (filters.alliances.length > 0) {
+    count++
+  }
+  
+  // Check airlines filter
+  if (filters.airlines.length > 0) {
+    count++
+  }
+  
+  // Check departure airports filter
+  if (filters.depAirports.length > 0) {
+    count++
+  }
+  
+  // Check arrival airports filter
+  if (filters.arrAirports.length > 0) {
+    count++
+  }
+  
+  // Check departure time filter (not default range)
+  if (filters.departTime[0] !== 0 || filters.departTime[1] !== 1439) {
+    count++
+  }
+  
+  // Check arrival time filter (not default range)
+  if (filters.arriveTime[0] !== 0 || filters.arriveTime[1] !== 1439) {
+    count++
+  }
+  
+  return count
+})
+
+// Mobile sort/filter button handlers
+const isFilterModalOpen = ref(false)
+const isSortModalOpen = ref(false)
+
+// Shared state for selected card (mobile modal)
+const selectedCardRefNumber = ref<number | null>(null)
+const isFlightInfoModalOpen = ref(false)
+const selectedCardData = computed(() => {
+  if (selectedCardRefNumber.value === null) return null
+  return filteredFlights.value.find(card => card.refNumber === selectedCardRefNumber.value) || null
+})
+
+// Initialize fare rule composable for mobile purchase flow
+// Uses reactive getter to access current selected card data
+const fareRuleForPurchase = useFlightFareRule(() => {
+  const card = selectedCardData.value
+  if (!card || !card.sectors) {
+    return {
+      sectors: [],
+      previousSegments: props.selectedSegments,
+      tripType: tripType.value,
+      leg: currentLeg.value,
+      adultCount: props.searchRequest?.adultCount || props.searchRequest?.adults || 1,
+      childCount: props.searchRequest?.childCount || props.searchRequest?.children || 0,
+      babyCount: props.searchRequest?.babyCount || props.searchRequest?.infants || 0,
+      validatingAirlineCode: undefined,
+      itineraryRBDs: undefined,
+      fareOptions: []
+    }
+  }
+  
+  // Find full flight data to get validatingAirlineCode and itineraryRBDs
+  const currentFlight = props.data.find(flight => flight.refNumber === card.refNumber)
+  
+  return {
+    sectors: card.sectors,
+    previousSegments: props.selectedSegments,
+    tripType: tripType.value,
+    leg: currentLeg.value,
+    adultCount: props.searchRequest?.adultCount || props.searchRequest?.adults || 1,
+    childCount: props.searchRequest?.childCount || props.searchRequest?.children || 0,
+    babyCount: props.searchRequest?.babyCount || props.searchRequest?.infants || 0,
+    validatingAirlineCode: currentFlight?.validatingAirlineCode,
+    itineraryRBDs: currentFlight?.itineraryRBDs,
+    fareOptions: []
+  }
+})
+
+function handleCardClick(card: CardRow) {
+  // Only handle on mobile
+  if (window.innerWidth >= 768) return
+  // Set selected card (opens modal if not already open, or switches content if already open)
+  if (card.refNumber !== undefined && card.refNumber !== null) {
+    selectedCardRefNumber.value = card.refNumber
+  }
+}
+
+function handleCardModalFlightInfo() {
+  // When "航班資訊" is clicked in FlightActionModal, close FlightActionModal and open FlightInfoModal
+  isFlightInfoModalOpen.value = true
+  // FlightActionModal will close automatically because :open condition checks !isFlightInfoModalOpen
+}
+
+async function handleFlightInfoNextStep() {
+  // Close modal and proceed with selection
+  const card = selectedCardData.value
+  if (!card) return
+
+  // If last step, trigger purchase flow (navigate to /booking)
+  if (isLastStep.value) {
+    // Always try to fetch fare rules before booking (like desktop toggleFareOptions)
+    let fareRuleData = null
+    let fareWithNotes: any = {
+      id: 'default-fare',
+      cabin: card.sectors?.[0]?.cabinDesc || '經濟艙',
+      price: (card.price || 0) - (card.taxAmount || 0),
+      taxAmount: card.taxAmount || 0,
+      notes: []
+    }
+
+    if (card.sectors && card.sectors.length > 0) {
+      // Check if fare rules already fetched, if not fetch them
+      if (!fareRuleForPurchase.fareRuleData.value && !fareRuleForPurchase.fareRuleLoading.value) {
+        await fareRuleForPurchase.fetchFareRule()
+      }
+
+      fareRuleData = fareRuleForPurchase.fareRuleData.value
+
+      // Get transformed fare with notes
+      const availableFares = fareRuleForPurchase.dynamicFareOptions.value.length > 0
+        ? fareRuleForPurchase.dynamicFareOptions.value
+        : []
+
+      if (availableFares.length > 0) {
+        fareWithNotes = availableFares[0]
+      }
+    }
+
+    const purchasePayload = {
+      fare: fareWithNotes,
+      refNumber: card.refNumber,
+      fareRuleData: fareRuleData
+    }
+    onPurchase(purchasePayload)
+  } else {
+    // Not last step, proceed to next segment
+    handleSelect({
+      refNumber: card.refNumber,
+      sectors: card.sectors || [],
+      totalMinutes: card.durationMinutes || 0,
+      stopsCount: Math.max(0, (card.sectors?.length ?? 1) - 1),
+      totalPrice: card.price || 0,
+      taxAmount: card.taxAmount || 0,
+      currency: 'TWD',
+      header: {
+        departureTime: card.departureTime || '',
+        arrivalTime: card.arrivalTime || '',
+        departureAirportCode: card.departureAirportCode || '',
+        arrivalAirportCode: card.arrivalAirportCode || '',
+        departureTerminal: card.departureTerminal || '',
+        arrivalTerminal: card.arrivalTerminal || ''
+      }
+    })
+  }
+
+  // After handling next step (either booking or go to next segment), clear modal state
+  selectedCardRefNumber.value = null
+  isFlightInfoModalOpen.value = false
+}
+
+function handleSortClick() {
+  // Close mobile modal when sort is clicked
+  selectedCardRefNumber.value = null
+  isFlightInfoModalOpen.value = false
+  isSortModalOpen.value = true
+}
+
+function handleFilterClick() {
+  // Close mobile modal when filter is clicked
+  selectedCardRefNumber.value = null
+  isFlightInfoModalOpen.value = false
+  isFilterModalOpen.value = true
+}
+
+function handleSortOptionClick(key: typeof sort.key, dir: typeof sort.dir) {
+  setSort(key, dir)
+}
+
+// Filter initial state for FilterSideBar (to persist checked state)
+const filterInitialState = computed(() => ({
+  studentOnly: filters.studentOnly,
+  stops: { ...filters.stops },
+  alliances: [...filters.alliances],
+  airlines: [...filters.airlines],
+  depAirports: [...filters.depAirports],
+  arrAirports: [...filters.arrAirports],
+  departTime: [filters.departTime[0], filters.departTime[1]] as [number, number],
+  arriveTime: [filters.arriveTime[0], filters.arriveTime[1]] as [number, number],
+}))
+
+// Lock body scroll when filter or sort modal is open
+let savedScrollY = 0
+
+watch([isFilterModalOpen, isSortModalOpen], ([filterOpen, sortOpen]) => {
+  const isOpen = filterOpen || sortOpen
+  if (isOpen) {
+    // Save current scroll position
+    savedScrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${savedScrollY}px`
+    document.body.style.width = '100%'
+    document.body.style.overflow = 'hidden'
+  } else {
+    // Restore scroll position
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+    document.body.style.overflow = ''
+    // Use requestAnimationFrame to ensure styles are reset before scrolling
+    requestAnimationFrame(() => {
+      window.scrollTo(0, savedScrollY)
+      savedScrollY = 0
+    })
+  }
+})
 
 // "Infinite" show more
 const showCount = ref(5)
@@ -672,6 +1036,17 @@ onMounted(() => {
 onBeforeUnmount(() => {
   apply(false)
   window.removeEventListener('scroll', onScroll)
+  // Clean up body scroll lock if modal is still open
+  if (isFilterModalOpen.value || isSortModalOpen.value) {
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+    document.body.style.overflow = ''
+    requestAnimationFrame(() => {
+      window.scrollTo(0, savedScrollY)
+      savedScrollY = 0
+    })
+  }
 })
 </script>
 <style>
@@ -691,4 +1066,19 @@ onBeforeUnmount(() => {
   display: block;
 }
 .v-leave-active { position: absolute; }
+
+.fade-scale-enter-active,
+.fade-scale-leave-active {
+  transition: all 0.15s ease;
+}
+
+.fade-scale-enter-from {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.fade-scale-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}
 </style>

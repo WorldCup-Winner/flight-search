@@ -137,6 +137,8 @@ actions: {
       this.$state.searchParams = null
       this.$state.bookingResult = null
       this.clearBookingData()
+      // 清除 sessionStorage 中的 bookingStep，確保新搜尋從 step 2 開始
+      sessionStorage.removeItem('bookingStep')
     },
     
     // === 新的彈性方法 ===
