@@ -21,7 +21,7 @@ const router = createRouter({
     {
       path: '/404-page',
       name: '404',
-      component: () => import('../components/ui/feedback/NotFound.vue')
+      component: () => import('../components/ui/NotFound.vue')
     },
     // MUST be last: catch-all for undefined routes
     { path: '/:pathMatch(.*)*', redirect: '/404-page' }

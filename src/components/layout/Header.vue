@@ -140,7 +140,7 @@ import { useAuthStore } from '@/stores/auth'
 
 import SignIn from "@/components/auth/SignIn.vue"
 import SignUp from "@/components/auth/SignUp.vue"
-import BookingSearch from '@/components/ui/booking/BookingSearch.vue'
+import BookingSearch from '@/components/ui/BookingSearch.vue'
 
 
 import Header from "@/assets/imgs/header-logo.svg"

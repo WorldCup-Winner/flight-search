@@ -1,17 +1,46 @@
 <template>
-  <div :class="sharedValue?.isSearch ? 'md:mt-60' : 'mt-80 md:mt-60'">
-    <div
-      class="relative flex items-center justify-center px-4 md:px-0"
-      :class="[{ 'hidden md:flex': sharedValue?.isSearch && flightSearchStore.loading === 'success' }]"
-    >
-      <SearchPanel
-        :active-tab="activeTab as any"
-        :restored-params="restoredParams"
-        @update:activeTab="val => (activeTab = val)"
-        @roundtrip-search="handleRoundSearch"
-        @oneway-search="handleSingleSearch"
-        @multi-search="handleMultiSearch"
-      />
+  <div :class="[ sharedValue?.isSearch ? 'mt-60' : 'mt-80 ' ]">
+    <div class="relative flex items-center justify-center px-4 md:px-0">
+      <div class="bg-white rounded-t-3xl md:rounded-2xl md:rounded-br-none shadow-2xl p-4 md:p-8 md:px-14 w-full mx-auto max-w-6xl">
+        <div class="flex flex-col md:flex-row md:justify-between w-full gap-4 md:gap-0">
+          <!-- Title -->
+          <h1 class="text-h3 md:text-h1 font-light text-others-gray1 md:text-h1-d">機票搜尋</h1>
+
+          <!-- Tab Navigation -->
+          <div class="flex space-x-2 justify-center  px-2 md:px-4 py-2 md:py-3 border-2 rounded-xl rounded-b-none border-b-0 border-primary-gold">
+            <button @click="activeTab = 'roundtrip'" :class="[
+              'px-3 md:px-6 min-w-[80px] md:min-w-[148px] min-h-[32px] md:min-h-[38px] py-1.5 md:py-2 rounded-lg font-medium transition text-sm md:text-base',
+              activeTab === 'roundtrip' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-others-gray1 hover:bg-gray-300'
+            ]">來回</button>
+            <button @click="activeTab = 'oneway'" :class="[
+              'px-3 md:px-6 min-w-[80px] md:min-w-[148px] min-h-[32px] md:min-h-[38px] py-1.5 md:py-2 rounded-lg font-medium transition text-sm md:text-base',
+              activeTab === 'oneway' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-others-gray1 hover:bg-gray-300'
+            ]">單程</button>
+            <button @click="activeTab = 'multi'" :class="[
+              'px-3 md:px-6 min-w-[80px] md:min-w-[148px] min-h-[32px] md:min-h-[38px] py-1.5 md:py-2 rounded-lg font-medium transition text-sm md:text-base',
+              activeTab === 'multi' ? 'bg-primary-gold text-white' : 'bg-others-gray3 text-others-gray1 hover:bg-gray-300'
+            ]">多行程</button>
+          </div>
+        </div>
+        <div v-if="activeTab == 'roundtrip'">
+          <RoundSearchBox 
+            @search="handleRoundSearch"
+            :initialParams="restoredParams"
+          />
+        </div>
+        <div v-else-if="activeTab === 'oneway'">
+          <SingleSearchBox 
+            @search="handleSingleSearch"
+            :initialParams="restoredParams"
+          />
+        </div>
+        <div v-else-if="activeTab === 'multi'">
+          <MultiSearchBox 
+            @search="handleMultiSearch"
+            :initialParams="restoredParams"
+          />
+        </div>
+      </div>
     </div>
     <div class="mt-24 px-4 md:px-0">
       <div v-if="flightSearchStore.loading === 'default'">
@@ -24,15 +53,14 @@
           <FlightSearchLoading />
         </div>
       </template>
-      <ResultsMain
-        v-else-if="flightSearchStore.loading === 'success'"
-        :data="flightSearchStore.data"
+      <ResultsMain 
+        v-else-if="flightSearchStore.loading === 'success'" 
+        :data="flightSearchStore.data" 
         :tripType="activeTab"
         :searchRequest="currentSearchRequest"
         :currentSegmentIndex="currentSegmentIndex"
         :selectedSegments="selectedSegments"
         @searchNextSegment="handleSearchNextSegment"
-        @edit-search="openSearchEditModal"
       />
     </div>
     
@@ -43,18 +71,6 @@
           @close="updateValue?.({ isOpenBaggageInfoAndFeeRule: false, fareRuleData: undefined })" 
         />
     </Transition>
-
-    <!-- Mobile search edit modal -->
-    <SearchEditModal
-      :open="isSearchEditModalOpen"
-      :active-tab="activeTab"
-      :restored-params="restoredParams"
-      @close="closeSearchEditModal"
-      @update:activeTab="val => (activeTab = val)"
-      @roundtrip-search="handleRoundSearchFromModal"
-      @oneway-search="handleSingleSearchFromModal"
-      @multi-search="handleMultiSearchFromModal"
-    />
   </div>
 </template>
 
@@ -66,14 +82,15 @@ import { useFlightSearchStore } from '@/stores/flightSearch'
 import { useBookingStore } from '@/stores/booking'
 import { useLocationStore } from '@/stores/location'
 
-import SearchPanel from '@/components/home/SearchPanel.vue'
-import SearchEditModal from '@/components/ui/modals/SearchEditModal.vue'
+import MultiSearchBox from '@/components/home/MultiSearchBox.vue'
+import SingleSearchBox from '@/components/home/SingleSearchBox.vue'
+import RoundSearchBox from "@/components/home/RoundSearchBox.vue"
 import RecommendedTrips from '@/components/home/RecommendedTrips.vue'
 import BannerImg from '@/components/home/BannerImg.vue'
-import FlightSearchLoading from '@/components/ui/loading/FlightSearchLoading.vue'
-import SearchResultLoading from '@/components/ui/loading/SearchResultLoading.vue'
+import FlightSearchLoading from '@/components/ui/FlightSearchLoading.vue'
+import SearchResultLoading from '@/components/ui/SearchResultLoading.vue'
 import ResultsMain from '@/components/search/ResultsMain.vue';
-import BaggageInfoAndFeeRule from '@/components/ui/booking/BaggageInfoAndFeeRule.vue'
+import BaggageInfoAndFeeRule from '@/components/ui/BaggageInfoAndFeeRule.vue'
 import { useAirlineStore } from '@/stores/airline'
 import { 
   serializeSearchParams, 
@@ -92,7 +109,7 @@ const locationStore = useLocationStore()
 const router = useRouter()
 const route = useRoute()
 
-const activeTab = ref<'oneway' | 'roundtrip' | 'multi'>('roundtrip')
+const activeTab = ref('roundtrip')
 
 const state = ref('default') // "default" | "loading" | "result"
 
@@ -114,15 +131,6 @@ interface SharedData {
 
 const sharedValue = inject<{ isOpenBaggageInfoAndFeeRule: boolean; isSearch: boolean; fareRuleData?: any }>('sharedValue')
 const updateValue = inject<(val: SharedData) => void>('updateValue')
-
-// Mobile search edit modal state
-const isSearchEditModalOpen = ref(false)
-function openSearchEditModal() {
-  isSearchEditModalOpen.value = true
-}
-function closeSearchEditModal() {
-  isSearchEditModalOpen.value = false
-}
 
 // Function to restore search from URL params
 function restoreSearchFromUrl() {
@@ -272,11 +280,6 @@ function handleRoundSearch(payload: any) {
   updateValue?.({ isSearch: true })
 }
 
-function handleRoundSearchFromModal(payload: any) {
-  handleRoundSearch(payload)
-  closeSearchEditModal()
-}
-
 function handleSingleSearch(payload: any) {
   console.log('handleSingleSearch:', payload)
   // 清除舊的訂票資料，避免從來回切到單程時，帶有舊的回程資料
@@ -293,11 +296,6 @@ function handleSingleSearch(payload: any) {
   updateUrlParams(payload, 'oneway')
 
   updateValue?.({ isSearch: true })
-}
-
-function handleSingleSearchFromModal(payload: any) {
-  handleSingleSearch(payload)
-  closeSearchEditModal()
 }
 
 function handleMultiSearch(payload: any) {
@@ -317,11 +315,6 @@ function handleMultiSearch(payload: any) {
   updateUrlParams(payload, 'multi')
   
   updateValue?.({ isSearch: true })
-}
-
-function handleMultiSearchFromModal(payload: any) {
-  handleMultiSearch(payload)
-  closeSearchEditModal()
 }
 
 // Handle next segment search for round-trip or multi-trip
@@ -354,3 +347,20 @@ function handleSearchNextSegment(payload: { selectedRefNumbers: number[]; select
   }
 }
 </script>
+<style scoped>
+/* subtle entrance for the small modal */
+.fade-scale-enter-active,
+.fade-scale-leave-active {
+  transition: all .15s ease;
+}
+
+.fade-scale-enter-from {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+}
+
+.fade-scale-leave-to {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+}
+</style>

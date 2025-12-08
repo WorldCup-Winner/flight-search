@@ -1,9 +1,6 @@
 <template>
-  <main>
-    <!-- Hero hides on mobile once a search has been performed; remains on desktop -->
-    <div :class="sharedValue.isSearch ? 'hidden md:block' : ''">
-      <HeroSection />
-    </div>
+  <main class="">
+    <HeroSection />
     <FlightSearchBox />
   </main>
 </template>

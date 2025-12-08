@@ -1,8 +1,6 @@
 <template>
   <main class="w-full flex flex-col items-center justify-center bg-[#EFEFEF]">
-    <div class = "hidden md:block">
-      <BookingProcessBar :step="step"/>
-    </div>
+    <BookingProcessBar :step="step"/>
     <StepTwo v-if="step === 2" v-model:step="step" />
     <StepThree v-else-if="step === 3" v-model:step="step"/>
     <StepFour v-else-if="step === 4" v-model:step="step" />

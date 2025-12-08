@@ -286,7 +286,7 @@ interface AirportResult {
 
 const keywordLower = computed(() => searchKeyword.value.trim().toLowerCase())
 
-// Country-level matches: country name contains keyword, or any city/airport iataCode matches
+// Country-level matches: country name contains keyword
 const countryResults = computed<CountryResult[]>(() => {
     const kw = keywordLower.value
     if (!kw || !locationStore.autocompleteResults?.length) return []
@@ -295,33 +295,7 @@ const countryResults = computed<CountryResult[]>(() => {
 
     locationStore.autocompleteResults.forEach((country: any) => {
         const countryName = country.displayNameZh || ''
-        
-        // Check if country name matches
-        const countryNameMatches = countryName.toLowerCase().includes(kw)
-        
-        // Check if any city iataCode matches
-        let cityCodeMatches = false
-        if (Array.isArray(country.data)) {
-            cityCodeMatches = country.data.some((city: any) => 
-                city.iataCode && city.iataCode.toLowerCase().includes(kw)
-            )
-        }
-        
-        // Check if any airport iataCode matches
-        let airportCodeMatches = false
-        if (Array.isArray(country.data)) {
-            country.data.forEach((city: any) => {
-                if (Array.isArray(city.data)) {
-                    if (city.data.some((airport: any) => 
-                        airport.iataCode && airport.iataCode.toLowerCase().includes(kw)
-                    )) {
-                        airportCodeMatches = true
-                    }
-                }
-            })
-        }
-        
-        if (!countryNameMatches && !cityCodeMatches && !airportCodeMatches) return
+        if (!countryName.toLowerCase().includes(kw)) return
 
         const airports: { name: string; iataCode: string; cityDisplayOrder?: number }[] = []
         if (Array.isArray(country.data)) {
@@ -355,7 +329,7 @@ const countryResults = computed<CountryResult[]>(() => {
     return results
 })
 
-// City-level matches: city name or iataCode contains keyword
+// City-level matches: city name contains keyword
 const cityResults = computed<CityResult[]>(() => {
     const kw = keywordLower.value
     if (!kw || !locationStore.autocompleteResults?.length) return []
@@ -369,10 +343,8 @@ const cityResults = computed<CityResult[]>(() => {
             country.data.forEach((city: any) => {
                 const cityName =
                     city.displayNameZh || city.cityNameZhTw || ''
-                const cityCode = city.iataCode || ''
 
-                // Match if city name OR city iataCode contains keyword
-                if (!cityName.toLowerCase().includes(kw) && !cityCode.toLowerCase().includes(kw)) return
+                if (!cityName.toLowerCase().includes(kw)) return
 
                 const airports: { name: string; iataCode: string; cityDisplayOrder?: number }[] = []
 
@@ -406,7 +378,7 @@ const cityResults = computed<CityResult[]>(() => {
     return results
 })
 
-// Airport-level matches: airport name or iataCode contains keyword
+// Airport-level matches: airport name contains keyword
 const airportResults = computed<AirportResult[]>(() => {
     const kw = keywordLower.value
     if (!kw || !locationStore.autocompleteResults?.length) return []
@@ -420,11 +392,9 @@ const airportResults = computed<AirportResult[]>(() => {
                     city.data.forEach((airport: any) => {
                         const name =
                             airport.displayNameZh || airport.airportNameZh || ''
-                        const airportCode = airport.iataCode || ''
-                        // Match if airport name OR iataCode contains keyword
                         if (
                             airport.iataCode &&
-                            (name.toLowerCase().includes(kw) || airportCode.toLowerCase().includes(kw))
+                            name.toLowerCase().includes(kw)
                         ) {
                             results.push({
                                 name,

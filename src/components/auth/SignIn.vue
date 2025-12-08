@@ -151,8 +151,8 @@ import { useAuthStore } from '@/stores/auth';
 import { useToast } from 'vue-toastification';
 import { sendSMS, verifySMS } from '@/api';
 
-import PhoneField from '@/components/ui/forms/PhoneField.vue'
-import CodeField from '@/components/ui/forms/CodeField.vue'
+import PhoneField from '@/components/ui/PhoneField.vue'
+import CodeField from '@/components/ui/CodeField.vue'
 
 import { goPrivacy, goMemberPage } from '@/utils';
 
@@ -234,7 +234,6 @@ const handleLogin = async () => {
                 // Success - proceed with guest authentication
                 toast.success(data.msg || '驗證成功')
                 // Set authenticated state with guest info
-                // smsId.value 是 FA01B 回傳的 RET04，用於 booking API 的 mobileVerificationId
                 authStore.setGuestInfo({
                     name: fullName,
                     firstName: form1.value.firstname,
@@ -242,7 +241,6 @@ const handleLogin = async () => {
                     phone: form1.value.phone,
                     countryCode: form1.value.code,
                     isMember: false,
-                    mobileVerificationId: smsId.value, // FP01B RET04 - 手機驗證簡訊ID
                 })
                 emit('close')
             } else if (data.status === '0' || data.status === 0) {

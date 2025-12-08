@@ -53,7 +53,7 @@ import { ref, defineProps, defineEmits } from "vue";
 import { useRouter } from "vue-router"
 import { queryOrder, viewOrder } from '@/api'
 
-import PhoneField from '@/components/ui/forms/PhoneField.vue'
+import PhoneField from '@/components/ui/PhoneField.vue'
 
 const router = useRouter()
 

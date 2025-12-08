@@ -77,5 +77,5 @@
 </template>
 
 <script setup>
-import Awesome from "@/components/ui/feedback/Awesome.vue"
+import Awesome from "@/components/ui/Awesome.vue"
 </script>

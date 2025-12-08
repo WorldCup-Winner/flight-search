@@ -129,6 +129,21 @@
 
             <!-- Mobile: Vertical scrolling months -->
             <div class="md:hidden space-y-6">
+                <!-- Year Selector for Mobile -->
+                <div class="mb-4 flex justify-center">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-others-gray1 font-medium">快速選擇年份：</label>
+                        <select 
+                            :value="currentMonth.getFullYear()" 
+                            @change="onYearChange($event)"
+                            class="px-3 py-1.5 border border-primary-gold rounded-md text-others-gray7 focus:ring-2 focus:ring-others-original focus:outline-none cursor-pointer"
+                        >
+                            <option v-for="year in yearOptions" :key="year" :value="year">
+                                {{ year }}年
+                            </option>
+                        </select>
+                    </div>
+                </div>
                 
                 <!-- Single month mode: only current month -->
                 <template v-if="props.singleMonth">
