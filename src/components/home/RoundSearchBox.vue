@@ -170,6 +170,7 @@
                                 :airlines="airlineStore.airlines"
                                 :selected-airline="selectedAirline"
                                 @select="selectAirline"
+                                @clear="clearAirline"
                                 @close="isAirlineOpen = false"
                             />
                         </div>
@@ -232,11 +233,11 @@ import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useAirlineStore } from '@/stores/airline'
 import { useLocationStore } from '@/stores/location'
 
-import RangeDatePicker from '@/components/ui/RangeDatePicker.vue'
-import LocationPicker from '@/components/ui/LocationPicker.vue'
-import AirlinePicker from '@/components/ui/AirlinePicker.vue'
-import CabinClassPicker from '@/components/ui/CabinClassPicker.vue'
-import PassengerPicker from '@/components/ui/PassengerPicker.vue'
+import RangeDatePicker from '@/components/ui/pickers/RangeDatePicker.vue'
+import LocationPicker from '@/components/ui/pickers/LocationPicker.vue'
+import AirlinePicker from '@/components/ui/pickers/AirlinePicker.vue'
+import CabinClassPicker from '@/components/ui/pickers/CabinClassPicker.vue'
+import PassengerPicker from '@/components/ui/pickers/PassengerPicker.vue'
 import { formatDate, formatDateToYYYYMMDD } from '@/utils'
 
 import type { Airline } from '@/utils/types'
@@ -443,6 +444,11 @@ function selectArrivalCity(city: any) {
 }
 function selectAirline(airline: any) {
     selectedAirline.value = airline
+    isAirlineOpen.value = false
+    airlineSearchTerm.value = ''
+}
+function clearAirline() {
+    selectedAirline.value = null
     isAirlineOpen.value = false
     airlineSearchTerm.value = ''
 }

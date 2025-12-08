@@ -135,7 +135,7 @@
 <script setup>
 import { ref } from 'vue'
 
-import PhoneField from '@/components/ui/PhoneField.vue'
+import PhoneField from '@/components/ui/forms/PhoneField.vue'
 
 const phone = ref('')
 const code  = ref('+886')

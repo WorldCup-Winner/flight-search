@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
-import { sendSMS, signIn, getMemberInfo } from '@/api'
+import { sendSMS, signIn, getMemberInfo, revokeToken, setStoredTokens, clearStoredTokens, getStoredTokens, type TokenInfo } from '@/api'
 import { useToast } from 'vue-toastification'
 
 export interface UserInfo {
@@ -14,11 +13,13 @@ export interface UserInfo {
     isMember?: boolean // true for member, false for guest
     memberId?: string // 會員編號 (RET01/MEA01)
     memberAccount?: string // 會員帳號/身份證號 (RET02/MEA02)
+    mobileVerificationId?: string // 手機驗證簡訊ID (FP01B RET04) - 僅訪客使用
 }
 
 export const useAuthStore = defineStore('auth', {
-    state: (): { user: UserInfo; loading: boolean; error: string | null } => {
+    state: (): { user: UserInfo; loading: boolean; error: string | null; isTokenValid: boolean } => {
         const storedUser = localStorage.getItem('userInfo')
+        const tokens = getStoredTokens()
         return {
             user: storedUser ? JSON.parse(storedUser) : {
                 name: null,
@@ -31,18 +32,21 @@ export const useAuthStore = defineStore('auth', {
                 isMember: undefined,
                 memberId: undefined,
                 memberAccount: undefined,
+                mobileVerificationId: undefined,
             },
             loading: false,
             error: null,
+            isTokenValid: !!tokens?.accessToken,
         }
     },
 
     getters: {
-        isAuthenticated: (state) => !!state.user.name,
+        isAuthenticated: (state) => !!state.user.name && state.isTokenValid,
         isMember: (state) => state.user.isMember === true,
         isGuest: (state) => state.user.isMember === false,
         // Backward compatibility: expose name directly
         name: (state) => state.user.name,
+        hasValidToken: (state) => state.isTokenValid,
     },
 
     actions: {
@@ -57,6 +61,17 @@ export const useAuthStore = defineStore('auth', {
                 console.log('FA01 response:', data)
 
                 if (data.status == '1' || data.status === 1) {
+                    // 儲存 JWT tokens
+                    if (data.accessToken) {
+                        const tokens: TokenInfo = {
+                            tokenType: data.tokenType || 'Bearer',
+                            accessToken: data.accessToken,
+                            refreshToken: data.refreshToken || ''
+                        }
+                        setStoredTokens(tokens)
+                        this.isTokenValid = true
+                    }
+                    
                     // FA01 Response fields:
                     // RET01: 會員編號 (Member ID)
                     // RET02: 會員帳號(身份證號) (Member Account/ID Number)
@@ -212,7 +227,19 @@ export const useAuthStore = defineStore('auth', {
                 this.loading = false
             }
         },
-        logout() {
+        async logout() {
+            // 先呼叫 revoke token API（在清除本地 token 之前）
+            try {
+                await revokeToken()
+            } catch (err) {
+                // 即使 revoke 失敗也繼續登出流程
+                console.warn('Revoke token failed:', err)
+            }
+            
+            // 清除本地 tokens
+            clearStoredTokens()
+            this.isTokenValid = false
+            
             this.user = {
                 name: null,
                 firstName: undefined,
@@ -224,8 +251,19 @@ export const useAuthStore = defineStore('auth', {
                 isMember: undefined,
                 memberId: undefined,
                 memberAccount: undefined,
+                mobileVerificationId: undefined,
             }
             localStorage.removeItem('userInfo')
+        },
+        
+        // 監聽 token 過期事件
+        setupTokenExpirationListener() {
+            window.addEventListener('auth:token-expired', () => {
+                this.isTokenValid = false
+                this.logout()
+                const toast = useToast()
+                toast.warning('登入已過期，請重新登入')
+            })
         },
     },
 })
