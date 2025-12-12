@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white mt-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-8 w-full">
+  <div class="bg-white mt-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-8 w-full hidden md:block">
     <!-- Header -->
     <div class="flex items-center justify-between mb-4">
       <h2 class="font-semibold text-primary-gold">機票商品資料</h2>
@@ -112,14 +112,95 @@
       </div>
     </section>
   </div>
+
+  <!-- Mobile Version -->
+  <div class="md:hidden bg-white mt-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-4 py-12 w-full">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold text-primary-gold text-lg">機票商品資料</h2>
+      <button
+        class="text-primary-gold text-md font-bold flex items-center gap-2"
+        @click="isDetailModalOpen = true"
+      >
+        查看詳情 <span>></span>
+      </button>
+    </div>
+
+    <!-- Order Number -->
+    <div class="mb-4">
+      <p class="text-others-gray7 text-sm">
+        訂單編號 <span class="text-others-original font-semibold">{{ orderNumber || 'ORD0026597365' }}</span>
+      </p>
+    </div>
+
+    <!-- Flight Segments (Using BookingHeaderStrip) -->
+    <div class="space-y-4 mb-6">
+      <div v-for="(flight, index) in groupedFlights" :key="index">
+        <BookingHeaderStrip
+          :current-leg="index === 0 ? 'outbound' : 'return'"
+          :segment-title="index === 0 ? '去程' : '回程'"
+          :date-text="getFlightDate(flight)"
+          :origin="getFlightOrigin(flight)"
+          :destination="getFlightDestination(flight)"
+          :no-margin="index > 0"
+          :show-detailed-info="true"
+          :departure-time="getFlightDepartureTime(flight)"
+          :cabin="getCabinLabel(flight[0]?.cabin || 'Y')"
+        />
+      </div>
+    </div>
+
+    <!-- Passenger Details Card -->
+    <div class="mb-4 border border-others-gray8 rounded-[10px] overflow-hidden">
+      <div v-for="(item, index) in items" :key="index" class="first:rounded-t-[10px] last:rounded-b-[10px] border-others-gray8" :class="{ 'border-b': index < items.length - 1 }">
+        <div class="px-4 py-4">
+          <!-- Route/Airline info - full width -->
+          <div class="text-others-gray1 text-sm mb-2">{{ item.productName }}</div>
+          <!-- Passenger name (left) and payment info (right) on same row -->
+          <div class="flex items-center justify-between">
+            <div class="text-black font-semibold">{{ formatPassengerName(item.name) }}</div>
+            <div class="text-others-original font-semibold">
+              未付 <span class="font-bold">NTD {{ formatPrice(item.totalWithTax - item.paid) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Amount and Payment Deadline -->
+    <div class="flex flex-col items-end gap-3">
+      <div class="flex items-baseline gap-2">
+        <span class="text-primary-gold text-sm">應付總額 </span>
+        <span class="text-others-original font-bold ">TWD</span>
+        <span class="text-others-original font-bold text-2xl">{{ formatPrice(total) }}</span>
+      </div>
+      <div class="border border-others-original rounded-md px-3 py-1.5">
+        <p class="text-others-original text-sm font-semibold">
+          請於 {{ getPaymentDeadline() }} 前完成付款
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile: Full-screen order detail modal -->
+  <TicketBookingDetailModal
+    :open="isDetailModalOpen"
+    :flights="flights"
+    :items="items"
+    :total="total"
+    @close="isDetailModalOpen = false"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { formatPrice } from "@/utils";
 import { useBookingStore } from "@/stores/booking";
+import BookingHeaderStrip from "./BookingHeaderStrip.vue";
+import TicketBookingDetailModal from "./TicketBookingDetailModal.vue";
 
 const bookingStore = useBookingStore();
+const isDetailModalOpen = ref(false)
 
 const orderNumber = computed(() => {
     return bookingStore.bookingResult?.bookingData?.orderNumber || null
@@ -133,6 +214,7 @@ type Flight = {
   flight: string;
   cabin: string;
   status: string;
+  airlineName?: string;
 };
 
 type Item = {
@@ -156,6 +238,7 @@ const flights = computed<Flight[]>(() => {
                 arriveTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
                 arriveAirport: sector.arrivalAirportCode,
                 flight: `${sector.marketingAirlineCode} ${sector.flightNo}`,
+                airlineName: sector.marketingAirlineName || sector.operatingAirlineName || '',
                 cabin: sector.bookingClass || 'Y',
                 status: "處理中",
             })))
@@ -167,6 +250,7 @@ const flights = computed<Flight[]>(() => {
                 arriveTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
                 arriveAirport: sector.arrivalAirportCode,
                 flight: `${sector.marketingAirlineCode} ${sector.flightNo}`,
+                airlineName: sector.marketingAirlineName || sector.operatingAirlineName || '',
                 cabin: sector.bookingClass || 'Y',
                 status: "處理中",
             })))
@@ -181,6 +265,7 @@ const flights = computed<Flight[]>(() => {
             arriveTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
             arriveAirport: sector.arrivalAirportCode,
             flight: `${sector.marketingAirlineCode} ${sector.flightNo}`,
+            airlineName: sector.marketingAirlineName || sector.operatingAirlineName || '',
             cabin: sector.bookingClass,
             status: "處理中",
         }))
@@ -248,6 +333,85 @@ const total = computed(() =>
     .filter((i) => i.checked)
     .reduce((sum, i) => sum + i.totalWithTax - i.paid, 0)
 );
+
+// Mobile version helpers - using existing flights data
+const groupedFlights = computed(() => {
+  // Group flights by outbound/return (assuming first half is outbound, second half is return)
+  const flightList = flights.value
+  if (flightList.length === 0) return []
+  
+  // For round trip, split flights into outbound and return
+  // For one way, only outbound
+  const midPoint = Math.ceil(flightList.length / 2)
+  const outbound = flightList.slice(0, midPoint)
+  const returnFlights = flightList.slice(midPoint)
+  
+  const result = [outbound]
+  if (returnFlights.length > 0) {
+    result.push(returnFlights)
+  }
+  return result
+})
+
+function getFlightDate(flightGroup: Flight[]): string {
+  if (flightGroup.length === 0) return ''
+  // Extract date from departTime (format: "YYYY-MM-DD HH:mm")
+  const dateTime = flightGroup[0].departTime
+  if (!dateTime) return ''
+  return dateTime.split(' ')[0] // Return just the date part
+}
+
+function getFlightDepartureTime(flightGroup: Flight[]): string {
+  if (flightGroup.length === 0) return ''
+  // Extract time from departTime (format: "YYYY-MM-DD HH:mm")
+  const dateTime = flightGroup[0].departTime
+  if (!dateTime) return ''
+  return dateTime.split(' ')[1] || '' // Return just the time part
+}
+
+function getFlightOrigin(flightGroup: Flight[]): { name: string; code: string } {
+  if (flightGroup.length === 0) return { name: '出發地', code: '' }
+  // Use airport code as name for now (can be enhanced with airport name lookup if needed)
+  return { name: flightGroup[0].departAirport, code: flightGroup[0].departAirport }
+}
+
+function getFlightDestination(flightGroup: Flight[]): { name: string; code: string } {
+  if (flightGroup.length === 0) return { name: '目的地', code: '' }
+  const lastFlight = flightGroup[flightGroup.length - 1]
+  // Use airport code as name for now (can be enhanced with airport name lookup if needed)
+  return { name: lastFlight.arriveAirport, code: lastFlight.arriveAirport }
+}
+
+function getCabinLabel(cabinCode: string): string {
+  const cabinMap: Record<string, string> = {
+    'Y': '經濟艙',
+    'C': '商務艙',
+    'F': '頭等艙',
+    'W': '豪華經濟艙'
+  }
+  return cabinMap[cabinCode] || '經濟艙'
+}
+
+function formatPassengerName(name: string): string {
+  // Remove ", MR." or ", MRS." suffix if present
+  return name.replace(/,?\s*(MR\.|MRS\.)$/i, '').trim()
+}
+
+function getPaymentDeadline(): string {
+  // Get deadline from first item or use default
+  if (items.value.length > 0 && items.value[0].deadline) {
+    const deadline = items.value[0].deadline
+    // Format: "2025/8/31 14:20" or "2025-08-31T14:20:00"
+    if (deadline.includes('T')) {
+      const [date, time] = deadline.split('T')
+      const [year, month, day] = date.split('-')
+      const [hour, minute] = time.split(':')
+      return `${year}/${parseInt(month)}/${parseInt(day)} ${hour}:${minute}`
+    }
+    return deadline
+  }
+  return '2025/8/31 14:20'
+}
 </script>
 
 <style scoped>

@@ -170,7 +170,6 @@
                                 :airlines="airlineStore.airlines"
                                 :selected-airline="selectedAirline"
                                 @select="selectAirline"
-                                @clear="clearAirline"
                                 @close="isAirlineOpen = false"
                             />
                         </div>
@@ -346,8 +345,22 @@ watch(
 watch(
     () => props.initialParams,
     (newParams) => {
-        // Only restore if locations are available
-        if (newParams && locationStore.locations.length > 0) {
+        if (newParams === null || newParams === undefined) {
+            // Reset form to initial values when params are cleared
+            selectedDepartureLocation.value = locationStore.locations?.[0] || null
+            selectedDepartureCity.value = locationStore.locations?.[0]?.["airports"]?.[0] || null
+            const japanKoreaLocation = locationStore.locations.find((loc: any) => loc.region === '日韓')
+            selectedArrivalLocation.value = japanKoreaLocation || locationStore.locations?.[0] || null
+            selectedArrivalCity.value = japanKoreaLocation?.["airports"]?.[0] || null
+            startDate.value = null
+            endDate.value = null
+            adultCount.value = 1
+            childrenCount.value = 0
+            selectedAirline.value = null
+            selectedCabinClass.value = '艙等不限'
+            isNonStopFlight.value = false
+        } else if (newParams && locationStore.locations.length > 0) {
+            // Only restore if locations are available
             restoreFromParams(newParams)
         }
     },
@@ -444,11 +457,6 @@ function selectArrivalCity(city: any) {
 }
 function selectAirline(airline: any) {
     selectedAirline.value = airline
-    isAirlineOpen.value = false
-    airlineSearchTerm.value = ''
-}
-function clearAirline() {
-    selectedAirline.value = null
     isAirlineOpen.value = false
     airlineSearchTerm.value = ''
 }

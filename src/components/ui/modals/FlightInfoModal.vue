@@ -70,7 +70,7 @@
                   class="px-4 py-3 rounded-[10px] text-white bg-others-original font-bold hover:bg-others-hover transition whitespace-nowrap"
                   @click="handleNextStep"
                 >
-                  下一步
+                  {{ isLastStep ? '訂購' : '下一步' }}
                 </button>
               </div>
             </div>
@@ -87,7 +87,22 @@ import { formatPrice } from '@/utils'
 import type { Sector } from '@/utils/types'
 import FlightSectorDetail from './FlightInfoModalSector.vue'
 import TransferInfo from './FlightInfoModalTransfer.vue'
-import { resolveAirlineLogo } from '@/utils/airlineLogo'
+import AirlineDefault from '@/assets/imgs/airlines/airline-default.svg'
+
+// Import all airline logos at build time using Vite's glob import
+const airlineLogosModules = import.meta.glob('@/assets/imgs/airlines/*.png', { eager: true, import: 'default' })
+
+function resolveAirlineLogo(code?: string): string {
+  if (!code) return AirlineDefault
+  
+  const fullPath = Object.keys(airlineLogosModules).find(path => path.includes(`/${code}.png`))
+  
+  if (fullPath && airlineLogosModules[fullPath]) {
+    return airlineLogosModules[fullPath] as string
+  }
+  
+  return AirlineDefault
+}
 
 const props = defineProps<{
   open: boolean
@@ -97,6 +112,7 @@ const props = defineProps<{
   currencyDisplay: string
   taxMode: 'in' | 'ex'
   taxAmount?: number
+  isLastStep?: boolean
 }>()
 
 function airlineLogoFor(sec: Sector) {

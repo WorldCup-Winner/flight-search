@@ -1,8 +1,11 @@
 <template>
   <div
     v-if="open"
-    class="fixed inset-0 z-50 top-0 bg-black/20 w-[100vw] h-[100vh] flex items-center justify-center">
-    <div class="max-w-[800px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-8 py-8">
+    class="fixed inset-0 z-50 top-0 bg-black/20 w-[100vw] h-[100vh] flex items-center justify-center px-4">
+    <div
+      class="max-w-[800px] w-full max-h-[90vh] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)]
+             px-6 py-6 md:px-8 md:py-8 relative flex flex-col"
+    >
         <!-- Close button -->
         <button
             class="absolute right-4 top-4 text-gray-500 hover:text-gray-800"
@@ -15,7 +18,7 @@
         <br />
 
       <!-- Content -->
-      <div class="space-y-6 h-[700px] overflow-y-scroll text-sm leading-relaxed text-gray-700
+      <div class="space-y-6 flex-1 min-h-0 overflow-y-auto text-sm leading-relaxed text-gray-700
                     [&::-webkit-scrollbar]:w-[4px]
                     [&::-webkit-scrollbar-track]:transparent
                     [&::-webkit-scrollbar-thumb]:bg-others-gray8
@@ -154,7 +157,7 @@
       </div>
 
       <!-- Action Button -->
-      <div class="mt-6 text-center">
+      <div class="mt-4 md:mt-6 pt-4 border-t border-others-gray3 text-center flex-shrink-0">
         <button
           class="px-8 py-3 rounded-md border-none bg-others-original text-white hover:bg-others-hover transition font-semibold"
           @click="close"
@@ -166,8 +169,6 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, defineProps, defineEmits } from "vue";
-
 const props = defineProps<{
   open: boolean;
 }>();

@@ -9,13 +9,17 @@
   >
     <div class="flex w-full items-center justify-between min-w-0">
       <!-- Logo -->
-      <RouterLink to="/" class="flex items-center">
+      <button 
+        type="button"
+        class="flex items-center cursor-pointer"
+        @click="handleHomeClick"
+      >
         <img 
           :src="isOrderPage ? Header1 : Header" 
           alt="GalileeTours" 
           class="h-8 md:h-9 w-auto" 
         />
-      </RouterLink>
+      </button>
 
       <!-- Menu -->
       <div class="flex items-center gap-2 md:gap-6">
@@ -24,7 +28,7 @@
           :class="[
             linkCls, 
             'flex items-center cursor-pointer',
-            'text-base',
+            'text-sm md:text-base',
             'gap-1 md:gap-2'
           ]" 
           @click="isOpenBookingSearch = true"
@@ -39,7 +43,7 @@
             :class="[isOrderPage ? 'bg-others-gray4' : 'bg-white']"
           ></div>
           <span class="hidden md:inline">訂單查詢</span>
-          <span class="md:hidden text-base">訂單</span>
+          <span class="md:hidden text-sm">訂單</span>
         </div>
         
         <a
@@ -48,7 +52,7 @@
           :class="[
             linkCls, 
             'flex items-center cursor-pointer',
-            'text-base md:text-base',
+            'text-sm md:text-base',
             'gap-1 md:gap-2'
           ]"
         >
@@ -71,7 +75,7 @@
           class="flex items-center gap-2 md:gap-6"
         >
           <button
-            class="px-3 md:px-4 py-1 w-[70px] md:w-[93px] h-[38px] md:h-[40px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition text-base md:text-base"
+            class="px-3 md:px-4 py-1 w-[70px] md:w-[93px] h-[38px] md:h-[40px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition text-sm md:text-base"
             @click="openDialog('signin')"
           >
             登入
@@ -89,7 +93,7 @@
             :class="[
               linkCls, 
               'flex items-center cursor-pointer',
-            'text-base md:text-base',
+            'text-sm md:text-base',
               'gap-1 md:gap-2'
             ]"
           >
@@ -103,10 +107,9 @@
               :class="[isOrderPage ? 'bg-others-gray4' : 'bg-white']"
             ></div>
             <span class="hidden md:inline">Hi, {{ authStore.user.name }}</span>
-            <span class="md:hidden text-base">{{ authStore.user.name }}</span>
           </div>
           <button
-            class="px-3 md:px-4 py-1 w-[70px] md:w-[93px] h-[38px] md:h-[40px] rounded-md border border-none hover:bg-others-gray2 hover:text-others-gray1 transition text-base md:text-base"
+            class="px-3 md:px-4 py-1 w-[70px] md:w-[93px] h-[38px] md:h-[40px] rounded-md border border-none hover:bg-others-gray2 hover:text-others-gray1 transition text-sm md:text-base"
             :class="[isOrderPage ? 'bg-others-gray4 text-others-gray1' : 'bg-white text-others-gray1']"
             @click="handleLogout"
           >
@@ -137,6 +140,9 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
+import { useFlightSearchStore } from '@/stores/flightSearch'
+import { useBookingStore } from '@/stores/booking'
+import { useLocationStore } from '@/stores/location'
 
 import SignIn from "@/components/auth/SignIn.vue"
 import SignUp from "@/components/auth/SignUp.vue"
@@ -147,6 +153,9 @@ import Header from "@/assets/imgs/header-logo.svg"
 import Header1 from "@/assets/imgs/header-logo-1.svg"
 
 const authStore = useAuthStore()
+const flightSearchStore = useFlightSearchStore()
+const bookingStore = useBookingStore()
+const locationStore = useLocationStore()
 
 const activeDialog = ref(null)
 const isOpenBookingSearch = ref(false)
@@ -168,6 +177,28 @@ const isOrderPage = computed(() => {
 const linkCls = computed(() =>
   isOrderPage.value ? 'text-others-gray1 hover:text-others-gray2' : 'text-white hover:text-gray-200'
 )
+
+// Clear all search and booking state when navigating home
+function handleHomeClick() {
+  // Reset flight search store
+  flightSearchStore.reset()
+  
+  // Clear booking store
+  bookingStore.clearBookingInfo()
+  
+  // Clear location autocomplete results
+  locationStore.clearAutocompleteResults()
+  
+  // Clear session storage items
+  sessionStorage.removeItem('bookingStep')
+  sessionStorage.removeItem('orderBasicInfo')
+  sessionStorage.removeItem('orderDataWithPayment')
+  sessionStorage.removeItem('paymentInfo')
+  sessionStorage.removeItem('iframePaymentData')
+  
+  // Navigate to home without query params
+  router.push({ path: '/', query: {} })
+}
 
 const handleLogout = () => {
   authStore.logout()

@@ -15,6 +15,7 @@
 
       <!-- MAIN -->
       <section class="col-span-12 md:col-span-9">
+        <template v-if="!isStepTwoMobileSummaryOpen">
         <!-- Round-trip mobile: HeaderStrip + HeaderStripSummary side by side -->
         <div v-if="tripType === 'roundtrip'" class="md:hidden flex gap-2 mb-4 min-w-0">
           <div :class="[currentLeg === 'outbound' ? 'order-1' : 'order-2', 'flex-1 min-w-0']">
@@ -110,6 +111,14 @@
         <div v-if="shownFlights.length <= 0">
           <SorryNoData />
         </div>
+        </template>
+
+        <!-- Mobile StepTwo summary (full-page replacement) -->
+        <StepTwoMobileSummary
+          v-else
+          @confirm="() => { isStepTwoMobileSummaryOpen = false; goToBooking() }"
+          @edit-segment="() => { isStepTwoMobileSummaryOpen = false; handleEditSegment() }"
+        />
       </section>
     </div>
 
@@ -162,7 +171,7 @@
     <!-- Mobile Card Click Modal (FlightActionModal - initial modal with price + buttons) -->
     <FlightActionModal
       v-if="selectedCardData"
-      :open="selectedCardRefNumber !== null && !isFlightInfoModalOpen"
+      :open="selectedCardRefNumber !== null && !isFlightInfoModalOpen && !isMobileBookingLoading"
       :price-total="displayPrice(selectedCardData)"
       :currency-display="'TWD'"
       :tax-mode="taxMode"
@@ -183,9 +192,15 @@
       :currency-display="'TWD'"
       :tax-mode="taxMode"
       :tax-amount="selectedCardData.taxAmount"
+      :is-last-step="isLastStep"
       @close="isFlightInfoModalOpen = false; selectedCardRefNumber = null"
       @next-step="handleFlightInfoNextStep"
     />
+
+    <!-- Mobile booking loading overlay (reuse global flight search loading style) -->
+    <transition name="fade">
+      <FlightSearchLoading v-if="isMobileBookingLoading" />
+    </transition>
   </div>
 </template>
 <script setup lang="ts">
@@ -203,6 +218,8 @@ import SortBar from '@/components/search/SortBar.vue'
 import SortModal from '@/components/ui/modals/SortModal.vue'
 import FlightActionModal from '@/components/ui/modals/FlightActionModal.vue'
 import FlightInfoModal from '@/components/ui/modals/FlightInfoModal.vue'
+import StepTwoMobileSummary from '@/components/booking/StepTwoMobileSummary.vue'
+import FlightSearchLoading from '@/components/ui/loading/FlightSearchLoading.vue'
 import SorryNoData from '@/components/ui/feedback/SorryNoData.vue'
 import { useAirlineStore } from '@/stores/airline'
 import { useBookingStore } from '@/stores/booking'
@@ -498,26 +515,32 @@ const stopsPricing = computed(() => {
 const router = useRouter()
 const bookingStore = useBookingStore()
 
-function onPurchase(payload: any) {
-  
-  // 收集訂票所需的所有資訊
+// 控制行動版 StepTwo 摘要頁顯示與載入狀態
+const isStepTwoMobileSummaryOpen = ref(false)
+const isMobileBookingLoading = ref(false)
+
+// 將目前選擇的航班與票價寫入 bookingStore，但不導頁
+function prepareBooking(payload: any) {
   const { fare, refNumber, fareRuleData } = payload
-  
+
   // 找出當前航班的完整資訊
   const currentFlight = props.data.find(flight => flight.refNumber === refNumber)
   if (!currentFlight) {
     console.error('Flight not found:', refNumber)
     return
   }
-  
+
   // 計算停靠站數量（sectors數量 - 1）
   const stopsCount = (currentFlight.sectors?.length || 1) - 1
-  
+
   // 構建航段資訊
   const currentSegment = {
     refNumber: refNumber,
     sectors: currentFlight.sectors || [],
-    totalMinutes: currentFlight.sectors?.reduce((sum, s) => sum + (s.durationMinutes || 0), 0) || currentFlight.durationMinutes || 0,
+    totalMinutes:
+      currentFlight.sectors?.reduce((sum, s) => sum + (s.durationMinutes || 0), 0) ||
+      currentFlight.durationMinutes ||
+      0,
     stopsCount: stopsCount,
     totalPrice: currentFlight.price || 0,
     currency: 'TWD', // 從 flight-search API 的回應來看，通常是 TWD
@@ -525,33 +548,41 @@ function onPurchase(payload: any) {
     header: {
       departureTime: currentFlight.departureTime || '',
       arrivalTime: currentFlight.arrivalTime || '',
-      departureAirportCode: currentFlight.departureAirportCode || currentFlight.sectors?.[0]?.departureCityCode || '',
-      arrivalAirportCode: currentFlight.arrivalAirportCode || currentFlight.sectors?.slice(-1)?.[0]?.arrivalCityCode || '',
+      departureAirportCode:
+        currentFlight.departureAirportCode || currentFlight.sectors?.[0]?.departureCityCode || '',
+      arrivalAirportCode:
+        currentFlight.arrivalAirportCode ||
+        currentFlight.sectors?.slice(-1)?.[0]?.arrivalCityCode ||
+        '',
       departureTerminal: currentFlight.departureTerminal || currentFlight.sectors?.[0]?.departureTerminal,
-      arrivalTerminal: currentFlight.arrivalTerminal || currentFlight.sectors?.slice(-1)?.[0]?.arrivalTerminal,
+      arrivalTerminal:
+        currentFlight.arrivalTerminal || currentFlight.sectors?.slice(-1)?.[0]?.arrivalTerminal,
     },
     // 新增：從 flight-search 回應中取得的欄位
     validatingAirlineCode: currentFlight.validatingAirlineCode,
     itineraryRBDs: currentFlight.itineraryRBDs,
   }
-  
+
   // 判斷行程類型和當前航段索引
   const segmentIndex = props.currentSegmentIndex ?? 0
   const isReturnSegment = tripType.value === 'roundtrip' && segmentIndex === 1
   const isMultiTrip = tripType.value === 'multi'
-  
+
   // 設定航段資訊
   if (isMultiTrip) {
     // 多行程：收集所有已選擇的航段 + 當前航段
     const allSegments: any[] = []
-    
+
     // 1. 加入之前選擇的所有航段
     if (props.selectedSegments && props.selectedSegments.length > 0) {
       props.selectedSegments.forEach((seg: any) => {
         allSegments.push({
           refNumber: seg.refNumber,
           sectors: seg.sectors || [],
-          totalMinutes: seg.sectors?.reduce((sum: number, s: any) => sum + (s.durationMinutes || 0), 0) || seg.totalMinutes || 0,
+          totalMinutes:
+            seg.sectors?.reduce((sum: number, s: any) => sum + (s.durationMinutes || 0), 0) ||
+            seg.totalMinutes ||
+            0,
           stopsCount: seg.stopsCount || 0,
           totalPrice: seg.totalPrice || 0,
           currency: seg.currency || 'TWD',
@@ -562,13 +593,12 @@ function onPurchase(payload: any) {
         })
       })
     }
-    
+
     // 2. 加入當前選擇的航段
     allSegments.push(currentSegment)
-    
+
     // 3. 使用 setSegments 一次性設定所有航段
     bookingStore.setSegments(allSegments)
-    
   } else if (isReturnSegment) {
     // 來回票的回程
     bookingStore.setReturnSegment(currentSegment)
@@ -578,7 +608,10 @@ function onPurchase(payload: any) {
       bookingStore.setOutboundSegment({
         refNumber: outboundData.refNumber,
         sectors: outboundData.sectors || [],
-        totalMinutes: outboundData.sectors?.reduce((sum: number, s: any) => sum + (s.durationMinutes || 0), 0) || outboundData.totalMinutes || 0,
+        totalMinutes:
+          outboundData.sectors?.reduce((sum: number, s: any) => sum + (s.durationMinutes || 0), 0) ||
+          outboundData.totalMinutes ||
+          0,
         stopsCount: outboundData.stopsCount || 0,
         totalPrice: outboundData.totalPrice || 0,
         currency: outboundData.currency || 'TWD',
@@ -592,15 +625,15 @@ function onPurchase(payload: any) {
     // 單程或來回票的去程
     bookingStore.setOutboundSegment(currentSegment)
   }
-  
+
   // 設定選擇的票價
   bookingStore.setSelectedFare(fare)
-  
+
   // 設定 fare-rule 資料
   if (fareRuleData) {
     bookingStore.setFareRuleData(fareRuleData)
   }
-  
+
   // 設定搜尋參數
   if (props.searchRequest) {
     // 對於來回票，departureCity/arrivalCity 應該固定為原始搜尋的出發地/目的地
@@ -609,7 +642,7 @@ function onPurchase(payload: any) {
     let searchArrivalCity = destination.value.name
     let searchDepartureCityCode = origin.value.code
     let searchArrivalCityCode = destination.value.code
-    
+
     // 如果是回程航段，需要交換回來，使用去程的起訖點作為搜尋條件
     if (isReturnSegment && props.selectedSegments && props.selectedSegments.length > 0) {
       const outboundData = props.selectedSegments[0]
@@ -619,33 +652,61 @@ function onPurchase(payload: any) {
         searchArrivalCityCode = outboundData.header.arrivalAirportCode
         // 從 sectors 取得城市名稱
         if (outboundData.sectors && outboundData.sectors.length > 0) {
-          searchDepartureCity = outboundData.sectors[0]?.departureCityName || searchDepartureCity
-          searchArrivalCity = outboundData.sectors[outboundData.sectors.length - 1]?.arrivalCityName || searchArrivalCity
+          searchDepartureCity =
+            outboundData.sectors[0]?.departureCityName || searchDepartureCity
+          searchArrivalCity =
+            outboundData.sectors[outboundData.sectors.length - 1]?.arrivalCityName ||
+            searchArrivalCity
         }
       }
     }
-    
+
     bookingStore.setSearchParams({
       tripType: tripType.value as any,
       departureCity: searchDepartureCity,
       arrivalCity: searchArrivalCity,
       departureCityCode: searchDepartureCityCode,
       arrivalCityCode: searchArrivalCityCode,
-      departureDate: props.searchRequest.departureDate || props.searchRequest.slices?.[0]?.departureDate || dateText.value,
-      returnDate: props.searchRequest.flightSegments?.[0]?.returnDate || props.searchRequest.returnDate || props.searchRequest.slices?.[1]?.departureDate || undefined,
-      adults: props.searchRequest.adults || props.searchRequest.adultCount || props.searchRequest.passengers?.ADT || 1,
-      children: props.searchRequest.children || props.searchRequest.childCount || props.searchRequest.passengers?.CHD || 0,
-      infants: props.searchRequest.infants || props.searchRequest.babyCount || props.searchRequest.passengers?.INF || 0,
+      departureDate:
+        props.searchRequest.departureDate ||
+        props.searchRequest.slices?.[0]?.departureDate ||
+        dateText.value,
+      returnDate:
+        props.searchRequest.flightSegments?.[0]?.returnDate ||
+        props.searchRequest.returnDate ||
+        props.searchRequest.slices?.[1]?.departureDate ||
+        undefined,
+      adults:
+        props.searchRequest.adults ||
+        props.searchRequest.adultCount ||
+        props.searchRequest.passengers?.ADT ||
+        1,
+      children:
+        props.searchRequest.children ||
+        props.searchRequest.childCount ||
+        props.searchRequest.passengers?.CHD ||
+        0,
+      infants:
+        props.searchRequest.infants ||
+        props.searchRequest.babyCount ||
+        props.searchRequest.passengers?.INF ||
+        0,
     })
   }
-  
+}
+
+// 導航到訂票頁面 - 保留 URL 查詢參數以支援瀏覽器返回功能
+function goToBooking() {
   sessionStorage.setItem('bookingStep', '2')
-  
-  // 導航到訂票頁面 - 保留 URL 查詢參數以支援瀏覽器返回功能
   router.push({
     path: '/booking',
-    query: router.currentRoute.value.query
+    query: router.currentRoute.value.query,
   })
+}
+
+function onPurchase(payload: any) {
+  prepareBooking(payload)
+  goToBooking()
 }
 
 const handleSelect = (payload: any) => {
@@ -891,42 +952,86 @@ async function handleFlightInfoNextStep() {
   const card = selectedCardData.value
   if (!card) return
 
-  // If last step, trigger purchase flow (navigate to /booking)
+  // If last step, trigger purchase flow / summary
   if (isLastStep.value) {
-    // Always try to fetch fare rules before booking (like desktop toggleFareOptions)
-    let fareRuleData = null
-    let fareWithNotes: any = {
-      id: 'default-fare',
-      cabin: card.sectors?.[0]?.cabinDesc || '經濟艙',
-      price: (card.price || 0) - (card.taxAmount || 0),
-      taxAmount: card.taxAmount || 0,
-      notes: []
-    }
+    const isMobile = window.innerWidth < 768
 
-    if (card.sectors && card.sectors.length > 0) {
-      // Check if fare rules already fetched, if not fetch them
-      if (!fareRuleForPurchase.fareRuleData.value && !fareRuleForPurchase.fareRuleLoading.value) {
+    if (isMobile) {
+      // 行動版：顯示載入中畫面（保留 selectedCardRefNumber，讓 fareRuleForPurchase 有 sectors）
+      isMobileBookingLoading.value = true
+
+      const baseFare: any = {
+        id: 'default-fare',
+        cabin: card.sectors?.[0]?.cabinDesc || '經濟艙',
+        price: (card.price || 0) - (card.taxAmount || 0),
+        taxAmount: card.taxAmount || 0,
+        notes: []
+      }
+
+      // 確保每次都重新呼叫 fare-rule API
+      fareRuleForPurchase.fareRuleData.value = null
+
+      // 載入 fare-rule，計算實際票價與說明
+      let fareRuleData = null
+      let fareWithNotes: any = baseFare
+
+      if (card.sectors && card.sectors.length > 0) {
         await fareRuleForPurchase.fetchFareRule()
+
+        fareRuleData = fareRuleForPurchase.fareRuleData.value
+        const availableFares = fareRuleForPurchase.dynamicFareOptions.value.length > 0
+          ? fareRuleForPurchase.dynamicFareOptions.value
+          : []
+
+        if (availableFares.length > 0) {
+          fareWithNotes = availableFares[0]
+        }
       }
 
-      fareRuleData = fareRuleForPurchase.fareRuleData.value
+      // 將結果寫入 bookingStore，關閉載入畫面並顯示摘要頁
+      prepareBooking({
+        fare: fareWithNotes,
+        refNumber: card.refNumber,
+        fareRuleData
+      })
 
-      // Get transformed fare with notes
-      const availableFares = fareRuleForPurchase.dynamicFareOptions.value.length > 0
-        ? fareRuleForPurchase.dynamicFareOptions.value
-        : []
-
-      if (availableFares.length > 0) {
-        fareWithNotes = availableFares[0]
+      isMobileBookingLoading.value = false
+      isStepTwoMobileSummaryOpen.value = true
+    } else {
+      // 桌機版：維持原本流程，先取得 fare-rule 再導頁
+      let fareRuleData = null
+      let fareWithNotes: any = {
+        id: 'default-fare',
+        cabin: card.sectors?.[0]?.cabinDesc || '經濟艙',
+        price: (card.price || 0) - (card.taxAmount || 0),
+        taxAmount: card.taxAmount || 0,
+        notes: []
       }
-    }
 
-    const purchasePayload = {
-      fare: fareWithNotes,
-      refNumber: card.refNumber,
-      fareRuleData: fareRuleData
+      if (card.sectors && card.sectors.length > 0) {
+        if (!fareRuleForPurchase.fareRuleData.value && !fareRuleForPurchase.fareRuleLoading.value) {
+          await fareRuleForPurchase.fetchFareRule()
+        }
+
+        fareRuleData = fareRuleForPurchase.fareRuleData.value
+
+        const availableFares = fareRuleForPurchase.dynamicFareOptions.value.length > 0
+          ? fareRuleForPurchase.dynamicFareOptions.value
+          : []
+
+        if (availableFares.length > 0) {
+          fareWithNotes = availableFares[0]
+        }
+      }
+
+      const purchasePayload = {
+        fare: fareWithNotes,
+        refNumber: card.refNumber,
+        fareRuleData
+      }
+
+      onPurchase(purchasePayload)
     }
-    onPurchase(purchasePayload)
   } else {
     // Not last step, proceed to next segment
     handleSelect({

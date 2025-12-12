@@ -3,7 +3,9 @@
         :class="[
             'shadow-2xl flex flex-col bg-white',
             props.compact
-                ? 'w-full h-[70vh] md:w-[560px] md:max-w-[90vw] md:h-auto md:rounded-2xl'
+                ? (props.mobileConfirm === false
+                    ? 'w-full h-fit md:w-[560px] md:max-w-[90vw] md:h-auto md:rounded-2xl'
+                    : 'w-full h-[70vh] md:w-[560px] md:max-w-[90vw] md:h-auto md:rounded-2xl')
                 : 'w-full h-full md:w-[730px] md:max-w-[95vw] md:h-auto md:rounded-2xl'
         ]"
     >
@@ -25,7 +27,7 @@
             </button>
         </div>
 
-        <!-- Mobile: Sticky header with DOW + first month label -->
+        <!-- Mobile: Sticky header with DOW + month controls/label -->
         <div class="md:hidden sticky top-[52px] z-10 bg-others-gray9 px-4 pt-4 pb-4">
             <!-- DOW row -->
             <div class="grid grid-cols-7 text-center text-[16px] leading-none">
@@ -38,8 +40,51 @@
                     {{ d }}
                 </div>
             </div>
-            <!-- First month label -->
-            <div v-if="allMonths.length > 0" class="text-center text-[18px] leading-8 font-semibold text-gray-500 mt-2">
+
+            <!-- Single-month (birthday) mode: Year dropdown + month prev/next -->
+            <div v-if="props.singleMonth" class="mt-3 flex items-center justify-between gap-3">
+                <select
+                    :value="currentMonth.getFullYear()"
+                    @change="onYearChange($event)"
+                    class="h-9 px-3 border border-primary-gold rounded-md text-others-gray7 bg-white focus:ring-2 focus:ring-others-original focus:outline-none cursor-pointer"
+                    aria-label="選擇年份"
+                >
+                    <option v-for="year in yearOptions" :key="year" :value="year">
+                        {{ year }}年
+                    </option>
+                </select>
+
+                <div class="flex items-center gap-2">
+                    <button
+                        type="button"
+                        class="w-9 h-9 flex items-center justify-center rounded-xl bg-others-gray2 text-primary-gold transition"
+                        :class="canShiftPrev ? 'hover:bg-others-gray4' : 'opacity-40 cursor-not-allowed hover:bg-others-gray2'"
+                        :disabled="!canShiftPrev"
+                        @click="shift(-1)"
+                        aria-label="上個月"
+                    >
+                        <img src="@/assets/imgs/arrow-right.svg" alt="" class="transform rotate-180" />
+                    </button>
+
+                    <div class="min-w-0 text-center text-[18px] leading-8 font-semibold text-gray-500">
+                        {{ monthLabel(leftMonth) }}
+                    </div>
+
+                    <button
+                        type="button"
+                        class="w-9 h-9 flex items-center justify-center rounded-xl bg-others-gray2 text-primary-gold transition"
+                        :class="canShiftNext ? 'hover:bg-others-gray4' : 'opacity-40 cursor-not-allowed hover:bg-others-gray2'"
+                        :disabled="!canShiftNext"
+                        @click="shift(1)"
+                        aria-label="下個月"
+                    >
+                        <img src="@/assets/imgs/arrow-right.svg" alt="" />
+                    </button>
+                </div>
+            </div>
+
+            <!-- Default (multi-month) mode: First month label -->
+            <div v-else-if="allMonths.length > 0" class="text-center text-[18px] leading-8 font-semibold text-gray-500 mt-2">
                 {{ monthLabel(allMonths[0]) }}
             </div>
         </div>
@@ -170,8 +215,9 @@
             </div>
         </div>
 
-        <!-- Footer: Mobile only -->
+        <!-- Footer: Mobile only (optional) -->
         <div
+            v-if="props.mobileConfirm !== false"
             class="md:hidden bg-white px-6 py-5 sticky bottom-0 z-10"
             style="box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);"
         >
@@ -216,6 +262,8 @@ const props = defineProps<{
     singleMonth?: boolean
     // When true, use a smaller dialog size (e.g., for birthday picker)
     compact?: boolean
+    // When false, mobile selection will apply immediately and the footer confirm will be hidden
+    mobileConfirm?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -229,13 +277,32 @@ const emit = defineEmits<{
    ============================================ */
 const localSelected = ref<Date | null>(props.modelValue ?? null)
 
-watch(() => props.modelValue, v => (localSelected.value = v ?? null))
-
 const min = computed(() => props.min ?? null)
 const max = computed(() => props.max ?? null)
 
 const today = new Date()
-const currentMonth = ref(new Date(today.getFullYear(), today.getMonth(), 1))
+
+function monthStart(d: Date) {
+    return new Date(d.getFullYear(), d.getMonth(), 1)
+}
+
+function clampMonth(d: Date) {
+    const target = monthStart(d)
+    const minM = min.value ? monthStart(min.value) : null
+    const maxM = max.value ? monthStart(max.value) : null
+
+    if (minM && target < minM) return minM
+    if (maxM && target > maxM) return maxM
+    return target
+}
+
+// Default to selected month when provided, otherwise today (clamped to min/max if present)
+const currentMonth = ref<Date>(clampMonth(props.modelValue ?? today))
+
+watch(() => props.modelValue, v => {
+    localSelected.value = v ?? null
+    currentMonth.value = clampMonth(v ?? today)
+})
 
 const leftMonth = computed(() => currentMonth.value)
 const rightMonth = computed(() => 
@@ -257,6 +324,20 @@ const yearOptions = computed(() => {
         years.push(year)
     }
     return years
+})
+
+const canShiftPrev = computed(() => {
+    const minM = min.value ? monthStart(min.value) : null
+    if (!minM) return true
+    const prev = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() - 1, 1)
+    return monthStart(prev) >= minM
+})
+
+const canShiftNext = computed(() => {
+    const maxM = max.value ? monthStart(max.value) : null
+    if (!maxM) return true
+    const next = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() + 1, 1)
+    return monthStart(next) <= maxM
 })
 
 const allMonths = computed(() => {
@@ -315,17 +396,17 @@ const allMonths = computed(() => {
    Methods
    ============================================ */
 function shift(delta: number) {
-    currentMonth.value = new Date(
+    currentMonth.value = clampMonth(new Date(
         currentMonth.value.getFullYear(),
         currentMonth.value.getMonth() + delta,
         1
-    )
+    ))
 }
 
 function onYearChange(event: Event) {
     const target = event.target as HTMLSelectElement
     const year = parseInt(target.value, 10)
-    currentMonth.value = new Date(year, currentMonth.value.getMonth(), 1)
+    currentMonth.value = clampMonth(new Date(year, currentMonth.value.getMonth(), 1))
 }
 
 function monthLabel(d: Date) {
@@ -365,6 +446,9 @@ function onPickMobile(d: Date) {
     if (isDisabled(d)) return
     localSelected.value = d
     emit('update:modelValue', d)
+    if (props.mobileConfirm === false) {
+        emit('apply', d)
+    }
 }
 
 function onConfirm() {

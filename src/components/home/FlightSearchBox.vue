@@ -2,7 +2,7 @@
   <div :class="sharedValue?.isSearch ? 'md:mt-60' : 'mt-80 md:mt-60'">
     <div
       class="relative flex items-center justify-center px-4 md:px-0"
-      :class="[{ 'hidden md:flex': sharedValue?.isSearch && flightSearchStore.loading === 'success' }]"
+      :class="[{ 'hidden md:flex': sharedValue?.isSearch && flightSearchStore.loading !== 'default' }]"
     >
       <SearchPanel
         :active-tab="activeTab as any"
@@ -172,8 +172,15 @@ function restoreSearchFromUrl() {
       updateValue?.({ isSearch: true })
     }
   } else {
-    // No URL params, clear restored params
+    // No URL params, reset all local state to initial values
+    activeTab.value = 'roundtrip'
+    currentSearchRequest.value = null
+    currentSegmentIndex.value = 0
+    selectedSegments.value = []
     restoredParams.value = null
+    isSearchEditModalOpen.value = false
+    // Explicitly reset isSearch to false
+    updateValue?.({ isSearch: false })
   }
 }
 

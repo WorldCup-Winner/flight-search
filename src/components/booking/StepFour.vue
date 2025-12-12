@@ -1,45 +1,75 @@
 <template>
-    <div class="max-w-6xl w-full">
-        <div class="bg-white my-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-8 w-full">
-            <h2 class="text-others-gray1 text-[26px]">訂單查詢</h2>
+    <div class="max-w-6xl w-full mx-auto bg-divider-bg md:bg-transparent px-4 md:px-0 py-4 md:py-0">
+        <!-- Mobile-only page title (desktop keeps existing title in card) -->
+        <h2 class="md:hidden text-others-gray1 text-[18px] font-semibold mb-4">完成訂單</h2>
+
+        <div class="bg-white my-0 md:my-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-4 md:px-10 py-4 md:py-8 w-full">
+            <h2 class="text-others-gray1 text-base md:text-[26px]">訂單查詢</h2>
             <div class="bg-white mt-6 rounded-[10px] border-[2px] px-8 py-4 w-full">
-                <h2 class="font-semibold text-primary-gold">訂單狀況</h2>
-                <div class="space-x-4 mt-4">
-                    <!-- 付款完成 -->
-                    <span v-if="orderData?.FPA50 === '10'" class="text-green-600 text-[22px] font-bold">付款完成</span>
-                    <!-- 訂單成立/待付款 -->
-                    <span v-else-if="orderData?.FPA50 === '5'" class="text-text-error text-[22px] font-bold">{{ orderData?.FPA50S || '訂單成立' }}</span>
-                    <!-- 處理中（顯示付款類型相關訊息） -->
-                    <span v-else-if="paymentType === 'A1' || paymentType === 'A5'" class="text-others-original text-[22px] font-bold">
-                        <span class="inline-flex items-center">
-                            <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            等待付款中
+                <h2 class="font-semibold text-base md:text-[22px] text-primary-gold">訂單狀況</h2>
+                <!-- Status row (mobile: stacked, desktop: inline) -->
+                <div class="mt-4 flex flex-col md:flex-row md:items-start md:gap-4">
+                    <!-- Status text -->
+                    <div class="flex items-center gap-3">
+                        <!-- Waiting payment (A1/A5) -->
+                        <span
+                          v-if="paymentType === 'A1' || paymentType === 'A5'"
+                          class="text-others-original text-sm md:text-[22px] font-bold"
+                        >
+                            <span class="inline-flex items-center">
+                                <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                待付款
+                            </span>
                         </span>
-                    </span>
-                    <!-- 其他狀態 -->
-                    <span v-else class="text-others-gray1 text-[22px] font-bold">{{ orderData?.FPA50S || '處理中' }}</span>
-                    
-                    <!-- 付款完成說明 -->
-                    <span v-if="orderData?.FPA50 === '10'" class="text-others-gray7">感謝您的訂購，客服人員將為您開票，並於開票完成後寄送電子機票email給您。</span>
-                    <!-- 待付款說明 (B1) -->
-                    <span v-else-if="orderData?.FPA50 === '5' && paymentType === 'B1'" class="text-others-gray7">為保留機位及票價，請於付款期限內完成付款，逾期訂單將自動取消並釋出機位。</span>
-                    <!-- 等待付款中說明 (A1/A5) -->
-                    <span v-else-if="paymentType === 'A1' || paymentType === 'A5'" class="text-others-gray7">
-                        正在確認付款狀態，系統每 30 秒自動更新一次。如已完成付款，請稍候片刻，訂單狀態將自動更新。
-                    </span>
-                    <!-- A4 付款完成說明 -->
-                    <span v-else-if="paymentType === 'A4'" class="text-others-gray7">付款已處理，正在確認訂單狀態...</span>
+
+                        <!-- Other statuses (color driven by FPA50 code, not text) -->
+                        <span
+                          v-else
+                          :class="['text-sm md:text-[22px] font-bold', orderStatusClass]"
+                        >
+                          {{ orderStatusText }}
+                        </span>
+                    </div>
+
+                    <!-- Description (mobile goes to next line) -->
+                    <div class="mt-2 md:mt-0 text-others-gray7 text-xs md:text-base leading-relaxed md:flex-1">
+                        <template v-if="orderData?.FPA50 === '10'">
+                            感謝您的訂購，客服人員將為您開票，並於開票完成後寄送電子機票email給您。
+                        </template>
+                        <template v-else-if="orderData?.FPA50 === '5' && paymentType === 'B1'">
+                            為保留機位及票價，請於付款期限內完成付款，逾期訂單將自動取消並釋出機位。
+                        </template>
+                        <template v-else-if="paymentType === 'A1' || paymentType === 'A5'">
+                            正在確認付款狀態，系統每 30 秒自動更新一次。如已完成付款，請稍候片刻，訂單狀態將自動更新。
+                        </template>
+                        <template v-else-if="paymentType === 'A4'">
+                            付款已處理，正在確認訂單狀態...
+                        </template>
+                    </div>
                 </div>
-                <div class="space-x-4 mt-2">
-                    <span class="text-others-gray7">應付金額</span>
-                    <span class="text-others-gray7 text-[18px] font-bold">{{ formatPrice(total) }}</span>
-                </div>
-                <div class="space-x-4 mt-2">
-                    <span class="text-others-gray7">訂單編號</span>
-                    <span class="text-others-gray7 text-[18px] font-bold">{{ orderData?.FPA01 || 'ORD0026597365' }}</span>
+                <div class="mt-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="space-y-2">
+                        <div class="space-x-4">
+                            <span class="text-others-gray7">應付金額</span>
+                            <span class="text-others-gray7 text-base md:text-[18px] font-bold tabular-nums">{{ formatPrice(total) }}</span>
+                        </div>
+                        <div class="space-x-4">
+                            <span class="text-others-gray7">訂單編號</span>
+                            <span class="text-others-gray7 text-base md:text-[18px] font-bold tabular-nums">{{ orderData?.FPA01 || 'ORD0026597365' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- CTA: show on both mobile & desktop (layout differs via width) -->
+                    <button
+                        v-if="orderData?.FPA50 === '5' && paymentType !== 'B1'"
+                        class="w-full md:w-[260px] rounded-[10px] bg-others-original py-3 font-semibold text-white hover:bg-others-hover"
+                        type="button"
+                    >
+                        立即付款
+                    </button>
                 </div>
                 <!-- 虛擬匯款資訊顯示區域 - 只有 B1 才顯示 -->
                 <div v-if="paymentType === 'B1' && paymentInfo && paymentInfo.length > 0" class="mt-6 pt-6 border-t-2">
@@ -77,11 +107,52 @@
                 </div>
             </div>
         </div>
-        <div class="bg-white mt-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-8 w-full">
+
+        <!-- 航班資料: mobile card + desktop table -->
+        <div class="bg-white mt-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-4 md:px-10 py-4 md:py-8 w-full">
             <!-- Header -->
             <h2 class="font-semibold text-primary-gold mb-4">航班資料</h2>
-            <!-- Flight table -->
-            <section class="border-none rounded-xl text-center overflow-hidden">
+
+            <!-- Mobile: card layout -->
+            <div class="md:hidden border border-others-gray8 rounded-[10px] overflow-hidden bg-white">
+                <div
+                    v-for="(f, i) in flights"
+                    :key="i"
+                    class="px-4 py-4"
+                    :class="{ 'border-b border-others-gray8': i < flights.length - 1 }"
+                >
+                    <div class="flex items-start justify-between gap-3 text-[12px]">
+                        <div class="flex-1 min-w-0">
+                            <div class="font-semibold text-others-gray1">{{ f.departTime }}</div>
+                            <div class="text-others-gray1">{{ f.departAirport }}</div>
+                        </div>
+                        <div class="pt-1 text-others-gray5">
+                            <img src="@/assets/imgs/arrow-right.svg" class="w-4 h-4" alt="to" />
+                        </div>
+                        <div class="flex-1 min-w-0 text-right">
+                            <div class="font-semibold text-others-gray1">{{ f.arriveTime }}</div>
+                            <div class="text-others-gray1">{{ f.arriveAirport }}</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 text-others-gray1 text-[12px] space-y-1">
+                        <div>
+                            航空公司：
+                            <span class="font-semibold">{{ f.flight }} {{ f.cabin }}</span>
+                        </div>
+                        <div>
+                            狀態：<span class="font-semibold">{{ f.status }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-others-gray8 px-4 py-3 text-xs text-others-original leading-relaxed">
+                    以上班機起飛和抵達時間皆為當地時間，以24小時制呈現，例如：03:00為凌晨3點
+                </div>
+            </div>
+
+            <!-- Desktop: Flight table -->
+            <section class="hidden md:block border-none rounded-xl text-center overflow-hidden">
                 <table class="w-full text-sm">
                     <thead class="bg-primary-gold text-white">
                     <tr>
@@ -116,11 +187,64 @@
                 </div>
             </section>
         </div>
-        <div class="bg-white mt-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-8 w-full">
+
+        <!-- 旅客資料: mobile cards + desktop table -->
+        <div class="bg-white mt-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-4 md:px-10 py-4 md:py-8 w-full">
             <!-- Header -->
             <h2 class="font-semibold text-primary-gold mb-4">旅客資料</h2>
-            <!-- Items table -->
-            <section class="mt-6 border-none rounded-xl text-center overflow-hidden">
+
+            <!-- Mobile: cards -->
+            <div class="md:hidden space-y-4">
+                <div
+                    v-for="(it, i) in items"
+                    :key="i"
+                    class="bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] border border-others-gray8 overflow-hidden"
+                >
+                    <div class="bg-primary-gold text-white px-4 py-3 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="flex items-center justify-center w-5 h-5 bg-white/20 rounded-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="font-semibold text-[13px] truncate">{{ it.name }}</div>
+                        </div>
+                        <div class="text-[12px] whitespace-nowrap">
+                            出發：{{ flights?.[0]?.departTime?.split(' ')?.[0] || '' }}
+                        </div>
+                    </div>
+
+                    <div class="px-4 py-4 text-[12px] text-others-gray1 space-y-3">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="space-y-1">
+                                <div>{{ it.productName }}</div>
+                            </div>
+                            <div class="space-y-1">
+                                <div>未付： <span class="font-semibold tabular-nums text-others-original">{{ formatPrice(Math.max(it.fare - it.paid, 0)) }}</span></div>
+                                <div>已付： <span class="font-semibold tabular-nums">{{ formatPrice(it.paid) }}</span></div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-others-original font-semibold">
+                                付款期限：{{ it.deadline }}
+                            </div>
+                            <div class="text-others-original font-semibold whitespace-nowrap">
+                                未付： <span class="font-bold tabular-nums">{{ formatPrice(Math.max(it.fare - it.paid, 0)) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-baseline justify-end gap-2">
+                    <span class="text-primary-gold font-semibold text-[12px]">應付總額</span>
+                    <span class="text-others-original font-bold text-[12px]">TWD</span>
+                    <span class="text-others-original font-bold text-[22px] tabular-nums">{{ formatPrice(total) }}</span>
+                </div>
+            </div>
+
+            <!-- Desktop: Items table -->
+            <section class="hidden md:block mt-6 border-none rounded-xl text-center overflow-hidden">
                 <table class="w-full text-sm">
                     <thead class="bg-primary-gold text-white">
                         <tr>
@@ -203,87 +327,89 @@
                 </div>
             </section>
         </div>
-        <div class="bg-white mt-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-8 w-full">
+
+        <!-- Remaining sections keep desktop markup but become responsive via padding -->
+        <div class="bg-white text-xs md:text-base mt-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-4 md:px-10 py-4 md:py-8 w-full">
             <!-- Header -->
-            <h2 class="font-semibold text-primary-gold mb-4">主要聯絡人</h2>
+            <h2 class="font-semibold text-primary-gold text-base mb-4">主要聯絡人</h2>
             <div class="grid grid-cols-12 w-full items-center bg-primary-gold text-white rounded-t-[10px]">
-                <div class="px-4 py-3 font-medium col-span-4 text-center">
+                <div class="px-4 py-3 font-medium col-span-4 text-center min-w-0">
                     <p>聯絡人姓名</p>
                 </div>
-                <div class="px-4 py-3 font-medium col-span-4 text-center">
+                <div class="px-4 py-3 font-medium col-span-4 text-center min-w-0">
                     <p>聯絡手機</p>
                 </div>
-                <div class="px-4 py-3 font-medium col-span-4 text-center">
+                <div class="px-4 py-3 font-medium col-span-4 text-center min-w-0">
                     <p>聯絡email</p>
                 </div>
             </div>
             <div v-for="(contact, i) in contacts" :key="i">
                 <div class="grid grid-cols-12 w-full items-center text-others-gray1 border-2 border-t-0" :class="[i <= contacts.length - 1 ? 'rounded-b-[10px]' : '']">
-                    <div class="px-4 py-3 col-span-4 text-center">
-                        <p>{{ contact.name }}</p>
+                    <div class="px-4 py-3 col-span-4 text-center min-w-0">
+                        <p class="break-words">{{ contact.name }}</p>
                     </div>
-                    <div class="px-4 py-3 col-span-4 text-center">
-                        <p>{{ contact.number }}</p>
+                    <div class="px-4 py-3 col-span-4 text-center min-w-0">
+                        <p class="break-words">{{ contact.number }}</p>
                     </div>
-                    <div class="px-4 py-3 col-span-4 text-center">
-                        <p>{{ contact.mail }}</p>
+                    <div class="px-4 py-3 col-span-4 text-center min-w-0">
+                        <p class="break-all">{{ contact.mail }}</p>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="bg-white mt-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-8 w-full">
+        <div class="bg-white text-xs md:text-base mt-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-4 md:px-10 py-4 md:py-8 w-full">
             <!-- Header -->
-            <h2 class="font-semibold text-primary-gold mb-4">代收轉付收據</h2>
+            <h2 class="font-semibold text-primary-gold text-base mb-4">代收轉付收據</h2>
             <div class="grid grid-cols-12 w-full items-center bg-primary-gold text-white rounded-t-[10px]">
-                <div class="px-4 py-3 font-medium col-span-3 text-center">
+                <div class="px-4 py-3 font-medium col-span-3 text-center min-w-0">
                     <p>是否開立抬頭或統編</p>
                 </div>
-                <div class="px-4 py-3 font-medium col-span-3 text-center">
+                <div class="px-4 py-3 font-medium col-span-3 text-center min-w-0">
                     <p>公司名稱</p>
                 </div>
-                <div class="px-4 py-3 font-medium col-span-3 text-center">
+                <div class="px-4 py-3 font-medium col-span-3 text-center min-w-0">
                     <p>統一編號</p>
                 </div>
-                <div class="px-4 py-3 font-medium col-span-3 text-center">
+                <div class="px-4 py-3 font-medium col-span-3 text-center min-w-0">
                     <p>收據內容摘要</p>
                 </div>
             </div>
             <div v-for="(receipt, i) in receipts" :key="i">
                 <div class="grid grid-cols-12 w-full items-center text-others-gray1 border-2 border-t-0" :class="[i <= contacts.length - 1 ? 'rounded-b-[10px]' : '']">
-                    <div class="px-4 py-3 col-span-3 text-center">
-                        <p>{{ receipt.type }}</p>
+                    <div class="px-4 py-3 col-span-3 text-center min-w-0">
+                        <p class="break-words">{{ receipt.type }}</p>
                     </div>
-                    <div class="px-4 py-3 col-span-3 text-center">
-                        <p>{{ receipt.name }}</p>
+                    <div class="px-4 py-3 col-span-3 text-center min-w-0">
+                        <p class="break-words">{{ receipt.name }}</p>
                     </div>
-                    <div class="px-4 py-3 col-span-3 text-center">
-                        <p>{{ receipt.number }}</p>
+                    <div class="px-4 py-3 col-span-3 text-center min-w-0">
+                        <p class="break-all">{{ receipt.number }}</p>
                     </div>
-                    <div class="px-4 py-3 col-span-3 text-center">
-                        <p>{{ receipt.summary }}</p>
+                    <div class="px-4 py-3 col-span-3 text-center min-w-0">
+                        <p class="break-words">{{ receipt.summary }}</p>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="bg-white my-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-8 w-full">
+        <div class="bg-white text-xs md:text-base my-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-4 md:px-10 py-4 md:py-8 w-full">
             <!-- Header -->
-            <h2 class="font-semibold text-primary-gold mb-4">特殊協力事項</h2>
+            <h2 class="font-semibold text-primary-gold text-base mb-4">特殊協力事項</h2>
             
             <div class="grid grid-cols-12 w-full items-center bg-primary-gold text-white rounded-t-[10px]">
-                <div class="px-4 py-3 col-span-3 text-center">
+                <div class="px-4 py-3 col-span-3 text-center min-w-0">
                     <p>是否有特殊需求</p>
                 </div>
-                <div class="px-4 py-3 col-span-9 text-center">
+                <div class="px-4 py-3 col-span-9 text-center min-w-0">
                     <p>需求內容</p>
                 </div>
             </div>
             <div v-for="(cooper, i) in specialCooperations" :key="i">
                 <div class="grid grid-cols-12 w-full items-center text-others-gray1 border-2 border-t-0" :class="[i <= contacts.length - 1 ? 'rounded-b-[10px]' : '']">
-                    <div class="px-4 py-3 col-span-3 text-center">
-                        <p>{{ cooper.type }}</p>
+                    <div class="px-4 py-3 col-span-3 text-center min-w-0">
+                        <p class="break-words">{{ cooper.type }}</p>
                     </div>
-                    <div class="px-4 py-3 col-span-9 text-center">
-                        <p>{{ cooper.detail }}</p>
+                    <div class="px-4 py-3 col-span-9 text-center min-w-0">
+                        <p class="break-words">{{ cooper.detail }}</p>
                     </div>
                 </div>
             </div>
@@ -338,6 +464,23 @@ const paymentInfo = ref<any[]>([])
 
 // 付款類型：B1=虛擬匯款, A1=信用卡, A4=IFRAME, A5=外部導向
 const paymentType = ref<string>('')
+
+// Status styling should be stable even if backend text changes.
+// Use FPA50 code to decide color, use FPA50S for display (fallbacks for safety).
+const orderStatusText = computed(() => {
+  const code = orderData.value?.FPA50
+  if (code === '10') return '付款完成'
+  if (code === '5') return orderData.value?.FPA50S || '待付款'
+  return orderData.value?.FPA50S || '處理中'
+})
+
+const orderStatusClass = computed(() => {
+  const code = orderData.value?.FPA50
+  // Note: must return a CSS class name (Tailwind), not a raw hex string.
+  if (code === '10') return 'text-[#E32636]'
+  if (code === '5') return 'text-[#45B035]'
+  return 'text-[#E32636]'
+})
 
 // 格式化日期時間
 const formatDateTime = (dateStr: string) => {

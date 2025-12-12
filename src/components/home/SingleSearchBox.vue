@@ -167,7 +167,6 @@
                             :airlines="airlineStore.airlines"
                             :selected-airline="selectedAirline"
                             @select="selectAirline"
-                            @clear="clearAirline"
                             @close="isAirlineOpen = false"
                         />
                     </div>
@@ -345,8 +344,21 @@ watch(
 
 // Watch for initialParams changes (e.g., when navigating back)
 watch(() => props.initialParams, (newParams) => {
-  // Only restore if locations are available
-  if (newParams && locationStore.locations.length > 0) {
+  if (newParams === null || newParams === undefined) {
+    // Reset form to initial values when params are cleared
+    selectedDepartureLocation.value = locationStore.locations?.[0] || null
+    selectedDepartureCity.value = locationStore.locations?.[0]?.["airports"]?.[0] || null
+    selectedArrivalLocation.value = (locationStore.locations && locationStore.locations.find(loc => loc.region === '日韓')) || locationStore.locations?.[0] || null
+    selectedArrivalCity.value = null
+    departureDate.value = null
+    adultCount.value = 1
+    childrenCount.value = 0
+    infantCount.value = 0
+    selectedAirline.value = null
+    selectedCabinClass.value = '艙等不限'
+    isNonStopFlight.value = false
+  } else if (newParams && locationStore.locations.length > 0) {
+    // Only restore if locations are available
     console.log('SingleSearchBox: initialParams changed, restoring...', newParams)
     restoreFromParams(newParams)
   }
@@ -471,11 +483,6 @@ function toggleAirline() {
 }
 function selectAirline(airline: any) {
   selectedAirline.value = airline
-  isAirlineOpen.value = false
-  airlineSearchTerm.value = ''
-}
-function clearAirline() {
-  selectedAirline.value = null
   isAirlineOpen.value = false
   airlineSearchTerm.value = ''
 }

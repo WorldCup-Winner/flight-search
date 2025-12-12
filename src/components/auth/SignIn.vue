@@ -1,6 +1,7 @@
 <template>
-    <div class="flex flex-col items-center justify-center bg-white">
-        <div class="bg-white rounded-t-2xl border-b-0 px-[40px] py-[30px] w-[500px] border-2 border-primary-gold">
+    <div class="flex flex-col items-center justify-center bg-white w-full">
+        <div class="w-full max-w-[500px] px-4 md:px-0">
+        <div class="bg-white rounded-t-2xl border-b-0 px-6 md:px-[40px] py-6 md:py-[30px] w-full border-2 border-primary-gold">
             <!-- Tabs -->
             <div class="flex gap-4">
                 <button @click="activeTab = 'login-member'" class="flex-1 py-2 rounded-md"
@@ -13,7 +14,7 @@
                 </button>
             </div>
         </div>
-        <div class="bg-white rounded-b-2xl px-[40px] py-[30px] w-[500px] border-2 border-primary-gold">
+        <div class="bg-white rounded-b-2xl px-6 md:px-[40px] py-6 md:py-[30px] w-full border-2 border-primary-gold max-h-[80vh] md:max-h-none overflow-y-auto md:overflow-visible">
             <div v-if="activeTab === 'login-member'">
                 <form @submit.prevent="handleLogin" class="flex flex-col items-center">
                     <!-- 身分證號 -->
@@ -58,7 +59,7 @@
                     </div>
                     <!-- Submit -->
                     <button type="submit"
-                        class="w-[150px] mx-auto bg-others-original text-white py-2 rounded-md hover:bg-others-hover transition">
+                        class="w-full max-w-[360px] md:w-[150px] md:max-w-none mx-auto bg-others-original text-white py-2 rounded-md hover:bg-others-hover transition">
                         登入
                     </button>
                     <!-- Footer text -->
@@ -74,44 +75,50 @@
                 <form @submit.prevent="handleLogin" class="flex flex-col items-center">
                     <!-- 身分證號 -->
                     <div class="mb-4 w-full">
-                        <p class="block mb-1 text-others-original text-sm">訪客購買需先驗證手機，或切換至會員登入頁籤進行登入</p>
-                        <p class="block mb-3 text-others-original text-sm">非本國籍請輸入護照英文拼音</p>
-                        <label class="block mb-1 text-others-gray1 text-sm">您的姓名</label>
-                        <div class="relative flex flex-row justify-between">
+                        <p class="block mb-1 text-others-original text-xs leading-none md:leading-relaxed">
+                          訪客購買需先驗證手機，或切換至會員登入頁籤進行登入
+                        </p>
+                        <p class="block mb-3 text-others-original text-xs leading-none md:leading-relaxed">非本國籍請輸入護照英文拼音</p>
+                        <label class="block mb-2 text-others-gray1 text-sm">您的姓名</label>
+                        <!-- Mobile: two inputs in one row (first smaller), Desktop: keep original 190px widths -->
+                        <div class="relative flex flex-row gap-2 md:gap-3 md:justify-between min-w-0">
                             <input v-model="form1.lastname" type="text" placeholder="姓氏"
-                                class="w-[190px] px-5 py-2 border rounded-md border-primary-gold text-others-gray1 focus:ring-2 focus:ring-others-original focus:outline-none" />
+                                class="w-[90px] md:w-[190px] md:flex-none px-4 md:px-5 py-2 border rounded-md border-primary-gold text-others-gray1 focus:ring-2 focus:ring-others-original focus:outline-none min-w-0" />
                             <input v-model="form1.firstname" type="text" placeholder="名字"
-                                class="w-[190px] px-5 py-2 border rounded-md border-primary-gold text-others-gray1 focus:ring-2 focus:ring-others-original focus:outline-none" />
+                                class="w-0 flex-1 md:w-[190px] md:flex-none px-4 md:px-5 py-2 border rounded-md border-primary-gold text-others-gray1 focus:ring-2 focus:ring-others-original focus:outline-none min-w-0" />
                         </div>
                     </div>
                     <div class="mb-4 w-full">
                         <label class="block mb-1 text-others-gray1 text-sm">手機號碼</label>
-                        <div class="relative flex items-center justify-between gap-4">
-                            <PhoneField v-model="form1.phone" v-model:countryCode="form1.code" :showEye="true" />
+                        <!-- Mobile: phone input then full-width button below (matches screenshot) -->
+                        <div class="relative flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+                            <div class="w-full md:flex-1 md:min-w-0">
+                              <PhoneField v-model="form1.phone" v-model:countryCode="form1.code" :showEye="true" />
+                            </div>
                             <button
                                 v-if="!isCodeSent || codeLeftTime == 0"
-                                class="flex-none inline-flex items-center justify-center w-fit whitespace-nowrap
+                                class="inline-flex items-center justify-center w-full md:w-fit whitespace-nowrap
                                     bg-others-original text-white px-5 py-2 rounded-[10px] hover:bg-others-hover transition"
                                 @click="handleCodeSMS">
                                 發送驗證簡訊
                             </button>
                             <button
                                 v-else
-                                class="flex-none inline-flex items-center justify-center w-fit whitespace-nowrap bg-primary-gold text-white px-5 py-2 rounded-[10px] hover:bg-primary-gold1 transition">
-                                等待{{codeLeftTime}}秒
+                                class="inline-flex items-center justify-center w-full md:w-fit whitespace-nowrap bg-primary-gold text-white px-5 py-2 rounded-[10px] hover:bg-primary-gold1 transition">
+                                等待 {{ codeLeftTime }} 秒
                             </button>
                         </div>
                     </div>
                     <div v-if="isCodeSent" class="mb-4 w-full">
                         <label class="block mb-1 text-others-gray1 text-sm">驗證碼</label>
-                        <div class="relative flex items-center justify-between gap-4">
+                        <div class="relative w-full">
                             <CodeField v-model="verificationCode" />
                         </div>
                     </div>
                     
-                    <div class="flex w-full gap-2 items-start text-sm text-slate-600 select-none">                        
+                    <div class="flex w-full gap-2 items-start text-[12px] text-slate-600 select-none">                        
                         <label class="flex mt-[3px]  items-center cursor-pointer relative">
-                            <input type="checkbox" checked
+                            <input type="checkbox"
                                 class="peer w-4 h-4 cursor-pointer transition-all appearance-none rounded-none hover:shadow-md border-[1px] border-primary-gold checked:bg-primary-gold"
                                 id="check" v-model="agreed" />
                             <span
@@ -125,23 +132,20 @@
                             </span>
                         </label>
                         <!-- Footer text -->
-                        <div class="flex flex-row w-full mb-4">
-                            <span class="text-h6 text-others-gray1 md:text-h6-d">
-                                我已閱讀
-                            </span>
-                            <span class="text-h6 text-others-original cursor-pointer md:text-h6-d" @click="goPrivacy">「隱私權政策」</span>
-                            <span class="text-h6 text-others-gray1 md:text-h6-d">
-                                並同意其內容
-                            </span>
+                        <div class="flex flex-wrap w-full mb-4">
+                            <span class="text-[12px] text-others-gray1 md:text-h6-d">我已閱讀</span>
+                            <span class="text-[12px] text-others-original cursor-pointer md:text-h6-d" @click="goPrivacy">「隱私權政策」</span>
+                            <span class="text-[12px] text-others-gray1 md:text-h6-d">並同意其內容</span>
                         </div>
                     </div>
                     <!-- Submit -->
                     <button type="submit"
-                        class="w-[150px] mx-auto bg-others-original text-white py-2 rounded-md hover:bg-others-hover transition">
+                        class="w-full md:w-[150px] md:max-w-none mx-auto bg-others-original text-white py-3 rounded-[10px] font-semibold hover:bg-others-hover transition">
                         送出
                     </button>
                 </form>
             </div>
+        </div>
         </div>
     </div>
 </template>

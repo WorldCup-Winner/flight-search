@@ -1,38 +1,41 @@
-/**
- * Airline Logo Utility
- * 
- * Generates airline logo URLs based on environment configuration.
- * 
- * Test environment: https://image-test.galilee.com.tw/images/{airlineCode}.png
- * Production environment: https://image.galilee.com.tw/images/{airlineCode}.png
- */
-
 import AirlineDefault from '@/assets/imgs/airlines/airline-default.svg'
 
-/**
- * Get the base URL for airline images from environment variable
- */
-const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || 'https://image-test.galilee.com.tw'
+// Import all airline logos at build time using Vite's glob import
+const airlineLogosModules = import.meta.glob('@/assets/imgs/airlines/*.png', {
+  eager: true,
+  import: 'default',
+})
 
 /**
- * Resolves the airline logo URL for a given airline code
- * @param code - The IATA airline code (e.g., 'BR', 'CI', 'AA')
- * @returns The URL to the airline logo image
+ * Resolve an airline logo URL by airline code.
+ * Falls back to a default logo when not found.
  */
 export function resolveAirlineLogo(code?: string): string {
   if (!code) return AirlineDefault
-  return `${IMAGE_BASE_URL}/images/${code}.png`
+
+  const fullPath = Object.keys(airlineLogosModules).find((path) =>
+    path.includes(`/${code}.png`),
+  )
+
+  if (fullPath && airlineLogosModules[fullPath]) {
+    return airlineLogosModules[fullPath] as string
+  }
+
+  return AirlineDefault
 }
 
 /**
- * Default airline logo for fallback
+ * Shared <img> error handler for airline logos.
+ * Replaces the broken image source with the default airline logo.
  */
+export function onAirlineImageError(event: Event) {
+  const target = event.target as HTMLImageElement | null
+  if (target) {
+    target.src = AirlineDefault
+  }
+}
+
+// Re-export default logo so components can reference it directly if needed.
 export { AirlineDefault }
 
-/**
- * Handler for image load errors - falls back to default airline logo
- */
-export function onAirlineImageError(event: Event): void {
-  const target = event.target as HTMLImageElement
-  target.src = AirlineDefault
-}
+

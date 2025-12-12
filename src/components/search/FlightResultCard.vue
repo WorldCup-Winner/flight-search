@@ -368,7 +368,7 @@
                 <div class="flex items-end font-bold">
                   <div class="text-[12px] text-others-original">{{ currencyDisplay }}</div>
                   <div class="text-[28px] text-others-original leading-none">
-                    {{ formatPrice(taxMode === 'in' ? fare.price : (fare.price - fare.taxAmount)) }}
+                    {{ formatPrice(taxMode === 'in' ? (fare.price + fare.taxAmount) : fare.price) }}
                   </div>
                 </div>
                 <div class="text-[12px] pt-2 text-others-gray1">
@@ -578,10 +578,7 @@ const fareRule = useFlightFareRule(() => ({
   babyCount: props.babyCount,
   validatingAirlineCode: props.validatingAirlineCode,
   itineraryRBDs: props.itineraryRBDs,
-  fareOptions: props.fareOptions,
-  // 直接使用列表上的價格（props.price 已經是含稅價）
-  flightSearchPrice: props.price,
-  flightSearchTaxAmount: props.taxAmount
+  fareOptions: props.fareOptions
 }))
 
 const modals = useFlightModals()

@@ -1,4 +1,4 @@
-import { computed, toRef } from 'vue'
+import { computed } from 'vue'
 import type { Sector } from '@/utils/types'
 import { resolveAirlineLogo, onAirlineImageError, AirlineDefault } from '@/utils/airlineLogo'
 

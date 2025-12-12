@@ -21,6 +21,11 @@ export const useFlightSearchStore = defineStore('flightSearch', {
                 console.log(err)
             }
             this.loading = 'success'
+        },
+        reset() {
+            this.data = []
+            this.loading = 'default'
+            this.error = null
         }
     }
 })

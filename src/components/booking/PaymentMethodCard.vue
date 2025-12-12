@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white my-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-10 py-8 w-full">
+  <div class="bg-white my-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-4 md:px-10 py-4 md:py-8 w-full">
       <!-- A4 IFRAME 付款顯示區域 -->
       <div v-if="showIframePayment" class="w-full">
           <h2 class="font-semibold text-primary-gold mb-4">線上刷卡付款</h2>
@@ -25,10 +25,22 @@
       
       <!-- 一般付款方式選擇區域 -->
       <div v-else>
-      <h2 class="font-semibold text-primary-gold">付款方式</h2>
-      <div class="grid grid-cols-12 py-6 gap-12">
+      <h2 class="font-semibold text-primary-gold mb-4 md:mb-0">付款方式</h2>
+      <div class="grid grid-cols-12 py-4 md:py-6 gap-4 md:gap-12">
         <!-- 左側：付款方式選擇 (群組一: DET03) -->
-        <div class="col-span-12 md:col-span-3 w-full space-y-4">
+        <!-- Mobile: horizontal layout -->
+        <div class="col-span-12 md:hidden flex flex-row gap-3">
+            <button 
+                v-for="group in paymentGroups" 
+                :key="group.code" 
+                @click="selectedGroup = group.code"
+                class="flex-1 py-4 rounded-md transition-colors"
+                :class="selectedGroup === group.code ? 'text-white bg-primary-gold' : 'bg-primary-gold1 text-others-gray1'">
+                {{ group.name }}
+            </button>
+        </div>
+        <!-- Desktop: vertical layout (original with space-y-4) -->
+        <div class="hidden md:block md:col-span-3 w-full space-y-4">
             <button 
                 v-for="group in paymentGroups" 
                 :key="group.code" 
@@ -48,7 +60,7 @@
                     <!-- 信用卡類型選擇 (DET04) -->
                     <div v-if="selectedGroupOptions.length > 0" class="mt-5">
                         <h3 class="text-sm font-medium text-others-gray1 mb-3">選擇信用卡類型</h3>
-                        <div class="flex gap-3 flex-wrap">
+                        <div class="flex gap-2 md:gap-3 flex-wrap">
                             <label
                                 v-for="option in selectedGroupOptions"
                                 :key="option.DET04"
@@ -75,7 +87,7 @@
                     <!-- 分期期數選擇 (DET06) -->
                     <div v-if="installmentOptions.length > 0" class="mt-5">
                         <h3 class="text-sm font-medium text-others-gray1 mb-3">分期方式</h3>
-                        <div class="flex gap-3 flex-wrap">
+                        <div class="flex gap-2 md:gap-3 flex-wrap">
                             <label
                                 v-for="installment in installmentOptions"
                                 :key="installment.periods"
@@ -111,56 +123,61 @@
                 <!-- 付款注意事項 (DET04D) -->
                 <div v-if="currentOptionNote" class="w-full mt-4 border-others-gray8 border-2 rounded-[10px] p-6">
                     <h2 class="font-bold text-primary-gold">{{ selectedInstallment === 1 ? '付款注意事項' : '分期付款說明' }}</h2>
-                    <div class="mt-4 text-others-gray1 text-sm" v-html="currentOptionNote"></div>
+                    <div class="mt-4 text-others-gray1 text-sm space-y-3 md:space-y-2 [&>*]:mb-3 md:[&>*]:mb-2 [&>*:last-child]:mb-0" v-html="currentOptionNote"></div>
                 </div>
             </div>
 
             <!-- LINE Pay 付款 (DET03 = 'L') -->
             <div v-if="selectedGroup === 'L'">
-                <div class="w-full border-others-gray8 border-2 rounded-[10px] p-6">
-                    <h2 class="font-bold text-primary-gold">LINE Pay 付款方式</h2>
+
+                <!-- LINE Pay 選項 -->
+                <div class="w-full border-others-gray8 border-2 rounded-[10px] p-4 md:p-6">
+                    <h2 class="font-bold text-primary-gold hidden md:block">LINE Pay 付款方式</h2>
 
                     <!-- LINE Pay 選項 (DET04) -->
-                    <div v-if="selectedGroupOptions.length > 0" class="mt-5">
-                        <div class="flex gap-3 flex-wrap">
-                            <label
-                                v-for="option in selectedGroupOptions"
-                                :key="option.DET04"
-                                class="relative inline-block">
-                                <input
-                                    :id="`linepay-${option.DET04}`"
-                                    class="peer sr-only"
-                                    type="radio"
-                                    name="linepayType"
-                                    :value="option.DET04"
-                                    v-model="selectedOption"
-                                />
-                                <span
-                                    class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
-                                            bg-divider-soft text-others-gray1 transition-color duration-200
-                                            before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
-                                            peer-checked:before:bg-others-original peer-checked:before:border-none">
-                                    {{ option.DET04S }}
-                                </span>
-                            </label>
-                        </div>
+                    <div class="bg-white border-others-gray8">
+                      <h2 class="font-bold text-primary-gold mb-4 md:hidden">付款設定</h2>
+                      <div v-if="selectedGroupOptions.length > 0" class="mt-0 md:mt-5">
+                          <div class="flex gap-3 flex-wrap">
+                              <label
+                                  v-for="option in selectedGroupOptions"
+                                  :key="option.DET04"
+                                  class="relative inline-block">
+                                  <input
+                                      :id="`linepay-${option.DET04}`"
+                                      class="peer sr-only"
+                                      type="radio"
+                                      name="linepayType"
+                                      :value="option.DET04"
+                                      v-model="selectedOption"
+                                  />
+                                  <span
+                                      class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
+                                              bg-divider-soft text-others-gray1 transition-color duration-200
+                                              before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
+                                              peer-checked:before:bg-others-original peer-checked:before:border-none">
+                                      {{ option.DET04S }}
+                                  </span>
+                              </label>
+                          </div>
+                      </div>
                     </div>
                 </div>
 
-                <!-- LINE Pay 說明 (DET04D) -->
-                <div v-if="currentOptionNote" class="w-full mt-4 border-others-gray8 border-2 rounded-[10px] p-6">
+                <!-- Payment Instructions Card -->
+                <div v-if="currentOptionNote" class="w-full mt-4 border-others-gray8 border-2 rounded-[10px] p-4 md:p-6">
                     <h2 class="font-bold text-primary-gold">LINE Pay 付款說明</h2>
-                    <div class="mt-4 text-others-gray1 text-sm" v-html="currentOptionNote"></div>
+                    <div class="mt-4 text-others-gray1 text-sm space-y-3 md:space-y-2 [&>*]:mb-3 md:[&>*]:mb-2 [&>*:last-child]:mb-0" v-html="currentOptionNote"></div>
                 </div>
             </div>
 
             <!-- 匯款付款 (DET03 = 'B') -->
             <div v-if="selectedGroup === 'B'">
-                <div class="w-full border-others-gray8 border-2 rounded-[10px] p-6">
+                <div class="w-full border-others-gray8 border-2 rounded-[10px] p-4 md:p-6">
                     <h2 class="font-bold text-primary-gold">銀行匯款資訊</h2>
 
                     <!-- 匯款選項 (DET04) -->
-                    <div v-if="selectedGroupOptions.length > 0" class="mt-5">
+                    <div v-if="selectedGroupOptions.length > 0" class="mt-4 md:mt-5">
                         <div class="flex gap-3 flex-wrap">
                             <label
                                 v-for="option in selectedGroupOptions"
@@ -187,18 +204,18 @@
                 </div>
 
                 <!-- 匯款說明 (DET04D) -->
-                <div v-if="currentOptionNote" class="w-full mt-4 border-others-gray8 border-2 rounded-[10px] p-6">
+                <div v-if="currentOptionNote" class="w-full mt-4 border-others-gray8 border-2 rounded-[10px] p-4 md:p-6">
                     <h2 class="font-bold text-primary-gold">匯款注意事項</h2>
-                    <div class="mt-4 text-others-gray1 text-sm" v-html="currentOptionNote"></div>
+                    <div class="mt-4 text-others-gray1 text-sm space-y-3 md:space-y-2 [&>*]:mb-3 md:[&>*]:mb-2 [&>*:last-child]:mb-0" v-html="currentOptionNote"></div>
                 </div>
             </div>
 
             <!-- 下一步按鈕 -->
-            <div class="flex justify-center mt-8">
+            <div class="flex justify-center mt-6 md:mt-8">
                 <button
                     @click="handleNextStep"
                     :disabled="!selectedOption || isProcessing"
-                    class="px-8 py-3 w-[60%] h-[60px] rounded-md font-semibold transition-colors relative"
+                    class="px-8 py-3 w-full md:w-[60%] h-[50px] md:h-[60px] rounded-md font-semibold transition-colors relative"
                     :class="selectedOption && !isProcessing ? 'bg-others-original text-white hover:bg-others-hover' : 'bg-others-gray4 text-others-gray1 cursor-not-allowed'">
                     <span v-if="isProcessing" class="inline-flex items-center">
                         <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

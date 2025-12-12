@@ -58,7 +58,7 @@
 <script setup lang="ts">
 import { formatDateToChinese, toDuration } from '@/utils'
 import type { Sector } from '@/utils/types'
-import { onAirlineImageError } from '@/utils/airlineLogo'
+import AirlineDefault from '@/assets/imgs/airlines/airline-default.svg'
 
 const props = defineProps<{
   sector: Sector
@@ -66,7 +66,8 @@ const props = defineProps<{
 }>()
 
 const onImageError = (event: Event) => {
-  onAirlineImageError(event)
+  const target = event.target as HTMLImageElement
+  target.src = AirlineDefault
 }
 </script>
 

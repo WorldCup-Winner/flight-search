@@ -206,7 +206,6 @@
                             :airlines="airlineStore.airlines"
                             :selected-airline="selectedAirline"
                             @select="selectAirline"
-                            @clear="clearAirline"
                             @close="isAirlineOpen = false"
                         />
                     </div>
@@ -547,11 +546,6 @@ function selectAirline(airline: any) {
   isAirlineOpen.value = false
   airlineSearchTerm.value = ''
 }
-function clearAirline() {
-  selectedAirline.value = null
-  isAirlineOpen.value = false
-  airlineSearchTerm.value = ''
-}
 
 // Computed
 const canAdd = computed(() => segments.value.length < 5)
@@ -599,8 +593,20 @@ watch(
 
 // Watch for initialParams changes (e.g., when navigating back)
 watch(() => props.initialParams, (newParams, oldParams) => {
-  // Only restore if locations are available and params actually changed
-  if (newParams && 
+  if (newParams === null || newParams === undefined) {
+    // Reset form to initial values when params are cleared
+    segments.value = [makeSeg(), makeSeg()]
+    errors.value = [
+      { departure: false, arrival: false, startDate: false },
+      { departure: false, arrival: false, startDate: false }
+    ]
+    adultCount.value = 1
+    childrenCount.value = 0
+    infantCount.value = 0
+    selectedAirline.value = null
+    selectedCabinClass.value = '艙等不限'
+    isNonStopFlight.value = false
+  } else if (newParams && 
       locationStore.locations.length > 0 && 
       newParams.tripType === 'multi' &&
       JSON.stringify(newParams) !== JSON.stringify(oldParams)) {
