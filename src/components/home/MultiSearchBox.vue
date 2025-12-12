@@ -289,6 +289,7 @@ const locationStore = useLocationStore()
 // Adults and Children
 const adultCount = ref(1)
 const childrenCount = ref(0)
+const infantCount = ref(0)
 
 // Filter Options
 const airlineSearchTerm = ref('')
@@ -445,9 +446,9 @@ function onDateApply(i: number, d: Date) {
   if (i + 1 < segments.value.length) {
     const nextSegment = segments.value[i + 1]
     if (nextSegment.departureDate) {
-      const nextDate = new Date(nextSegment.departureDate)
+      const nextDate = new Date(nextSegment.departureDate.getTime())
       nextDate.setHours(0, 0, 0, 0)
-      const currentDate = new Date(d)
+      const currentDate = new Date(d.getTime())
       currentDate.setHours(0, 0, 0, 0)
       
       if (nextDate < currentDate) {
@@ -480,9 +481,9 @@ function validateSegmentDate(idx: number, dateToValidate?: Date): boolean {
     return true
   }
   
-  const prevDate = new Date(prevSegment.departureDate)
+  const prevDate = new Date(prevSegment.departureDate.getTime())
   prevDate.setHours(0, 0, 0, 0)
-  const currentDate = new Date(date)
+  const currentDate = new Date(date.getTime())
   currentDate.setHours(0, 0, 0, 0)
   
   if (currentDate < prevDate) {
@@ -505,7 +506,7 @@ function getMinDateForSegment(idx: number): Date {
   // For subsequent segments: min date is previous segment's date
   const prevSegment = segments.value[idx - 1]
   if (prevSegment.departureDate) {
-    return new Date(prevSegment.departureDate)
+    return new Date(prevSegment.departureDate.getTime())
   }
   
   // If previous segment has no date, use today
@@ -523,9 +524,9 @@ function isDateBeforePrevious(idx: number): boolean {
     return false
   }
   
-  const currentDate = new Date(currentSegment.departureDate)
+  const currentDate = new Date(currentSegment.departureDate.getTime())
   currentDate.setHours(0, 0, 0, 0)
-  const prevDate = new Date(prevSegment.departureDate)
+  const prevDate = new Date(prevSegment.departureDate.getTime())
   prevDate.setHours(0, 0, 0, 0)
   
   return currentDate < prevDate
@@ -554,13 +555,16 @@ const passengerDisplayText = computed(
 )
 const filteredAirlines = computed(() => {
   const s = airlineSearchTerm.value.toLowerCase()
-  return airlineStore.airlines.filter(a => a.iataCode.toLowerCase().includes(s) || a.nameZhTw.toLowerCase().includes(s))
+  return airlineStore.airlines.filter(a =>
+    a.iataCode.toLowerCase().indexOf(s) !== -1 ||
+    a.nameZhTw.toLowerCase().indexOf(s) !== -1
+  )
 })
 
 // 最大日期：從今天起算 350 天
 const maxDate = computed(() => {
   const today = new Date()
-  const max = new Date(today)
+  const max = new Date(today.getTime())
   max.setDate(today.getDate() + 350)
   return max
 })
@@ -806,7 +810,7 @@ function onSearch() {
 
   // If any error → stop search
   const hasError = errors.value.some(error =>
-    Object.values(error).some(v => v)
+    !!error.departure || !!error.arrival || !!error.startDate
   )
 
   if (hasError) {

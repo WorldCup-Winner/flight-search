@@ -264,6 +264,7 @@ const startDate = ref<Date | null>(null)
 // Adults and Children
 const adultCount = ref(1)
 const childrenCount = ref(0)
+const infantCount = ref(0)
 
 // Open States
 const isDepartureOpen = ref(false)
@@ -350,7 +351,7 @@ watch(() => props.initialParams, (newParams) => {
     selectedDepartureCity.value = locationStore.locations?.[0]?.["airports"]?.[0] || null
     selectedArrivalLocation.value = (locationStore.locations && locationStore.locations.find(loc => loc.region === '日韓')) || locationStore.locations?.[0] || null
     selectedArrivalCity.value = null
-    departureDate.value = null
+    startDate.value = null
     adultCount.value = 1
     childrenCount.value = 0
     infantCount.value = 0
