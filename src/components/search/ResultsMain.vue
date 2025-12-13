@@ -16,10 +16,12 @@
       <!-- MAIN -->
       <section class="col-span-12 md:col-span-9">
         <template v-if="!isStepTwoMobileSummaryOpen">
-        <!-- Round-trip mobile: HeaderStrip + HeaderStripSummary side by side -->
-        <div v-if="tripType === 'roundtrip'" class="md:hidden flex gap-2 mb-4 min-w-0">
-          <div :class="[currentLeg === 'outbound' ? 'order-1' : 'order-2', 'flex-1 min-w-0']">
+        <!-- Round-trip mobile: HeaderStrip + HeaderStripSummary side by side (force same height) -->
+        <div v-if="tripType === 'roundtrip'" class="md:hidden flex gap-2 mb-4 min-w-0 items-stretch">
+          <!-- Make wrapper a flex container so HeaderStrip can stretch -->
+          <div :class="[currentLeg === 'outbound' ? 'order-1' : 'order-2', 'flex-1 min-w-0 flex items-stretch']">
             <HeaderStrip
+              class="w-full h-full"
               :current-leg="currentLeg"
               :segment-title="segmentTitle"
               :date-text="dateText"
@@ -31,6 +33,7 @@
             />
           </div>
           <HeaderStripSummary
+            class="h-full"
             :class="currentLeg === 'outbound' ? 'order-2' : 'order-1'"
             :segment-title="summaryData?.segmentTitle || (currentLeg === 'outbound' ? '回程' : '去程')"
             :time-range="summaryData?.timeRange || null"

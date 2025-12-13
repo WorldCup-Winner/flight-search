@@ -1,18 +1,18 @@
 <template>
   <div :class="noMargin ? 'bg-none' : 'mb-4 bg-none'">
-    <div class="relative flex rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] bg-others-gray4">
+    <div class="relative flex rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] bg-others-gray4 h-full">
       <!-- Summary card: compact version for other leg -->
-      <div class="relative flex flex-col justify-between p-3 w-[100px] flex-shrink-0">
+      <div class="relative flex flex-col justify-between px-3 py-2.5 w-[100px] flex-shrink-0 h-full">
         <!-- Title -->
-        <div class="text-white text-base font-semibold mb-1">
+        <div class="text-white text-sm font-semibold mb-1">
           {{ segmentTitle }}
         </div>
 
         <!-- Time range -->
-        <div v-if="timeRange" class="text-white text-xs mb-1">
+        <div v-if="timeRange" class="text-white text-xs mb-0.5">
           {{ timeRange }}
         </div>
-        <div v-else class="text-white/60 text-xs mb-1">
+        <div v-else class="text-white/60 text-xs mb-0.5">
           未選擇
         </div>
 
