@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Search Form -->
-    <div class="border-2 border-primary-gold rounded-xl rounded-tr-none">
+    <div class="border-2 border-primary-gold rounded-xl rounded-t-none md:rounded-tl-xl">
       <div class="grid grid-cols-1 lg:grid-cols-5">
         <div class="grid grid-cols-[1fr_auto_1fr] md:flex md:flex-row col-span-2 lg:border-r-2 border-primary-gold border-b-2 md:border-b-0 px-4 md:px-0 py-3 md:py-0">
           <!-- Departure -->
@@ -167,6 +167,7 @@
                             :airlines="airlineStore.airlines"
                             :selected-airline="selectedAirline"
                             @select="selectAirline"
+                            @clear="clearAirline"
                             @close="isAirlineOpen = false"
                         />
                     </div>
@@ -264,7 +265,6 @@ const startDate = ref<Date | null>(null)
 // Adults and Children
 const adultCount = ref(1)
 const childrenCount = ref(0)
-const infantCount = ref(0)
 
 // Open States
 const isDepartureOpen = ref(false)
@@ -354,7 +354,6 @@ watch(() => props.initialParams, (newParams) => {
     startDate.value = null
     adultCount.value = 1
     childrenCount.value = 0
-    infantCount.value = 0
     selectedAirline.value = null
     selectedCabinClass.value = '艙等不限'
     isNonStopFlight.value = false
@@ -484,6 +483,11 @@ function toggleAirline() {
 }
 function selectAirline(airline: any) {
   selectedAirline.value = airline
+  isAirlineOpen.value = false
+  airlineSearchTerm.value = ''
+}
+function clearAirline() {
+  selectedAirline.value = null
   isAirlineOpen.value = false
   airlineSearchTerm.value = ''
 }

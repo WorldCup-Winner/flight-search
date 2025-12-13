@@ -3,7 +3,7 @@
     <div class="space-y-4">
       <div v-for="(seg, idx) in segments" :key="idx"
         class="border-2 border-primary-gold rounded-xl flex relative"
-        :class="{ 'rounded-tr-none': idx === 0 }">
+        :class="{ 'rounded-t-none md:rounded-tl-xl': idx === 0 }">
         <!-- Delete button: top right of segment card -->
         <button
           v-if="segments.length > 2 && idx >= 2"
@@ -20,7 +20,7 @@
         <div class="w-10 md:w-[5%] shrink-0">
           <div
             class="h-full rounded-l-[10px] bg-primary-gold2 russo text-white text-2xl md:text-5xl flex items-center justify-center"
-            :class="{ 'rounded-tr-none': idx === 0 }">
+            :class="{ 'rounded-t-none md:rounded-tl-xl': idx === 0 }">
             {{ idx + 1 }}
           </div>
         </div>
@@ -206,6 +206,7 @@
                             :airlines="airlineStore.airlines"
                             :selected-airline="selectedAirline"
                             @select="selectAirline"
+                            @clear="clearAirline"
                             @close="isAirlineOpen = false"
                         />
                     </div>
@@ -289,7 +290,6 @@ const locationStore = useLocationStore()
 // Adults and Children
 const adultCount = ref(1)
 const childrenCount = ref(0)
-const infantCount = ref(0)
 
 // Filter Options
 const airlineSearchTerm = ref('')
@@ -446,9 +446,9 @@ function onDateApply(i: number, d: Date) {
   if (i + 1 < segments.value.length) {
     const nextSegment = segments.value[i + 1]
     if (nextSegment.departureDate) {
-      const nextDate = new Date(nextSegment.departureDate.getTime())
+      const nextDate = new Date(nextSegment.departureDate)
       nextDate.setHours(0, 0, 0, 0)
-      const currentDate = new Date(d.getTime())
+      const currentDate = new Date(d)
       currentDate.setHours(0, 0, 0, 0)
       
       if (nextDate < currentDate) {
@@ -481,9 +481,9 @@ function validateSegmentDate(idx: number, dateToValidate?: Date): boolean {
     return true
   }
   
-  const prevDate = new Date(prevSegment.departureDate.getTime())
+  const prevDate = new Date(prevSegment.departureDate)
   prevDate.setHours(0, 0, 0, 0)
-  const currentDate = new Date(date.getTime())
+  const currentDate = new Date(date)
   currentDate.setHours(0, 0, 0, 0)
   
   if (currentDate < prevDate) {
@@ -506,7 +506,7 @@ function getMinDateForSegment(idx: number): Date {
   // For subsequent segments: min date is previous segment's date
   const prevSegment = segments.value[idx - 1]
   if (prevSegment.departureDate) {
-    return new Date(prevSegment.departureDate.getTime())
+    return new Date(prevSegment.departureDate)
   }
   
   // If previous segment has no date, use today
@@ -524,9 +524,9 @@ function isDateBeforePrevious(idx: number): boolean {
     return false
   }
   
-  const currentDate = new Date(currentSegment.departureDate.getTime())
+  const currentDate = new Date(currentSegment.departureDate)
   currentDate.setHours(0, 0, 0, 0)
-  const prevDate = new Date(prevSegment.departureDate.getTime())
+  const prevDate = new Date(prevSegment.departureDate)
   prevDate.setHours(0, 0, 0, 0)
   
   return currentDate < prevDate
@@ -547,6 +547,11 @@ function selectAirline(airline: any) {
   isAirlineOpen.value = false
   airlineSearchTerm.value = ''
 }
+function clearAirline() {
+  selectedAirline.value = null
+  isAirlineOpen.value = false
+  airlineSearchTerm.value = ''
+}
 
 // Computed
 const canAdd = computed(() => segments.value.length < 5)
@@ -555,16 +560,13 @@ const passengerDisplayText = computed(
 )
 const filteredAirlines = computed(() => {
   const s = airlineSearchTerm.value.toLowerCase()
-  return airlineStore.airlines.filter(a =>
-    a.iataCode.toLowerCase().indexOf(s) !== -1 ||
-    a.nameZhTw.toLowerCase().indexOf(s) !== -1
-  )
+  return airlineStore.airlines.filter(a => a.iataCode.toLowerCase().includes(s) || a.nameZhTw.toLowerCase().includes(s))
 })
 
 // 最大日期：從今天起算 350 天
 const maxDate = computed(() => {
   const today = new Date()
-  const max = new Date(today.getTime())
+  const max = new Date(today)
   max.setDate(today.getDate() + 350)
   return max
 })
@@ -606,7 +608,6 @@ watch(() => props.initialParams, (newParams, oldParams) => {
     ]
     adultCount.value = 1
     childrenCount.value = 0
-    infantCount.value = 0
     selectedAirline.value = null
     selectedCabinClass.value = '艙等不限'
     isNonStopFlight.value = false
@@ -810,7 +811,7 @@ function onSearch() {
 
   // If any error → stop search
   const hasError = errors.value.some(error =>
-    !!error.departure || !!error.arrival || !!error.startDate
+    Object.values(error).some(v => v)
   )
 
   if (hasError) {
