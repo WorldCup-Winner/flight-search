@@ -630,7 +630,7 @@
         </div>
         <!-- Modal -->
         <transition name="fade">
-            <div v-if="activeDialog" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50"
+            <div v-if="activeDialog" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[100]"
                 @click.self="closeDialog">
                 <div class="bg-white rounded-tl-[60px] rounded-tr-[60px] rounded-bl-[60px] shadow-lg px-6 py-8 md:px-[90px] md:py-[60px] relative w-[90%] md:w-auto max-w-md md:max-w-none max-h-[90vh] overflow-y-auto md:overflow-visible">
                 <SignIn v-if="activeDialog === 'signin'" @close="closeDialog" />
@@ -651,7 +651,7 @@
       @close="sharedValue.isOpenBaggageInfoAndFeeRule = false" 
     />
     <transition name="fade">
-        <div v-if="bookingError" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" @click.self="bookingError = null">
+        <div v-if="bookingError" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[100]" @click.self="bookingError = null">
             <div class="flex flex-col items-center justify-center w-[400px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-16 py-8">
                 <img src="@/assets/imgs/alert-price-change.png" class="w-20 h-20 mb-4" />
                 <h3 class="text-others-gray1 text-h3 md:text-h3-d mb-2">{{ bookingError.title || '訂單提交失敗' }}</h3>
@@ -679,21 +679,6 @@
     <Transition name="fade">
         <BookingInProgress v-if="showBookingInProgress" :passengers="reviewPassengersList" />
     </Transition>
-    <transition name="fade">
-        <div v-if="bookingError" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" @click.self="bookingError = null">
-            <div class="flex flex-col items-center justify-center w-[400px] bg-white rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-16 py-8">
-                <img src="@/assets/imgs/alert-price-change.png" class="w-20 h-20 mb-4" />
-                <h3 class="text-others-gray1 text-h3 md:text-h3-d mb-2">{{ bookingError.title || '訂單提交失敗' }}</h3>
-                <p class="text-others-gray1 text-center mb-6">{{ bookingError.message }}</p>
-                <button
-                  class="mt-6 px-4 py-1 w-[93px] h-[40px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition"
-                  @click="bookingError = null"
-                >
-                  確認
-                </button>
-            </div>
-        </div>
-    </transition>
     <!-- Mobile sticky price summary -->
     <StepTwoMobilePriceSummary
       :title-label="titleLabel"
