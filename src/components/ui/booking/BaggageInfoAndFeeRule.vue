@@ -31,8 +31,6 @@
             <p class="mb-4 md:mb-6 text-sm text-others-gray1 leading-relaxed">
               機票須依序使用，若第一段未搭乘，後段航程將自動失效。若您的行程包含多張不同機票或由不同航空公司承運，任一機票的變更或取消不影響其他機票行程，您仍須依原票規使用。
             </p>
-
-            <!-- Baggage Information -->
             <h3 class="mb-4 text-lg font-bold text-others-original">行李資訊</h3>
             <div v-if="!fareRuleData?.baggage || fareRuleData.baggage.length === 0" class="text-others-gray1 mb-4 p-4 bg-tb-body rounded-[10px]">
               <p>暫無行李資訊</p>
@@ -139,8 +137,8 @@
                       <th scope="row" class="p-4">服務費項目</th>
                       <td colspan="3" class="p-4">
                         <ul class="list-disc pl-5 space-y-1">
-                          <li>退票：加利利旅遊服務費 TWD 800 元。</li>
-                          <li>改期：加利利旅遊服務費 TWD 500 元。</li>
+                          <li>退票：加利利旅遊服務費 {{ formatPrice(serviceFeeRefund, 'TWD') }} 元。</li>
+                          <li>改期：加利利旅遊服務費 {{ formatPrice(serviceFeeChangePeriod, 'TWD') }} 元。</li>
                           <li>若非自營票而產生供應商服務費，則依服務人員提供之退/改票服務費金額為準。</li>
                         </ul>
                       </td>
@@ -219,7 +217,9 @@ const groupedFareRules = computed(() => {
     for (const rule of activeFareRules.value) {
         let groupKey = rule.type;
         if (rule.type.includes('改期')) groupKey = '改期費用';
-        if (rule.type.includes('退票')) groupKey = '退票費用';
+        if (rule.type.includes('退票費')) groupKey = '退票費用';
+
+        if (groupKey === '服務費') continue;
 
         if (!groups[groupKey]) {
             groups[groupKey] = [];
@@ -227,6 +227,16 @@ const groupedFareRules = computed(() => {
         groups[groupKey].push(rule);
     }
     return groups;
+});
+
+const serviceFeeChangePeriod = computed(() => {
+    const serviceRule = activeFareRules.value.find(rule => rule.type === '服務費' && rule.passengerType === 'ADT');
+    return serviceRule ? serviceRule.before : 500;
+});
+
+const serviceFeeRefund = computed(() => {
+    const refundRule = activeFareRules.value.find(rule => rule.type === '退票服務費' && rule.passengerType === 'ADT');
+    return refundRule ? refundRule.before : 800;
 });
 
 // --- Helper Functions ---

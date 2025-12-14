@@ -57,6 +57,14 @@
 
             <!-- Popular Airlines (when no search) -->
             <div v-else-if="!searchTerm.trim()">
+                <!-- Clear Selection Button -->
+                <button
+                    v-if="localSelectedAirline"
+                    class="w-full mb-4 py-2 px-4 rounded-lg border-2 border-others-original text-others-original hover:bg-others-original hover:text-white transition-colors font-medium"
+                    @click="onClearSelection"
+                >
+                    清除選擇（不限航空公司）
+                </button>
                 <h4 class="text-primary-gold font-semibold mb-4 pl-1">熱門航空公司</h4>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
                     <button
@@ -112,6 +120,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'select', airline: Airline): void
+    (e: 'clear'): void
     (e: 'close'): void
 }>()
 
@@ -124,44 +133,15 @@ watch(() => props.selectedAirline, (val) => {
     localSelectedAirline.value = val || null
 })
 
-// Popular airlines (specific 6 airlines in order)
-const popularAirlines = computed(() => {
-    // Define the order of popular airlines
-    const popularAirlineNames = [
-        '長榮航空',
-        '中華航空',
-        '星宇航空',
-        '日本航空',
-        '阿聯酋航空',
-        '紐西蘭航空'
-    ]
-    
-    // Find airlines in the specified order
-    const orderedAirlines: Airline[] = []
-    for (const name of popularAirlineNames) {
-        const airline = props.airlines.find(a => a.nameZhTw === name)
-        if (airline) {
-            orderedAirlines.push(airline)
-        }
-    }
-    
-    // If we found all 6, return them; otherwise, fill with first available airlines
-    if (orderedAirlines.length === 6) {
-        return orderedAirlines
-    }
-    
-    // Fallback: add remaining airlines from the list (excluding already added ones)
-    const addedCodes = new Set(orderedAirlines.map(a => a.iataCode))
-    for (const airline of props.airlines) {
-        if (orderedAirlines.length >= 6) break
-        if (!addedCodes.has(airline.iataCode)) {
-            orderedAirlines.push(airline)
-            addedCodes.add(airline.iataCode)
-        }
-    }
-    
-    return orderedAirlines
-})
+// Popular airlines (hardcoded 6 airlines with fixed names)
+const popularAirlines = [
+    { iataCode: 'BR', nameZhTw: '長榮航空', nameEnUs: 'EVA Air' },
+    { iataCode: 'CI', nameZhTw: '中華航空', nameEnUs: 'China Airlines' },
+    { iataCode: 'JX', nameZhTw: '星宇航空', nameEnUs: 'Starlux Airlines' },
+    { iataCode: 'JL', nameZhTw: '日本航空', nameEnUs: 'Japan Airlines' },
+    { iataCode: 'EK', nameZhTw: '阿聯酋航空', nameEnUs: 'Emirates' },
+    { iataCode: 'NZ', nameZhTw: '紐西蘭航空', nameEnUs: 'Air New Zealand' }
+]
 
 // Filtered airlines based on search
 const filteredAirlines = computed(() => {
@@ -204,6 +184,12 @@ function onConfirm() {
 }
 
 function onClose() {
+    emit('close')
+}
+
+function onClearSelection() {
+    localSelectedAirline.value = null
+    emit('clear')
     emit('close')
 }
 </script>

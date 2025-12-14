@@ -1,16 +1,16 @@
 <template>
     <div
         v-if="open"
-        class="fixed inset-0 z-50 top-0 w-[100vw] h-[100vh] flex items-center justify-center">
+        class="fixed inset-0 z-50 top-0 w-[100vw] h-[100vh] flex items-center justify-center p-4">
         <div
             class="fixed inset-0 top-0 bg-black/20 w-[100vw] h-[100vh]"
             @click="close"></div>
             
-        <div class="max-w-[800px] rounded-[60px] p-[60px] rounded-br-none bg-white drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)]">
-            <div class="bg-white rounded-t-2xl border-b-0 px-[30px] py-[20px] w-[500px] border-2 border-primary-gold">
+        <div class="w-full max-w-[800px] rounded-[40px] md:rounded-[60px] p-[40px] md:p-[60px] rounded-br-none bg-white drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)]">
+            <div class="bg-white rounded-t-2xl border-b-0 px-4 md:px-[30px] py-4 md:py-[20px] w-full border-2 border-primary-gold">
               <p class="text-others-gray1 text-h3">訂單查詢</p>
             </div>
-            <div class="bg-white rounded-b-2xl px-[40px] py-[30px] w-[500px] border-2 border-primary-gold">
+            <div class="bg-white rounded-b-2xl px-4 md:px-[40px] py-6 md:py-[30px] w-full border-2 border-primary-gold">
                 <form @submit.prevent="handleSearch" class="flex flex-col items-center">
                     <!-- 身分證號 -->
                     <div class="mb-4 w-full">

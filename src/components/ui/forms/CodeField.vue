@@ -3,18 +3,20 @@
     class="inline-flex w-full rounded-[10px] border bg-white
            border-primary-gold overflow-hidden"
   >
-    <!-- Country code -->
-    <div class="relative flex items-end">
-      <p
-        class="appearance-none bg-transparent pl-7 pr-3 py-2.5 text-sm
-               text-others-gray1 focus:outline-none cursor-pointer"
-      >
-        OUZ-
-      </p>
-    </div>
+    <!-- Verification code prefix from FP01B RET06 -->
+    <template v-if="prefix">
+      <div class="relative flex items-end">
+        <p
+          class="appearance-none bg-transparent pl-7 pr-3 py-2.5 text-sm
+                 text-others-gray1 focus:outline-none"
+        >
+          {{ prefix }}-
+        </p>
+      </div>
 
-    <!-- Divider -->
-    <div class="w-px bg-primary-gold" aria-hidden="true"></div>
+      <!-- Divider -->
+      <div class="w-px bg-primary-gold" aria-hidden="true"></div>
+    </template>
 
     <!-- Phone input -->
     <input
@@ -34,6 +36,7 @@ import { ref, watch, toRefs } from 'vue'
 const props = defineProps<{
   modelValue?: string
   placeholder?: string
+  prefix?: string // FP01B RET06 驗證碼前綴
 }>()
 
 const emit = defineEmits<{

@@ -14,6 +14,9 @@ export function useFlightFareRule(getProps: () => {
   validatingAirlineCode?: string
   itineraryRBDs?: string | string[]
   fareOptions?: FareOption[]
+  // 從 flight-search API 取得的價格（用於展開後顯示）
+  flightSearchPrice?: number
+  flightSearchTaxAmount?: number
 }) {
   // Use computed to access props reactively
   const props = computed(getProps)
@@ -181,7 +184,7 @@ export function useFlightFareRule(getProps: () => {
         let label = rule.type
         if (rule.type.includes('去程')) label = '去程改期費'
         if (rule.type.includes('回程')) label = '回程改期費'
-        if (rule.type.includes('退票')) label = '退票費'
+        if (rule.type.includes('退票費')) label = '退票費'
         const fee = rule.before !== null ? rule.before : 0
         
         let feeText = ''
@@ -203,33 +206,30 @@ export function useFlightFareRule(getProps: () => {
 
     const cabinDesc = (transformProps.sectors && transformProps.sectors.length > 0) ? transformProps.sectors[0].cabinDesc : '經濟艙'
     
-    let totalPriceWithTax = 0
-    let totalTaxAmount = 0
+    // 價格定義：
+    // - 所有 API 回傳的 price 都已經含稅
+    // - taxAmount 是稅額（僅供參考顯示用）
+    let perPersonPrice = 0
+    let perPersonTaxAmount = 0
     
-    for (const summary of data.fareSummary) {
-      const priceWithTax = summary.price ?? 0
-      const taxAmount = summary.taxAmount ?? 0
-      
-      let passengerCount = 0
-      if (summary.passengerType === 'ADT') {
-        passengerCount = transformProps.adultCount ?? 1
-      } else if (summary.passengerType === 'CNN') {
-        passengerCount = transformProps.childCount ?? 0
-      } else if (summary.passengerType === 'INF') {
-        passengerCount = transformProps.babyCount ?? 0
+    if (transformProps.flightSearchPrice !== undefined) {
+      // 直接使用 flight-search API 的價格（已含稅）
+      perPersonPrice = transformProps.flightSearchPrice
+      perPersonTaxAmount = transformProps.flightSearchTaxAmount ?? 0
+    } else {
+      // Fallback: 使用 fare-rule API 的成人(ADT)票價作為代表
+      const adtSummary = data.fareSummary.find(s => s.passengerType === 'ADT')
+      if (adtSummary) {
+        perPersonPrice = adtSummary.price ?? 0
+        perPersonTaxAmount = adtSummary.taxAmount ?? 0
       }
-      
-      totalPriceWithTax += priceWithTax * passengerCount
-      totalTaxAmount += taxAmount * passengerCount
     }
-    
-    const totalPriceWithoutTax = totalPriceWithTax - totalTaxAmount
 
     return [{
       id: `fare-0`,
       cabin: cabinDesc,
-      price: totalPriceWithoutTax,
-      taxAmount: totalTaxAmount,
+      price: perPersonPrice,
+      taxAmount: perPersonTaxAmount,
       notes
     }]
   }

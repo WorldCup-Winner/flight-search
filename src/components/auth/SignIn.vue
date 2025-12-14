@@ -99,8 +99,10 @@
                                 v-if="!isCodeSent || codeLeftTime == 0"
                                 class="inline-flex items-center justify-center w-full md:w-fit whitespace-nowrap
                                     bg-others-original text-white px-5 py-2 rounded-[10px] hover:bg-others-hover transition"
+                                :disabled="isSendingSMS"
                                 @click="handleCodeSMS">
-                                發送驗證簡訊
+                                <span v-if="isSendingSMS">發送中...</span>
+                                <span v-else>發送驗證簡訊</span>
                             </button>
                             <button
                                 v-else
@@ -111,8 +113,8 @@
                     </div>
                     <div v-if="isCodeSent" class="mb-4 w-full">
                         <label class="block mb-1 text-others-gray1 text-sm">驗證碼</label>
-                        <div class="relative w-full">
-                            <CodeField v-model="verificationCode" />
+                        <div class="relative flex items-center justify-between gap-4">
+                            <CodeField v-model="verificationCode" :prefix="smsPrefix" />
                         </div>
                     </div>
                     
@@ -140,8 +142,10 @@
                     </div>
                     <!-- Submit -->
                     <button type="submit"
-                        class="w-full md:w-[150px] md:max-w-none mx-auto bg-others-original text-white py-3 rounded-[10px] font-semibold hover:bg-others-hover transition">
-                        送出
+                        class="w-full md:w-[150px] md:max-w-none mx-auto bg-others-original text-white py-3 rounded-[10px] font-semibold hover:bg-others-hover transition"
+                        :disabled="isSendingSMS">
+                        <span v-if="isSendingSMS">發送簡訊中...</span>
+                        <span v-else>送出</span>
                     </button>
                 </form>
             </div>
@@ -179,7 +183,9 @@ const showUsername = ref(false)
 const showPassword = ref(false)
 const activeTab = ref('login-member')
 const isCodeSent = ref(false)
-const smsId = ref('') // Store RET04 (SMS ID) from FA01B response
+const smsId = ref('') // Store RET04 (SMS ID) from FP01B response
+const smsPrefix = ref('') // Store RET06 (驗證碼前綴) from FP01B response
+const isSendingSMS = ref(false) // Track SMS sending state
 const agreed = ref(false)
 
 const authStore = useAuthStore()
@@ -199,6 +205,12 @@ const handleLogin = async () => {
         // Validate required fields
         if (!form1.value.firstname || !form1.value.lastname || !form1.value.phone) {
             toast.warning('請填寫完整的姓名和手機號碼')
+            return
+        }
+        
+        // 如果正在發送簡訊，提示用戶等待
+        if (isSendingSMS.value) {
+            toast.warning('請等待簡訊發送完成')
             return
         }
         
@@ -287,6 +299,11 @@ const handleCodeSMS = async () => {
         return
     }
     
+    // Prevent multiple SMS sends
+    if (isSendingSMS.value) return
+    
+    isSendingSMS.value = true
+    
     try {
         // For Taiwan (+886), send phone number as-is. For other countries, combine code and phone
         const phoneNumber = form1.value.code === '+886' 
@@ -302,8 +319,9 @@ const handleCodeSMS = async () => {
         const data = response.data
         
         if (data.status === '1' || data.status === 1) {
-            // Success - store SMS ID and start countdown
+            // Success - store SMS ID, prefix and start countdown
             smsId.value = data.RET04 || ''
+            smsPrefix.value = data.RET06 || '' // 驗證碼前綴
             isCodeSent.value = true
             toast.success(data.msg || '驗證簡訊已發送')
         } else if (data.status === '0' || data.status === 0) {
@@ -320,6 +338,8 @@ const handleCodeSMS = async () => {
         const errorMsg = error.response?.data?.msg || error.response?.data?.message || error.message || '發送失敗'
         toast.error(errorMsg)
         console.error('SMS send error:', error)
+    } finally {
+        isSendingSMS.value = false
     }
 }
 

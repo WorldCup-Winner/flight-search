@@ -87,22 +87,7 @@ import { formatPrice } from '@/utils'
 import type { Sector } from '@/utils/types'
 import FlightSectorDetail from './FlightInfoModalSector.vue'
 import TransferInfo from './FlightInfoModalTransfer.vue'
-import AirlineDefault from '@/assets/imgs/airlines/airline-default.svg'
-
-// Import all airline logos at build time using Vite's glob import
-const airlineLogosModules = import.meta.glob('@/assets/imgs/airlines/*.png', { eager: true, import: 'default' })
-
-function resolveAirlineLogo(code?: string): string {
-  if (!code) return AirlineDefault
-  
-  const fullPath = Object.keys(airlineLogosModules).find(path => path.includes(`/${code}.png`))
-  
-  if (fullPath && airlineLogosModules[fullPath]) {
-    return airlineLogosModules[fullPath] as string
-  }
-  
-  return AirlineDefault
-}
+import { resolveAirlineLogo } from '@/utils/airlineLogo'
 
 const props = defineProps<{
   open: boolean

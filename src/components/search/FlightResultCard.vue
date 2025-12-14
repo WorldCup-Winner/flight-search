@@ -357,7 +357,7 @@
               {{ fare.cabin }}
             </div>
             <ul class="col-span-12 md:col-span-6 space-y-2">
-              <li v-for="(n, i) in fare.notes" :key="i" class="flex items-center gap-2">
+              <li v-for="(n, i) in fare.notes.filter(note => !note.text.includes('服務費'))" :key="i" class="flex items-center gap-2">
                 <img :src="noteIcon(n.type as FareNoteType, n.icon as FareIconType)" />
                 <span class="text-[14px] text-others-gray1">{{ n.text }}</span>
               </li>
@@ -368,7 +368,7 @@
                 <div class="flex items-end font-bold">
                   <div class="text-[12px] text-others-original">{{ currencyDisplay }}</div>
                   <div class="text-[28px] text-others-original leading-none">
-                    {{ formatPrice(taxMode === 'in' ? (fare.price + fare.taxAmount) : fare.price) }}
+                    {{ formatPrice(taxMode === 'in' ? fare.price : (fare.price - fare.taxAmount)) }}
                   </div>
                 </div>
                 <div class="text-[12px] pt-2 text-others-gray1">
@@ -578,7 +578,10 @@ const fareRule = useFlightFareRule(() => ({
   babyCount: props.babyCount,
   validatingAirlineCode: props.validatingAirlineCode,
   itineraryRBDs: props.itineraryRBDs,
-  fareOptions: props.fareOptions
+  fareOptions: props.fareOptions,
+  // 直接使用列表上的價格（props.price 已經是含稅價）
+  flightSearchPrice: props.price,
+  flightSearchTaxAmount: props.taxAmount
 }))
 
 const modals = useFlightModals()
