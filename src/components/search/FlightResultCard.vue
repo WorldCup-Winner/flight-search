@@ -7,40 +7,40 @@
     @click="handleCardClick"
   >
     <!-- MOBILE LAYOUT -->
-    <div class="md:hidden p-3 flex flex-col min-h-[120px]">
+    <div class="md:hidden p-3 flex flex-col ">
       <!-- Times (Top Row) -->
-      <div class="flex items-center justify-center gap-3 mb-1.5">
-        <div class="text-center flex-shrink-0 min-w-[80px]">
-          <div class="text-[24px] text-others-gray7 tracking-wide font-bold">{{ departureTime }}</div>
+      <div class="flex items-center justify-center gap-6 mb-0.5">
+        <div class="text-center flex-shrink-0 min-w-[70px] max-w-[90px]">
+          <div class="text-[17px] text-others-gray7 tracking-wide font-bold leading-tight">{{ departureTime }}</div>
         </div>
 
-        <div class="relative flex flex-col items-center flex-shrink-0 w-36">
-          <div class="relative w-36 h-10 flex items-center justify-center">
-            <img class="w-36 h-10" src="@/assets/imgs/arrow-right-long.svg" />
-            <div v-if="stopsCount >= 1" class="absolute top-[19px] border-2 border-primary-gold bg-white rounded-full w-3 h-3"></div>
+        <div class="relative flex flex-col items-center flex-shrink-0 w-20">
+          <div class="relative w-20 h-4 flex items-center justify-center">
+            <img class="w-20 h-4 object-contain" src="@/assets/imgs/arrow-right-long.svg" alt="" />
+            <div v-if="stopsCount >= 1" class="absolute top-[5px] border-2 border-primary-gold bg-white rounded-full w-3 h-3"></div>
           </div>
         </div>
 
-        <div class="text-center flex-shrink-0 min-w-[80px]">
-          <div class="text-[24px] text-others-gray7 tracking-wide font-bold relative inline-block">
-            {{ arrivalTime }}
-            <span v-if="crossDays && crossDays > 0" class="absolute -top-1 -right-4 text-[12px] text-others-original font-normal">+{{ crossDays }}</span>
+        <div class="text-center flex-shrink-0 min-w-[70px] max-w-[90px]">
+          <div class="text-[17px] text-others-gray7 tracking-wide font-bold leading-tight flex items-center justify-center gap-1">
+            <span>{{ arrivalTime }}</span>
+            <span v-if="crossDays && crossDays > 0" class="text-[12px] text-others-original font-normal">+{{ crossDays }}</span>
           </div>
         </div>
       </div>
 
       <!-- Airports and Duration (Bottom Row - Aligned with Top) -->
-      <div class="flex items-center justify-center gap-3 mb-1.5">
-        <div class="text-center flex-shrink-0 min-w-[80px]">
-          <div class="text-sm text-others-gray1">{{ departureAirportCode }} {{ departureTerminal }}</div>
+      <div class="flex items-center justify-center gap-6 mb-1.5">
+        <div class="text-center flex-shrink-0 min-w-[70px] max-w-[90px]">
+          <div class="text-xs text-others-gray1 leading-tight break-words">{{ departureAirportCode }} {{ departureTerminal }}</div>
         </div>
 
-        <div class="text-center flex-shrink-0 w-36">
-          <div class="text-sm text-others-gray1">{{ totalDurationText }}</div>
+        <div class="text-center flex-shrink-0 w-20">
+          <div class="text-xs text-others-gray1 leading-tight">{{ totalDurationText }}</div>
         </div>
 
-        <div class="text-center flex-shrink-0 min-w-[80px]">
-          <div class="text-sm text-others-gray1">{{ arrivalAirportCode }} {{ arrivalTerminal }}</div>
+        <div class="text-center flex-shrink-0 min-w-[70px] max-w-[90px]">
+          <div class="text-xs text-others-gray1 leading-tight break-words">{{ arrivalAirportCode }} {{ arrivalTerminal }}</div>
         </div>
       </div>
 
@@ -52,14 +52,14 @@
             v-if="airlines.length <= 1"
             :src="airlines[0]?.logo"
             :alt="airlines[0]?.name || 'airline'"
-            class="w-5 h-5 object-contain"
+            class="w-3 h-3 object-contain"
             @error="onImageError"
           />
           <img
             v-else
             :src="AirlineTwo"
             :alt="'airlines'"
-            class="w-5 h-5 object-contain"
+            class="w-3 h-3 object-contain"
             @error="onImageError"
           />
           <div class="text-[10px] text-others-gray7 font-bold">
@@ -73,8 +73,8 @@
         <!-- Price (Right) -->
         <div class="text-right flex-shrink-0" :class="{ 'invisible': leg === 'return' && expanded1 }">
           <div class="flex items-end justify-end font-bold whitespace-nowrap">
-            <div class="text-[12px] text-others-original">{{ currencyDisplay }}&nbsp;</div>
-            <div class="text-[24px] text-others-original leading-none">{{ formatPrice(priceTotal) }}</div>
+            <div class="text-[10px] text-others-original">{{ currencyDisplay }}&nbsp;&nbsp;</div>
+            <div class="text-[21px] text-others-original leading-none">{{ formatPrice(priceTotal) }}</div>
           </div>
         </div>
       </div>

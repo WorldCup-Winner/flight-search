@@ -55,6 +55,22 @@ export const useAuthStore = defineStore('auth', {
             this.loading = true
             this.error = null
 
+            // 會員登入前，先清除之前的用戶資料（可能是訪客資料）
+            this.user = {
+                name: null,
+                firstName: undefined,
+                lastName: undefined,
+                phone: undefined,
+                countryCode: undefined,
+                email: undefined,
+                gender: undefined,
+                isMember: undefined,
+                memberId: undefined,
+                memberAccount: undefined,
+                mobileVerificationId: undefined,
+            }
+            localStorage.removeItem('userInfo')
+
             try {
                 // Step 1: Call FA01 (member login)
                 const { data } = await signIn(req)
@@ -199,7 +215,7 @@ export const useAuthStore = defineStore('auth', {
                 }
                 return false // Unknown status
             } catch (err: any) {
-                this.error = err.response?.data?.message || 'Login failed'
+                this.error = err.response?.data?.error?.message || '登入失敗'
                 toast.error(this.error)
                 console.log(err)
                 return false // Failed

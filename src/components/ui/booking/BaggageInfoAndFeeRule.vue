@@ -216,10 +216,10 @@ const groupedFareRules = computed(() => {
     const groups: Record<string, any[]> = {};
     for (const rule of activeFareRules.value) {
         let groupKey = rule.type;
-        if (rule.type.includes('改期')) groupKey = '改期費用';
+        // if (rule.type.includes('改期')) groupKey = '改期費用';
         if (rule.type.includes('退票費')) groupKey = '退票費用';
 
-        if (groupKey === '服務費') continue;
+        if (rule.type.includes('服務費')) continue;
 
         if (!groups[groupKey]) {
             groups[groupKey] = [];

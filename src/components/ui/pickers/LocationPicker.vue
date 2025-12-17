@@ -90,10 +90,20 @@
                             <span class="border-2 border-others-original text-others-original rounded-xl font-medium py-1 px-1 text-base leading-none transition-colors">
                                 城市
                             </span>
-                            <span class="text-others-gray7">
+                            <button
+                                type="button"
+                                class="text-left text-others-gray7 hover:text-others-original transition-colors"
+                                @click="onCityClick({
+                                    type: 'city',
+                                    iataCode: city.iataCode,
+                                    displayName: city.cityName,
+                                    countryName: city.countryName,
+                                    cityDisplayOrder: 0
+                                })"
+                            >
                                 <span v-html="highlightMatch(city.cityName)" />
                                 <span class="ml-1 text-xs text-others-gray5">{{ city.countryName }}</span>
-                            </span>
+                            </button>
                         </div>
                         <div
                             v-for="airport in city.airports"
@@ -276,6 +286,7 @@ interface CountryResult {
 interface CityResult {
     cityName: string
     countryName: string
+    iataCode: string
     airports: { name: string; iataCode: string }[]
 }
 
@@ -396,6 +407,7 @@ const cityResults = computed<CityResult[]>(() => {
                     results.push({
                         cityName,
                         countryName,
+                        iataCode: cityCode,
                         airports: airports.map(a => ({ name: a.name, iataCode: a.iataCode }))
                     })
                 }

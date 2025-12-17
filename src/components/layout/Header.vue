@@ -4,20 +4,20 @@
       'fixed top-0 left-0 right-0 z-50 flex items-center w-[100vw]',
       'h-[60px] md:h-[80px]',
       'px-4 md:px-[120px]',
-      isOrderPage ? 'bg-white' : 'bg-black/30'
+      isOrderPage ? 'bg-white shadow-md' : 'bg-black/30'
     ]"
   >
     <div class="flex w-full items-center justify-between min-w-0">
       <!-- Logo -->
       <button 
         type="button"
-        class="flex items-center cursor-pointer"
+        class="flex items-center cursor-pointer shrink-0"
         @click="handleHomeClick"
       >
         <img 
           :src="isOrderPage ? Header1 : Header" 
           alt="GalileeTours" 
-          class="h-8 md:h-9 w-auto" 
+          class="max-w-[105px] md:max-w-none h-auto md:h-9" 
         />
       </button>
 
@@ -34,7 +34,7 @@
           @click="isOpenBookingSearch = true"
         >
           <div
-            class="w-7 h-7 md:w-8 md:h-8
+            class="w-[15px] h-[15px] md:w-8 md:h-8 shrink-0
                 [mask-image:url('@/assets/imgs/icon-search.svg')] 
                 [mask-repeat:no-repeat] 
                 [mask-position:center] 
@@ -57,7 +57,7 @@
           ]"
         >
           <div
-            class="w-7 h-7 md:w-8 md:h-8
+            class="w-[15px] h-[15px] md:w-8 md:h-8 shrink-0
                 [mask-image:url('@/assets/imgs/icon-customer.svg')] 
                 [mask-repeat:no-repeat] 
                 [mask-position:center] 
@@ -75,7 +75,7 @@
           class="flex items-center gap-2 md:gap-6"
         >
           <button
-            class="px-3 md:px-4 py-1 w-[70px] md:w-[93px] h-[38px] md:h-[40px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition text-sm md:text-base"
+            class="px-3 md:px-4 py-1 max-w-[60px] md:max-w-none md:w-[93px] h-[38px] md:h-[40px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition text-sm md:text-base shrink-0"
             @click="openDialog('signin')"
           >
             登入
@@ -98,7 +98,7 @@
             ]"
           >
             <div
-              class="w-7 h-7 md:w-8 md:h-8
+              class="w-[15px] h-[15px] md:w-8 md:h-8 shrink-0
                   [mask-image:url('@/assets/imgs/icon-avatar.svg')] 
                   [mask-repeat:no-repeat]
                   [mask-position:center]
@@ -109,7 +109,7 @@
             <span class="hidden md:inline">Hi, {{ authStore.user.name }}</span>
           </div>
           <button
-            class="px-3 md:px-4 py-1 w-[70px] md:w-[93px] h-[38px] md:h-[40px] rounded-md border border-none hover:bg-others-gray2 hover:text-others-gray1 transition text-sm md:text-base"
+            class="px-3 md:px-4 py-1 max-w-[60px] md:max-w-none md:w-[93px] h-[38px] md:h-[40px] rounded-md border border-none hover:bg-others-gray2 hover:text-others-gray1 transition text-sm md:text-base shrink-0"
             :class="[isOrderPage ? 'bg-others-gray4 text-others-gray1' : 'bg-white text-others-gray1']"
             @click="handleLogout"
           >
@@ -169,8 +169,15 @@ const router = useRouter()
 
 // Match "/order" and any sub-paths like "/order/123"
 const isOrderPage = computed(() => {
-  const p = route.path.toLowerCase()
-  return p === '/booking' || p.startsWith('/booking/') || p.startsWith('/booking-search-result') || p === '/404-page'
+  const p = route.fullPath.toLowerCase()
+  console.log(window.innerWidth)
+  return (
+    p === '/booking' ||
+    p.startsWith('/booking/') ||
+    p.startsWith('/booking-search-result') ||
+    p === '/404-page' ||
+    (p.startsWith('/?triptype=') && typeof window !== 'undefined' && window.innerWidth < 768)
+  )
 })
 
 // Text color for links based on background

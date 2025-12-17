@@ -117,7 +117,7 @@
                 </div>
 
                 <!-- Passengers -->
-                <div class="relative py-4 md:py-6 pl-4 md:pl-6" ref="passTriggerRef">
+                <div class="flex flex-row md:flex-col gap-4 md:gap-0 relative py-4 md:py-6 pl-4 md:pl-6" ref="passTriggerRef">
                     <label class="text-sm md:text-h5 text-primary-gold font-bold mb-2 block">人數</label>
                     <div class="cursor-pointer" @click="togglePassengers">
                         <div class="text-sm md:text-base text-others-gray1">{{ passengerDisplayText }}</div>
@@ -149,7 +149,7 @@
                 <!-- Airline Search -->
                 <div class="relative flex-1 md:flex-none" ref="airlineTriggerRef">
                     <button @click="toggleAirline"
-                        class="flex items-center justify-between w-full md:min-w-[200px] bg-divider-soft text-primary-gold px-3 md:px-4 py-2 md:py-3 rounded-xl text-xs md:text-sm font-medium transition-colors duration-200">
+                        class="flex items-center justify-between w-full md:min-w-[200px] bg-divider-soft text-others-gray1 px-3 md:px-4 py-2 md:py-3 rounded-xl text-xs md:text-sm font-medium transition-colors duration-200">
                         <span class="truncate">{{ selectedAirline?.nameZhTw?.trim() || "航空公司偏好" }}</span>
                         <svg class="w-3 h-3 md:w-4 md:h-4 ml-2 flex-shrink-0 transition-transform duration-200"
                             :class="{ 'rotate-180': isAirlineOpen }" fill="currentColor" viewBox="0 0 12 12">
@@ -180,7 +180,7 @@
                 <!-- Cabin Class Selection -->
                 <div class="relative flex-1 md:flex-none" ref="cabinClassTriggerRef">
                     <button @click="toggleCabinClass"
-                        class="flex items-center justify-between w-full md:min-w-[150px] bg-divider-soft text-primary-gold px-3 md:px-4 py-2 md:py-3 rounded-xl text-xs md:text-sm font-medium transition-colors duration-200">
+                        class="flex items-center justify-between w-full md:min-w-[150px] bg-divider-soft text-others-gray1 px-3 md:px-4 py-2 md:py-3 rounded-xl text-xs md:text-sm font-medium transition-colors duration-200">
                         <span class="truncate">{{ selectedCabinClass }}</span>
                         <svg class="w-3 h-3 md:w-4 md:h-4 ml-2 flex-shrink-0 transition-transform duration-200"
                             :class="{ 'rotate-180': isCabinClassOpen }" fill="currentColor" viewBox="0 0 12 12">
@@ -210,10 +210,10 @@
                 <div class="relative flex-1 md:flex-none">
                     <input id="directFlight" type="checkbox" v-model="isNonStopFlight" class="sr-only" />
                     <label for="directFlight"
-                        class="flex items-center justify-between w-full md:min-w-[120px] bg-divider-soft text-primary-gold px-3 md:px-4 py-2 md:py-3 rounded-xl text-xs md:text-sm font-medium transition-colors duration-200 cursor-pointer">
+                        class="flex items-center justify-between w-full md:min-w-[120px] bg-divider-soft text-others-gray1 px-3 md:px-4 py-2 md:py-3 rounded-xl text-xs md:text-sm font-medium transition-colors duration-200 cursor-pointer">
                         <span>直飛</span>
                         <div class="w-3 h-3 md:w-4 md:h-4 rounded-full border-2 transition-colors duration-200 flex items-center justify-center flex-shrink-0"
-                            :class="isNonStopFlight ? 'border-none bg-others-original' : 'border-primary-gold bg-none'">
+                            :class="isNonStopFlight ? 'border-none bg-others-original' : 'border-others-gray1 bg-none'">
                         </div>
                     </label>
                 </div>

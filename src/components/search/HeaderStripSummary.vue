@@ -1,10 +1,15 @@
 <template>
   <div :class="noMargin ? 'bg-none' : 'mb-4 bg-none'">
-    <div class="relative flex rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] bg-others-gray4 h-full">
+    <div 
+      :class="[
+        'relative flex rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] h-full',
+        currentLeg === 'outbound' ? 'bg-others-gray11' : 'bg-primary-gold'
+      ]"
+    >
       <!-- Summary card: compact version for other leg -->
       <div class="relative flex flex-col justify-between px-3 py-2.5 w-[100px] flex-shrink-0 h-full">
         <!-- Title -->
-        <div class="text-white text-sm font-semibold mb-1">
+        <div class="text-white text-sm font-semibold mb-1.5">
           {{ segmentTitle }}
         </div>
 
@@ -33,6 +38,7 @@
 import { formatPrice } from '@/utils'
 
 defineProps<{
+  currentLeg: 'outbound' | 'return'
   segmentTitle: string
   timeRange?: string | null
   price?: number | null

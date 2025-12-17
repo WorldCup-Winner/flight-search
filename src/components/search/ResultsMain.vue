@@ -34,6 +34,7 @@
           </div>
           <HeaderStripSummary
             class="h-full"
+            :current-leg="currentLeg"
             :class="currentLeg === 'outbound' ? 'order-2' : 'order-1'"
             :segment-title="summaryData?.segmentTitle || (currentLeg === 'outbound' ? '回程' : '去程')"
             :time-range="summaryData?.timeRange || null"

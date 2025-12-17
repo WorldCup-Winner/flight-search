@@ -59,7 +59,8 @@
                     </div>
                     <!-- Submit -->
                     <button type="submit"
-                        class="w-full max-w-[360px] md:w-[150px] md:max-w-none mx-auto bg-others-original text-white py-2 rounded-md hover:bg-others-hover transition">
+                        :disabled="isMemberLoginDisabled"
+                        class="w-full max-w-[360px] md:w-[150px] md:max-w-none mx-auto bg-others-original text-white py-2 rounded-md hover:bg-others-hover transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-others-original">
                         登入
                     </button>
                     <!-- Footer text -->
@@ -154,7 +155,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue';
+import { ref, watch, onUnmounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from 'vue-toastification';
 import { sendSMS, verifySMS } from '@/api';
@@ -190,6 +191,11 @@ const agreed = ref(false)
 
 const authStore = useAuthStore()
 const toast = useToast()
+
+// Check if member login form is complete
+const isMemberLoginDisabled = computed(() => {
+    return !form.value.username || !form.value.password
+})
 
 const togglePassword = () => {
     showPassword.value = !showPassword.value

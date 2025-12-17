@@ -129,18 +129,18 @@
 
         <!-- Footer: Mobile only -->
         <div
-            class="md:hidden bg-white px-6 py-5 sticky bottom-0 z-10"
+            class="md:hidden bg-white px-10 py-5 sticky bottom-0 z-10 rounded-t-[30px]"
             style="box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);"
         >
             <!-- Row 1: Labels -->
-            <div class="grid grid-cols-2 gap-4 mb-1">
-                <span class="text-sm text-others-gray5">去程</span>
-                <span class="text-sm text-others-gray5">回程</span>
+            <div class="grid grid-cols-2 gap-4 mb-1 font-bold text-sm">
+                <span class="text-primary-gold">去程</span>
+                <span class="text-primary-gold">回程</span>
             </div>
             <!-- Row 2: Date values -->
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <span class="text-base text-others-gray1">{{ formatDateDisplay(localStart) }}</span>
-                <span class="text-base text-others-gray1">{{ formatDateDisplay(localEnd) }}</span>
+            <div class="grid grid-cols-2 gap-4 mb-4 font-medium text-sm">
+                <span class="text-others-gray1">{{ formatDateDisplay(localStart) }}</span>
+                <span class="text-others-gray1">{{ formatDateDisplay(localEnd) }}</span>
             </div>
             <!-- Row 3: Full width button -->
             <button

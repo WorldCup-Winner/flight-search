@@ -228,6 +228,20 @@ type Item = {
 };
 
 const flights = computed<Flight[]>(() => {
+    // 優先使用 FP02 API 的 fly_list 資料
+    const orderData = bookingStore.bookingResult?.bookingData
+    if (orderData?.fly_list && orderData.fly_list.length > 0) {
+        return orderData.fly_list.map((fly: any) => ({
+            departTime: `${fly.FPD05A || ''} ${fly.FPD05B || ''}`.trim(),
+            departAirport: fly.FPD07S || fly.FPD07 || '', // FPD07S
+            arriveTime: `${fly.FPD06A || ''} ${fly.FPD06B || ''}`.trim(),
+            arriveAirport: fly.FPD08S || fly.FPD08 || '', // FPD08S
+            flight: fly.FPD03S || fly.FPD04 || '',        // FPD03S
+            cabin: fly.FPD09 || fly.FPD11S || fly.FPD11 || '-', // FPD09
+            status: fly.FPD15S || '處理中',
+        }))
+    }
+    
     if (!bookingStore.bookingResult?.itineraries || bookingStore.bookingResult.itineraries.length === 0) {
         // Fallback: Use outbound and return segments from booking store
         const segments = []
@@ -273,6 +287,24 @@ const flights = computed<Flight[]>(() => {
 });
 
 const items = computed<Item[]>(() => {
+    // 優先使用 FP02 API 的 cust_list 資料
+    const orderData = bookingStore.bookingResult?.bookingData
+    if (orderData?.cust_list && orderData.cust_list.length > 0) {
+        return orderData.cust_list.map((cust: any) => {
+            const fare = parseInt(cust.FPC52) || 0
+            const paid = parseInt(cust.FPC53) || 0
+            return {
+                checked: true,
+                name: cust.FPC05 || '-',
+                productName: cust.FPC51 || '-',           // FPC51 商品名稱
+                totalWithTax: fare,                       // FPC52 商品金額（含稅）
+                tax: 0,                                   // FP02 沒有單獨的稅額欄位
+                paid: paid,
+                deadline: formatDateTime(orderData.FPA55) || '2025/12/31 23:59', // FPA55 付款期限
+            }
+        })
+    }
+    
     if (!bookingStore.bookingResult?.passengers || bookingStore.bookingResult.passengers.length === 0) {
         // Fallback: Create items from fare rule data
         const fareData = bookingStore.fareRuleData
@@ -411,6 +443,19 @@ function getPaymentDeadline(): string {
     return deadline
   }
   return '2025/8/31 14:20'
+}
+
+// Helper function to format FPA55 datetime (format: YYYYMMDDHHMM)
+function formatDateTime(dateTime: string): string {
+  if (!dateTime || dateTime.length !== 12) return ''
+  
+  const year = dateTime.substring(0, 4)
+  const month = dateTime.substring(4, 6)
+  const day = dateTime.substring(6, 8)
+  const hour = dateTime.substring(8, 10)
+  const minute = dateTime.substring(10, 12)
+  
+  return `${year}/${parseInt(month)}/${parseInt(day)} ${hour}:${minute}`
 }
 </script>
 

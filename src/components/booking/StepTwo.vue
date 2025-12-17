@@ -120,7 +120,7 @@
                               {{ bookingStore.selectedFare.cabin }}
                           </div>
                           <ul class="col-span-12 md:col-span-9 space-y-2">
-                              <li v-for="(n, i) in bookingStore.selectedFare.notes" :key="i" class="flex items-center gap-2 text-others-gray1">
+                              <li v-for="(n, i) in bookingStore.selectedFare.notes.filter(note => !note.text.includes('服務費'))" :key="i" class="flex items-center gap-2 text-others-gray1">
                                   <img :src="noteIcon(n.type, n.icon)" />
                                   <span class="text-[14px]">
                                   {{ n.text }}
@@ -322,7 +322,8 @@
                                 :class="[
                                     'w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none',
                                     isContactLastNameLocked ? 'bg-gray-100 cursor-not-allowed' : ''
-                                ]" />
+                                ]"
+                                @focus="handleContactFieldFocus" />
                         </div>
                         <div class="relative col-span-12 md:col-span-4 mb-4">
                             <label class="block mb-1 text-others-gray1">聯絡人名字</label>
@@ -334,7 +335,8 @@
                                 :class="[
                                     'w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none',
                                     isContactFirstNameLocked ? 'bg-gray-100 cursor-not-allowed' : ''
-                                ]" />
+                                ]"
+                                @focus="handleContactFieldFocus" />
                         </div>
                         <div class="relative col-span-12 md:col-span-4 mb-4">
                             <label class="block mb-1 text-others-gray1">聯絡人性別</label>
@@ -348,6 +350,8 @@
                                         isContactGenderLocked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
                                     ]"
                                     aria-label="Contact Gender"
+                                    @mousedown="handleContactFieldFocus"
+                                    @focus="handleContactFieldFocus"
                                     >
                                     <option value="male">
                                         男
@@ -371,6 +375,7 @@
                                 :show-eye="false"
                                 :default-visible="true"
                                 :disabled="isContactPhoneLocked"
+                                @focus="handleContactFieldFocus"
                                 @blur="handlePhoneBlur"
                             />
                             <p v-if="phoneError" class="absolute left-0 top-full mt-1 text-text-error text-sm">
@@ -391,6 +396,7 @@
                                         : 'border-primary-gold focus:ring-others-original',
                                     isContactEmailLocked ? 'bg-gray-100 cursor-not-allowed' : ''
                                 ]"
+                                @focus="handleContactFieldFocus"
                                 @blur="handleEmailBlur"
                             />
                             <p v-if="emailError" class="absolute left-0 top-full mt-1 text-text-error text-sm">
@@ -1206,6 +1212,18 @@ const specialNeedsText = ref('')
 const openDialog = (type: any) => { activeDialog.value = type }
 const closeDialog = () => { activeDialog.value = null }
 
+// Handle contact field focus - check if user is logged in
+function handleContactFieldFocus(event: FocusEvent | MouseEvent) {
+  if (!authStore.isAuthenticated && !authStore.isGuest) {
+    event.preventDefault()
+    const target = event.target as HTMLElement
+    if ('blur' in target) {
+      target.blur()
+    }
+    openDialog('signin')
+  }
+}
+
 // Handle edit search - blank for now
 function handleEditSearch() {
   // TODO: Implement edit search functionality
@@ -1471,8 +1489,8 @@ if (countryCode === '+886') {
     }
   }
   
-  // Check if it's 10 digits
-  if (cleaned.length !== 10) {
+  // Check if it's 09 followed by 8 digits (10 digits total) or 9 followed by 8 digits (9 digits total)
+  if (!/^09\d{8}$/.test(cleaned) && !/^9\d{8}$/.test(cleaned)) {
     return {
       isValid: false,
       error: '格式有誤，請檢查'
@@ -1986,6 +2004,20 @@ watch(
         emitSubmit()
       }, 100)
     }
+  }
+}
+)
+
+// Watch for guest login (SMS verification)
+watch(
+() => authStore.isGuest,
+(isGuest) => {
+  if (isGuest) {
+    // Auto-fill contact info when guest verifies
+    fillContactInfoFromAuth()
+    
+    // Close login dialog when guest verifies
+    closeDialog()
   }
 }
 )

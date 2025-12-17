@@ -3,7 +3,7 @@
     <!-- Mobile: Total count + Sort/Filter buttons -->
     <div class="flex items-center justify-between md:hidden">
       <!-- Total count on left -->
-      <div class="text-sm text-others-gray1">
+      <div class="text-[12px] text-others-gray1">
         共找到 <span class="font-bold text-others-gray7">{{ totalCount }}</span> 筆航班
       </div>
       
@@ -15,8 +15,8 @@
           class="flex items-center gap-1.5 text-others-original"
           @click="$emit('sort-click')"
         >
-          <font-awesome-icon icon="bars" class="text-base" />
-          <span class="text-sm font-medium">排序</span>
+          <img src="@/assets/imgs/icon-order.svg" alt="排序" class="w-4 h-4" />
+          <span class="text-[12px] font-medium">排序</span>
         </button>
         
         <!-- Filter button with badge -->
@@ -25,15 +25,13 @@
           class="flex items-center gap-1.5 text-others-original"
           @click="$emit('filter-click')"
         >
-          <font-awesome-icon icon="sliders" class="text-base" />
-          <span class="relative text-sm font-medium">
-            篩選
-            <span
-              v-if="activeFilterCount > 0"
-              class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white"
-            >
-              {{ activeFilterCount }}
-            </span>
+          <img src="@/assets/imgs/icon-filter.svg" alt="篩選" class="w-4 h-4" />
+          <span class="text-[12px] font-medium">篩選</span>
+          <span
+            v-if="activeFilterCount > 0"
+            class="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#E32636] text-[8px] font-bold text-white leading-none"
+          >
+            {{ activeFilterCount }}
           </span>
         </button>
       </div>

@@ -17,7 +17,7 @@ export const useFlightSearchStore = defineStore('flightSearch', {
                 const res = await flightSearch(req)
                 this.data = res.data.data
             } catch (err: any) {
-                this.error = err.response?.data?.message || 'Login failed'
+                this.error = err.response?.data?.message || 'flightSearch failed'
                 console.log(err)
             }
             this.loading = 'success'

@@ -234,7 +234,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { getSupportedPaymentTypes } from '@/api'
+import { getSupportedPaymentTypes, viewOrder } from '@/api'
 import { useBookingStore } from '@/stores/booking'
 
 // Props for when used from order query page
@@ -352,10 +352,10 @@ const paymentGroups = computed<PaymentGroup[]>(() => {
     groupMap.get(method.DET03)!.options.push(method)
   })
   
-  // Define custom order: L (LINE Pay) first, then A (Credit Card), then others
+  // Define custom order: A (Credit Card) first, then L (LINE Pay), then others
   const orderMap: Record<string, number> = {
-    'L': 1,  // LINE Pay
-    'A': 2,  // Credit Card
+    'A': 1,  // Credit Card
+    'L': 2,  // LINE Pay
     'B': 3   // Bank Transfer
   }
   
@@ -501,24 +501,42 @@ const handleNextStep = async () => {
       return
     }
     
-    // 3. 呼叫 FP02 取得訂單詳細資料 (包含 cust_list)
-    console.log('Calling FP02 to get order details...')
-    const { viewOrder } = await import('@/api')
-    const fp02Response = await viewOrder(orderNumber, orderUniqId)
+    // 3. 取得 FP02 訂單詳細資料 (包含 cust_list)
+    // 優先使用 props 傳入的訂單號碼 (for order query page)
+    let custList
     
-    console.log('FP02 Response:', fp02Response.data)
-    
-    if (fp02Response.data?.status != 1) {
-      console.error('FP02 failed:', fp02Response.data?.msg)
-      alert(`無法取得訂單資料：${fp02Response.data?.msg || '未知錯誤'}`)
-      isProcessing.value = false
-      return
+    if (props.orderNumber) {
+      // 訂單查詢頁面：需要重新呼叫 FP02
+      console.log('Calling FP02 to get order details...')
+      const fp02Response = await viewOrder(orderNumber, orderUniqId)
+      
+      console.log('FP02 Response:', fp02Response.data)
+      
+      if (fp02Response.data?.status != 1) {
+        console.error('FP02 failed:', fp02Response.data?.msg)
+        alert(`無法取得訂單資料：${fp02Response.data?.msg || '未知錯誤'}`)
+        isProcessing.value = false
+        return
+      }
+      
+      custList = fp02Response.data.cust_list
+    } else {
+      // 一般訂票流程：使用 Step 3 已載入的 FP02 資料
+      console.log('Using FP02 data from booking store...')
+      const bookingData = bookingStore.bookingResult?.bookingData
+      
+      if (!bookingData || !bookingData.cust_list) {
+        console.error('FP02 data not found in booking store')
+        alert('訂單資料異常，請重新整理頁面')
+        isProcessing.value = false
+        return
+      }
+      
+      custList = bookingData.cust_list
     }
     
-    // 從 FP02 回應中取得 cust_list
-    const custList = fp02Response.data.cust_list
     if (!custList || custList.length === 0) {
-      console.error('No cust_list found in FP02 response')
+      console.error('No cust_list found in order data')
       alert('訂單資料異常，請重新訂票')
       isProcessing.value = false
       return

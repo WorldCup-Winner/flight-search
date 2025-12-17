@@ -25,14 +25,14 @@
           <div class="flex gap-3 flex-shrink-0">
             <button
               type="button"
-              class="px-4 py-3 rounded-[10px] text-others-gray7 bg-others-gray3 font-bold hover:bg-others-gray5 transition whitespace-nowrap"
+              class="px-4 py-3 rounded-[15px] text-white bg-primary-gold font-bold hover:bg-others-gray5 transition whitespace-nowrap"
               @click="handleFlightInfo"
             >
               航班資訊
             </button>
             <button
               type="button"
-              class="px-4 py-3 rounded-[10px] text-white bg-others-original font-bold hover:bg-others-hover transition whitespace-nowrap"
+              class="px-4 py-3 rounded-[15px] text-white bg-others-original font-bold hover:bg-others-hover transition whitespace-nowrap"
               @click="handleNextStep"
             >
               {{ isLastStep ? '訂購' : '下一步' }}

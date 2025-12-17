@@ -23,7 +23,7 @@ export const useAirlineStore = defineStore('airline', {
 
                 console.log(this.airlines)
             } catch (err: any) {
-                this.error = err.response?.data?.message || 'Login failed'
+                this.error = err.response?.data?.message || 'getAirlines failed'
                 console.log(err)
             }
             this.loading = false

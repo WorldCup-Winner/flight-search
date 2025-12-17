@@ -46,6 +46,7 @@
       :value="modelValue"
       :disabled="disabled"
       @input="onInput"
+      @focus="$emit('focus', $event)"
       @blur="$emit('blur')"
       :class="[
         'min-w-0 flex-1 px-5 py-2 text-sm text-others-gray1 focus:outline-none',
@@ -109,6 +110,7 @@ const emit = defineEmits<{
   (e: 'update:modelValue', v: string): void
   (e: 'update:countryCode', v: string): void
   (e: 'update:showEye', v: boolean): void
+  (e: 'focus', event: FocusEvent): void
   (e: 'blur'): void
 }>()
 
@@ -130,8 +132,10 @@ const placeholder = props.placeholder ?? '請輸手機號碼'
 
 const onInput = (e: Event) => {
   const target = e.target as HTMLInputElement
-  // keep digits, spaces, and dashes; trim leading spaces
-  const sanitized = target.value.replace(/[^\d\s-]/g, '').replace(/^\s+/, '')
+  // Only allow digits (numbers)
+  const sanitized = target.value.replace(/[^\d]/g, '')
+  // Update both model and input value to ensure immediate visual feedback
+  target.value = sanitized
   emit('update:modelValue', sanitized)
 }
 </script>

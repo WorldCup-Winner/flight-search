@@ -66,14 +66,14 @@
                 </div>
             </div>
 
-            <div class="text-sm text-others-gray5 text-center">
+            <div class="text-sm text-others-gray5 text-left mb-6">
                 如有嬰兒(&lt;2歲)同行，請洽票務人工訂位
             </div>
         </div>
 
         <!-- Footer: Mobile only -->
         <div
-            class="md:hidden bg-white px-6 py-5 sticky bottom-0 z-10"
+            class="md:hidden bg-white px-6 py-5 sticky bottom-0 z-10 rounded-t-[20px]"
             style="box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);"
         >
             <button

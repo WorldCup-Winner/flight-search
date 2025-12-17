@@ -4,7 +4,7 @@
       class="relative flex rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] h-full"
       :class="[
         noMargin ? '' : 'mb-4',
-        currentLeg === 'outbound' ? 'bg-primary-gold2' : 'bg-others-gray4'
+        currentLeg === 'outbound' ? 'bg-primary-gold' : 'bg-others-gray11'
       ]"
     >
       <!-- Main leg card -->
@@ -34,7 +34,7 @@
             <!-- Date + Edit (ALWAYS same row on mobile) -->
             <div class="order-1 flex w-full md:w-auto items-center gap-2 min-w-0 flex-nowrap">
               <!-- Date (truncate so edit button never drops) -->
-              <div class="text-xs md:text-[18px] font-semibold truncate min-w-0">
+              <div class="text-[11px] md:text-[18px] font-semibold truncate min-w-0">
                 {{ formatDateToChinese(dateText) }}
               </div>
 
@@ -44,15 +44,15 @@
                 class="ml-auto shrink-0 inline-flex items-center gap-0.5 rounded-md border border-white bg-black/5 px-1.5 py-1 text-xs font-medium text-white transition hover:text-others-original md:hidden"
                 @click="$emit('edit-segment')"
               >
-                <font-awesome-icon icon="pen" />
-                <span class="leading-none">修改</span>
+                <font-awesome-icon icon="pen" class="w-2.5 h-2.5" />
+                <span class="leading-none text-[11px]">修改</span>
               </button>
             </div>
 
             <!-- Route: on mobile it wraps to second line; on PC it sits beside the date -->
-            <div class="order-3 flex w-full flex-row items-center text-xs md:text-[16px] md:order-2 md:w-auto gap-1.5 md:gap-3 font-semibold">
+            <div class="order-3 flex w-full flex-row items-center text-[12px] md:text-[16px] md:order-2 md:w-auto gap-1.5 md:gap-3 font-semibold">
               <span>{{ origin.name }}({{ origin.code }})</span>
-              <img src="@/assets/imgs/icon-arrow-right-white.svg" class="w-6 h-6 md:w-4 md:h-4" />
+              <img src="@/assets/imgs/icon-arrow-right-white.svg" class="w-5 h-5 md:w-4 md:h-4" />
               <span>{{ destination.name }}({{ destination.code }})</span>
             </div>
           </div>
