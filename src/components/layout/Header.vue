@@ -131,7 +131,11 @@
     </Transition>
   </nav>
   <Transition name="fade">
-    <BookingSearch :open="isOpenBookingSearch" @close="isOpenBookingSearch = false" />
+    <BookingSearch 
+      :open="isOpenBookingSearch" 
+      :initial-order-number="initialOrderNumber"
+      @close="closeBookingSearch" 
+    />
   </Transition>
 </template>
 
@@ -157,11 +161,35 @@ const flightSearchStore = useFlightSearchStore()
 const bookingStore = useBookingStore()
 const locationStore = useLocationStore()
 
+// 監聽來自 HomeView 的訂單查詢請求
+import { onMounted, onUnmounted } from 'vue'
+
 const activeDialog = ref(null)
 const isOpenBookingSearch = ref(false)
+const initialOrderNumber = ref<string | undefined>(undefined)
 
 const openDialog = (type: any) => { activeDialog.value = type }
 const closeDialog = () => { activeDialog.value = null }
+
+// 提供方法給外部組件打開訂單查詢並填入訂單編號
+function openBookingSearchWithOrderNumber(orderNumber?: string) {
+  initialOrderNumber.value = orderNumber
+  isOpenBookingSearch.value = true
+}
+
+// 當 popup 關閉時清除初始訂單編號
+function closeBookingSearch() {
+  isOpenBookingSearch.value = false
+  // 延遲清除，確保 popup 動畫完成
+  setTimeout(() => {
+    initialOrderNumber.value = undefined
+  }, 300)
+}
+
+// 暴露方法給外部使用
+defineExpose({
+  openBookingSearchWithOrderNumber
+})
 
 // --- Route-aware styling ---
 const route = useRoute()
@@ -183,6 +211,21 @@ const isOrderPage = computed(() => {
 const linkCls = computed(() =>
   isOrderPage.value ? 'text-others-gray1 hover:text-others-gray2' : 'text-white hover:text-gray-200'
 )
+
+// 監聽來自其他組件的訂單查詢請求
+function handleOrderQueryEvent(event: Event) {
+  const customEvent = event as CustomEvent
+  const { orderNumber } = customEvent.detail
+  openBookingSearchWithOrderNumber(orderNumber)
+}
+
+onMounted(() => {
+  window.addEventListener('open-order-query', handleOrderQueryEvent)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('open-order-query', handleOrderQueryEvent)
+})
 
 // Clear all search and booking state when navigating home
 function handleHomeClick() {

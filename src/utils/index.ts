@@ -159,3 +159,16 @@ export function formatDateToYYYYMMDD(date: Date): string {
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
+
+/**
+ * Convert Date object to local YYYY年MM月DD日 format
+ * Prevents timezone conversion issues with toISOString()
+ * @param date - Date object
+ * @returns YYYY年MM月DD日 formatted string in local timezone
+ */
+export function formatChineseDateToYYYYMMDD(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}年${month}月${day}日`
+}

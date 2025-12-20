@@ -8,7 +8,7 @@
   </main>
 </template>
 <script setup lang="ts">
-import { ref, provide, watch } from 'vue'
+import { ref, provide, watch, onMounted, getCurrentInstance } from 'vue'
 import { useRoute } from 'vue-router'
 
 import HeroSection from '@/components/home/HeroSection.vue'
@@ -74,4 +74,24 @@ window.scrollTo({
   left: 0,
   behavior: 'smooth'
 });
+
+// 檢測是否從訂單確認信連結進入
+onMounted(() => {
+  const orderNumber = route.params.orderNumber as string
+  
+  if (orderNumber) {
+    // 獲取 Header 組件實例並調用方法打開訂單查詢 popup
+    const instance = getCurrentInstance()
+    const header = instance?.appContext.config.globalProperties.$refs?.header
+    
+    // 使用 nextTick 確保 DOM 已渲染
+    setTimeout(() => {
+      // 透過直接查找 Header 組件來調用方法
+      // 由於 Header 在 App.vue 中，我們需要透過 window 事件來通知
+      window.dispatchEvent(new CustomEvent('open-order-query', {
+        detail: { orderNumber }
+      }))
+    }, 100)
+  }
+})
 </script>

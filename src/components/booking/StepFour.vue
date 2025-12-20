@@ -63,13 +63,13 @@
                     </div>
 
                     <!-- CTA: show on both mobile & desktop (layout differs via width) -->
-                    <button
+                    <!-- <button
                         v-if="orderData?.FPA50 === '5' && paymentType !== 'B1'"
                         class="w-full md:w-[260px] rounded-[10px] bg-others-original py-3 font-semibold text-white hover:bg-others-hover"
                         type="button"
                     >
                         立即付款
-                    </button>
+                    </button> -->
                 </div>
                 <!-- 虛擬匯款資訊顯示區域 - 只有 B1 才顯示 -->
                 <div v-if="paymentType === 'B1' && paymentInfo && paymentInfo.length > 0" class="mt-6 pt-6 border-t-2">

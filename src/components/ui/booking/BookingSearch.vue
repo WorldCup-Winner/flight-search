@@ -49,7 +49,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useRouter } from "vue-router"
 import { queryOrder, viewOrder } from '@/api'
 
@@ -60,6 +60,7 @@ const router = useRouter()
 // defineProps and defineEmits are compiler macros in <script setup>, no need to import
 const props = defineProps<{
   open: boolean;
+  initialOrderNumber?: string;
 }>();
 
 const emit = defineEmits<{
@@ -79,6 +80,17 @@ const form = ref({
 
 const isSearching = ref(false)
 const searchError = ref('')
+
+// 當 popup 打開且有初始訂單編號時，自動填入
+watch(
+  () => [props.open, props.initialOrderNumber],
+  ([isOpen, orderNumber]) => {
+    if (isOpen && orderNumber && typeof orderNumber === 'string') {
+      form.value.bookingId = orderNumber
+    }
+  },
+  { immediate: true }
+)
 
 const handleSearch = async () => {
   try {
@@ -122,11 +134,23 @@ const handleSearch = async () => {
     // 關閉彈窗
     close()
     
+    // 保存訂單基本資訊到 sessionStorage（防止 router state 遺失）
+    sessionStorage.setItem('orderQueryBasicInfo', JSON.stringify({
+      orderNumber,
+      uniqId,
+      passengerSeq
+    }))
+    
     // 導向訂單查詢結果頁面，並傳遞訂單資料
     router.push({
       name: 'booking-search-result',
+      query: {
+        t: Date.now().toString() // 添加時間戳確保路由會更新
+      },
       state: {
-        orderData: fp02Response.data
+        orderData: fp02Response.data,
+        orderNumber,
+        uniqId
       }
     })
     

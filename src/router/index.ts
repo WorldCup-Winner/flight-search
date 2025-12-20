@@ -67,6 +67,11 @@ const router = createRouter({
       ]
     },
     {
+      path: '/QueryOrder/:orderNumber',
+      name: 'query-order',
+      component: () => import('../views/HomeView.vue')
+    },
+    {
       path: '/booking',
       component: () => import('../views/BookingView.vue'),
       // Redirect /booking to /booking/step-2 for backward compatibility

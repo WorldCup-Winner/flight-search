@@ -238,10 +238,10 @@ const handleLogin = async () => {
         // Call SMSCHK API
         try {
             const fullName = `${form1.value.lastname}${form1.value.firstname}`
-            // For Taiwan (+886), send phone number as-is. For other countries, combine code and phone
+            // For Taiwan (+886), send phone number as-is (09開頭10碼 or 9開頭9碼). For other countries, add + prefix
             const phoneNumber = form1.value.code === '+886' 
                 ? form1.value.phone 
-                : `${form1.value.code.replace('+', '')}${form1.value.phone}`
+                : `${form1.value.code}${form1.value.phone}`
             
             const response = await verifySMS({
                 PAR01: phoneNumber, // Phone number
@@ -311,10 +311,10 @@ const handleCodeSMS = async () => {
     isSendingSMS.value = true
     
     try {
-        // For Taiwan (+886), send phone number as-is. For other countries, combine code and phone
+        // For Taiwan (+886), send phone number as-is (09開頭10碼 or 9開頭9碼). For other countries, add + prefix
         const phoneNumber = form1.value.code === '+886' 
             ? form1.value.phone 
-            : `${form1.value.code.replace('+', '')}${form1.value.phone}`
+            : `${form1.value.code}${form1.value.phone}`
         
         const response = await sendSMS({
             PAR02: phoneNumber, // Phone number

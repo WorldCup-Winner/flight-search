@@ -30,24 +30,64 @@
       </div>
 
       <!-- Expanded price breakdown -->
-      <div v-if="isExpanded" class="space-y-2 mb-4">
-        <!-- Header total -->
-        <div class="flex items-baseline justify-between text-primary-gold font-semibold text-sm">
-          <span>{{ titleLabel }}</span>
-          <div class="flex items-end">
-            {{ currency }} {{ formatPrice(effectiveTotal) }}
+      <div v-if="isExpanded" class="space-y-3 mb-4">
+        <!-- Adult section -->
+        <div v-if="adultTotal && adultTotal > 0" class="space-y-2">
+          <div class="flex items-baseline justify-between text-primary-gold font-semibold text-sm">
+            <span>成人機票總額</span>
+            <div class="flex items-end">
+              {{ currency }} {{ formatPrice(adultTotal) }}
+            </div>
+          </div>
+          <div
+            v-for="(line, idx) in effectiveLines.filter((l: any) => l.label.includes('成人'))"
+            :key="'adult-' + idx"
+            class="flex justify-between text-others-gray1 text-sm pl-3"
+          >
+            <span>{{ line.label }}</span>
+            <div class="flex items-end">
+              {{ currency }} {{ formatPrice(line.amount) }} x {{ line.qty ?? 1 }}
+            </div>
           </div>
         </div>
         
-        <!-- Line items -->
-        <div
-          v-for="(line, idx) in effectiveLines"
-          :key="idx"
-          class="flex justify-between text-others-gray1 text-sm"
-        >
-          <span>{{ line.label }}</span>
-          <div class="flex items-end">
-            {{ currency }} {{ formatPrice(line.amount) }} x {{ line.qty ?? 1 }}
+        <!-- Child section -->
+        <div v-if="childTotal && childTotal > 0" class="space-y-2">
+          <div class="flex items-baseline justify-between text-primary-gold font-semibold text-sm">
+            <span>兒童機票總額</span>
+            <div class="flex items-end">
+              {{ currency }} {{ formatPrice(childTotal) }}
+            </div>
+          </div>
+          <div
+            v-for="(line, idx) in effectiveLines.filter((l: any) => l.label.includes('兒童'))"
+            :key="'child-' + idx"
+            class="flex justify-between text-others-gray1 text-sm pl-3"
+          >
+            <span>{{ line.label }}</span>
+            <div class="flex items-end">
+              {{ currency }} {{ formatPrice(line.amount) }} x {{ line.qty ?? 1 }}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Infant section -->
+        <div v-if="infantTotal && infantTotal > 0" class="space-y-2">
+          <div class="flex items-baseline justify-between text-primary-gold font-semibold text-sm">
+            <span>嬰兒機票總額</span>
+            <div class="flex items-end">
+              {{ currency }} {{ formatPrice(infantTotal) }}
+            </div>
+          </div>
+          <div
+            v-for="(line, idx) in effectiveLines.filter((l: any) => l.label.includes('嬰兒'))"
+            :key="'infant-' + idx"
+            class="flex justify-between text-others-gray1 text-sm pl-3"
+          >
+            <span>{{ line.label }}</span>
+            <div class="flex items-end">
+              {{ currency }} {{ formatPrice(line.amount) }} x {{ line.qty ?? 1 }}
+            </div>
           </div>
         </div>
 
@@ -133,6 +173,9 @@ const props = defineProps<{
   currency?: string
   effectiveLines: Array<{ label: string | String; amount: number; qty?: number }>
   effectiveTotal: number
+  adultTotal?: number
+  childTotal?: number
+  infantTotal?: number
   agreed: boolean
   isSubmitting: boolean
 }>()

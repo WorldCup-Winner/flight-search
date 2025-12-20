@@ -283,7 +283,7 @@
       :tax-mode="taxMode"
       :tax-amount="selectedCardData.taxAmount"
       :is-last-step="isLastStep"
-      @close="isFlightInfoModalOpen = false; selectedCardRefNumber = null"
+      @close="isFlightInfoModalOpen = false"
       @next-step="handleFlightInfoNextStep"
     />
 

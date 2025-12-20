@@ -35,7 +35,8 @@
             <div class="order-1 flex w-full md:w-auto items-center gap-2 min-w-0 flex-nowrap">
               <!-- Date (truncate so edit button never drops) -->
               <div class="text-[11px] md:text-[18px] font-semibold truncate min-w-0">
-                {{ formatDateToChinese(dateText) }}
+                <span class="md:hidden">{{ formatChineseDateToYYYYMMDD(new Date(dateText)) }}</span>
+                <span class="hidden md:inline">{{ formatDateToChinese(dateText) }}</span>
               </div>
 
               <!-- Mobile edit button -->
@@ -68,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { formatDateToChinese } from '@/utils'
+import { formatDateToChinese, formatChineseDateToYYYYMMDD } from '@/utils'
 
 defineProps<{
   currentLeg: 'outbound' | 'return'

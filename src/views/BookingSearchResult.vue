@@ -396,8 +396,8 @@
         
         <!-- PaymentMethodCard 組件 -->
         <PaymentMethodCard
-          :orderNumber="orderData?.FPA01"
-          :orderUniqId="orderData?.FPA02"
+          :orderNumber="orderNumber"
+          :orderUniqId="orderUniqId"
           :totalAmount="total"
           @payment-completed="handlePaymentCompleted"
           @close="showPaymentDialog = false" />
@@ -406,10 +406,10 @@
   </main>
 </template>
 <script setup lang="ts">
-import { reactive, computed, ref, onMounted } from "vue";
+import { reactive, computed, ref, onMounted, watch } from "vue";
 import { formatPrice } from "@/utils";
 import PaymentMethodCard from "@/components/booking/PaymentMethodCard.vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 
 type Flight = {
   departTime: string;
@@ -451,25 +451,70 @@ type SpecialCooperation = {
 
 // 從 router state 取得訂單資料
 const router = useRouter()
+const route = useRoute()
 const orderData = ref<any>(null)
+const orderNumber = ref<string>('')
+const orderUniqId = ref<string>('')
 const paymentInfo = ref<any[]>([])
 const paymentType = ref<string>('')
 
 // 付款對話框狀態
 const showPaymentDialog = ref(false)
 
-onMounted(() => {
+// 載入訂單資料的函數
+const loadOrderData = () => {
   // 取得從 BookingSearch 傳來的訂單資料
   const state = history.state as any
+  
   if (state && state.orderData) {
     orderData.value = state.orderData
-    console.log('Order data loaded:', orderData.value)
+    // 優先從 state 取得 orderNumber 和 uniqId（直接從 FP04 傳來的值）
+    orderNumber.value = state.orderNumber || state.orderData.FPA01 || ''
+    orderUniqId.value = state.uniqId || state.orderData.FPA02 || ''
+    
+    console.log('Order data loaded:', {
+      orderNumber: orderNumber.value,
+      orderUniqId: orderUniqId.value
+    })
+    
     processOrderData()
   } else {
-    console.warn('No order data found in router state')
-    // 可以導回首頁或顯示錯誤訊息
+    // 備用：從 sessionStorage 取得
+    console.warn('No order data in router state, trying sessionStorage...')
+    const cachedBasicInfo = sessionStorage.getItem('orderQueryBasicInfo')
+    
+    if (cachedBasicInfo) {
+      const basicInfo = JSON.parse(cachedBasicInfo)
+      orderNumber.value = basicInfo.orderNumber
+      orderUniqId.value = basicInfo.uniqId
+      
+      console.log('Loaded from sessionStorage:', { orderNumber: orderNumber.value, orderUniqId: orderUniqId.value })
+      // 如果需要，可以重新呼叫 FP02 API
+      alert('正在重新載入訂單資料...')
+      // TODO: 實作重新呼叫 FP02 的邏輯
+    } else {
+      console.error('No order data found')
+      alert('訂單資料遺失，請重新查詢')
+    }
   }
+}
+
+// 首次載入
+onMounted(() => {
+  loadOrderData()
 })
+
+// 監聽路由變化（處理同一路由重新查詢的情況）
+watch(
+  () => route.query.t,
+  (newTime, oldTime) => {
+    // 當查詢參數改變時（重新查詢訂單），重新載入資料
+    if (newTime && newTime !== oldTime) {
+      console.log('Route query changed, reloading order data...')
+      loadOrderData()
+    }
+  }
+)
 
 // 處理訂單資料，轉換成畫面需要的格式
 const flights = reactive<Flight[]>([])
@@ -582,6 +627,30 @@ const total = computed(() =>
     .filter((i) => i.checked)
     .reduce((sum, i) => sum + i.fare - i.paid, 0)
 );
+
+// 處理付款按鈕點擊
+const handlePaymentClick = () => {
+  // 檢查是否有必要的資料
+  if (!orderData.value) {
+    console.error('orderData is null or undefined')
+    alert('訂單資料遺失，請重新查詢訂單')
+    return
+  }
+  
+  if (!orderNumber.value) {
+    console.error('orderNumber is missing')
+    alert('訂單號碼遺失，請重新查詢訂單')
+    return
+  }
+  
+  if (!orderUniqId.value) {
+    console.error('orderUniqId is missing')
+    alert('訂單識別碼遺失，請重新查詢訂單')
+    return
+  }
+  
+  showPaymentDialog.value = true
+}
 
 // 處理付款完成
 const handlePaymentCompleted = async () => {

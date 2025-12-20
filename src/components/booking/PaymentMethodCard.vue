@@ -471,21 +471,32 @@ const handleNextStep = async () => {
     }
     
     // 2. 檢查並取得訂票資料
+    console.log('=== Payment Method Card - Data Check ===')
+    console.log('Props received:', {
+      orderNumber: props.orderNumber,
+      orderUniqId: props.orderUniqId,
+      totalAmount: props.totalAmount
+    })
     console.log('Booking store data:', {
+      hasBookingResult: !!bookingStore.bookingResult,
+      hasBookingData: !!bookingStore.bookingResult?.bookingData,
       bookingResult: bookingStore.bookingResult,
-      searchParams: bookingStore.searchParams,
-      props: { orderNumber: props.orderNumber, orderUniqId: props.orderUniqId }
+      searchParams: bookingStore.searchParams
     })
     
     // 優先使用傳入的 props (for order query page)
     let orderNumber = props.orderNumber
     let orderUniqId = props.orderUniqId
     
+    console.log('Initial values:', { orderNumber, orderUniqId })
+    
     // 如果沒有傳入 props，則從 bookingStore 取得
     if (!orderNumber || !orderUniqId) {
+      console.log('Props missing, trying to get from bookingStore...')
       const bookingResult = bookingStore.bookingResult
       if (!bookingResult || !bookingResult.bookingData) {
-        console.error('Booking result not found')
+        console.error('Booking result not found in store')
+        console.error('bookingResult:', bookingResult)
         alert('訂票資料不存在，請重新訂票')
         isProcessing.value = false
         return
@@ -495,6 +506,9 @@ const handleNextStep = async () => {
       // bookingData 包含: pnrCode, orderNumber, totalAmount, orderUniqId, details[]
       orderNumber = bookingResult.bookingData.orderNumber
       orderUniqId = bookingResult.bookingData.orderUniqId  // 用於 FP03 的 PAR02
+      console.log('Retrieved from store:', { orderNumber, orderUniqId })
+    } else {
+      console.log('Using props values:', { orderNumber, orderUniqId })
     }
     
     if (!orderNumber || !orderUniqId) {
@@ -644,15 +658,22 @@ const handleNextStep = async () => {
         return
       }
         
-      case 'A5': { // 外部導向 (如 LINE Pay) - 使用 KEY21，瀏覽器導向（新視窗），適用不允許 IFRAME 的銀行
-        console.log('A5 payment: Opening external payment with KEY21')
-        handleExternalPayment(KEY21)
-        // 如果在對話框中，發送完成事件
-        if (props.orderNumber) {
-          emit('payment-completed')
-        }
-        // 不重置 loading，因為會跳轉到 Step 4
-        break
+      case 'A5': { // 外部導向 (如 LINE Pay) - 使用 KEY21，在當前頁面顯示 iframe
+        console.log('A5 payment: Showing iframe payment with KEY21')
+        showIframePayment.value = true
+        iframeUrl.value = KEY21
+        iframeKey.value = '' // A5 不需要 KEY，直接使用 KEY21 URL
+        // 儲存資訊供 iframe 完成後使用
+        sessionStorage.setItem('iframePaymentData', JSON.stringify({
+          url: KEY21,
+          key: '',
+          orderNumber,
+          orderUniqId
+        }))
+        // 完成處理，顯示 iframe
+        isProcessing.value = false
+        // 不跳轉到 Step 4，停留在當前頁面顯示 iframe
+        return
       }
         
       case 'B1': { // 虛擬匯款帳號 - 呼叫 FP02 取得完整資料後進入 Step 4

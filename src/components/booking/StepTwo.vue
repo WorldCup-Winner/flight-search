@@ -469,45 +469,45 @@
                                     class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
                             </div>
                         </div>
-                        <div class="flex flex-col md:flex-row md:items-center mt-5 gap-2 md:gap-5">
-                            <p class="text-others-gray1 font-semibold">收據內容摘要</p>
-                            <div class="flex flex-col md:flex-row gap-2 md:gap-5" role="radiogroup" aria-label="收據內容摘要">
-                                <div class="relative w-fit">
-                                    <input
-                                        id="summary-yes"
-                                        class="peer sr-only"
-                                        type="radio"
-                                        name="summary"
-                                        :value="true"
-                                        v-model="isSummary"
-                                        />
-                                    <label
-                                        for="summary-yes"
-                                        class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
-                                                bg-divider-soft text-primary-gold transition-color duration-200
-                                                before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
-                                                peer-checked:before:bg-others-original peer-checked:before:border-none">
-                                    列出航班資訊
-                                    </label>
-                                </div>
-                                <div class="relative w-fit">
-                                    <input
-                                        id="summary-no"
-                                        class="peer sr-only"
-                                        type="radio"
-                                        name="summary"
-                                        :value="false"
-                                        v-model="isSummary"
-                                        />
-                                    <label
-                                        for="summary-no"
-                                        class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
-                                                bg-divider-soft text-primary-gold transition duration-200
-                                                before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
-                                                peer-checked:before:bg-others-original peer-checked:before:border-none">
-                                    僅開立「機票款」三個字
-                                    </label>
-                                </div>
+                    </div>
+                    <div class="flex flex-col md:flex-row md:items-center mt-5 gap-2 md:gap-5">
+                        <p class="text-others-gray1 font-semibold">收據內容摘要</p>
+                        <div class="flex flex-col md:flex-row gap-2 md:gap-5" role="radiogroup" aria-label="收據內容摘要">
+                            <div class="relative w-fit">
+                                <input
+                                    id="summary-yes"
+                                    class="peer sr-only"
+                                    type="radio"
+                                    name="summary"
+                                    :value="true"
+                                    v-model="isSummary"
+                                    />
+                                <label
+                                    for="summary-yes"
+                                    class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
+                                            bg-divider-soft text-primary-gold transition-color duration-200
+                                            before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
+                                            peer-checked:before:bg-others-original peer-checked:before:border-none">
+                                列出航班資訊
+                                </label>
+                            </div>
+                            <div class="relative w-fit">
+                                <input
+                                    id="summary-no"
+                                    class="peer sr-only"
+                                    type="radio"
+                                    name="summary"
+                                    :value="false"
+                                    v-model="isSummary"
+                                    />
+                                <label
+                                    for="summary-no"
+                                    class="flex items-center justify-between min-w-[80px] px-4 py-3 rounded-xl text-sm font-medium cursor-pointer
+                                            bg-divider-soft text-primary-gold transition duration-200
+                                            before:content-[''] before:w-4 before:h-4 before:rounded-full before:border-2 before:border-primary-gold before:mr-2 before:bg-transparent
+                                            peer-checked:before:bg-others-original peer-checked:before:border-none">
+                                僅開立「機票款」三個字
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -567,22 +567,63 @@
             </div>
             <div class="hidden md:block md:col-span-3 rounded-[10px] bg-white p-6 drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] md:p-4 w-full h-fit">
                 <div class="space-y-3">
-                    <!-- Header total -->
-                    <div class="flex items-baseline justify-between text-primary-gold font-semibold">
-                        <span>{{ titleLabel }}</span>
-                        <div class="flex items-end">
-                            {{ currency }} {{ formatPrice(effectiveTotal) }}
+                    <!-- Adult section -->
+                    <div v-if="adultTotal > 0" class="space-y-2">
+                        <div class="flex items-baseline justify-between text-primary-gold font-semibold">
+                            <span>成人機票總額</span>
+                            <div class="flex items-end">
+                                {{ currency }} {{ formatPrice(adultTotal) }}
+                            </div>
+                        </div>
+                        <div
+                            v-for="(line, idx) in effectiveLines.filter(l => l.label.includes('成人'))"
+                            :key="'adult-' + idx"
+                            class="flex justify-between text-others-gray1 pl-4"
+                        >
+                            <span>{{ line.label }}</span>
+                            <div class="flex items-end">
+                                {{ currency }} {{ formatPrice(line.amount) }} x {{ line.qty ?? 1 }}
+                            </div>
                         </div>
                     </div>
-                    <!-- Line items -->
-                    <div
-                        v-for="(line, idx) in effectiveLines"
-                        :key="idx"
-                        class="flex justify-between text-others-gray1"
+                    
+                    <!-- Child section -->
+                    <div v-if="childTotal > 0" class="space-y-2">
+                        <div class="flex items-baseline justify-between text-primary-gold font-semibold">
+                            <span>兒童機票總額</span>
+                            <div class="flex items-end">
+                                {{ currency }} {{ formatPrice(childTotal) }}
+                            </div>
+                        </div>
+                        <div
+                            v-for="(line, idx) in effectiveLines.filter(l => l.label.includes('兒童'))"
+                            :key="'child-' + idx"
+                            class="flex justify-between text-others-gray1 pl-4"
                         >
-                        <span>{{ line.label }}</span>
-                        <div class="flex items-end">
-                            {{ currency }} {{ formatPrice(line.amount) }} x {{ line.qty ?? 1 }}
+                            <span>{{ line.label }}</span>
+                            <div class="flex items-end">
+                                {{ currency }} {{ formatPrice(line.amount) }} x {{ line.qty ?? 1 }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Infant section -->
+                    <div v-if="infantTotal > 0" class="space-y-2">
+                        <div class="flex items-baseline justify-between text-primary-gold font-semibold">
+                            <span>嬰兒機票總額</span>
+                            <div class="flex items-end">
+                                {{ currency }} {{ formatPrice(infantTotal) }}
+                            </div>
+                        </div>
+                        <div
+                            v-for="(line, idx) in effectiveLines.filter(l => l.label.includes('嬰兒'))"
+                            :key="'infant-' + idx"
+                            class="flex justify-between text-others-gray1 pl-4"
+                        >
+                            <span>{{ line.label }}</span>
+                            <div class="flex items-end">
+                                {{ currency }} {{ formatPrice(line.amount) }} x {{ line.qty ?? 1 }}
+                            </div>
                         </div>
                     </div>
                     
@@ -692,6 +733,9 @@
       :currency="currency"
       :effective-lines="effectiveLines"
       :effective-total="effectiveTotal"
+      :adult-total="adultTotal"
+      :child-total="childTotal"
+      :infant-total="infantTotal"
       v-model:agreed="agreed"
       :is-submitting="isSubmitting"
       @submit="emitSubmit"
@@ -1316,6 +1360,25 @@ const effectiveTotal = computed(() => {
 return effectiveLines.value.reduce((sum: number, l: Line) => sum + (Number(l.amount) * (Number(l.qty ?? 1))), 0)
 })
 
+// 計算各類別乘客的總額
+const adultTotal = computed(() => {
+  return effectiveLines.value
+    .filter(line => line.label.includes('成人'))
+    .reduce((sum: number, l: Line) => sum + (Number(l.amount) * (Number(l.qty ?? 1))), 0)
+})
+
+const childTotal = computed(() => {
+  return effectiveLines.value
+    .filter(line => line.label.includes('兒童'))
+    .reduce((sum: number, l: Line) => sum + (Number(l.amount) * (Number(l.qty ?? 1))), 0)
+})
+
+const infantTotal = computed(() => {
+  return effectiveLines.value
+    .filter(line => line.label.includes('嬰兒'))
+    .reduce((sum: number, l: Line) => sum + (Number(l.amount) * (Number(l.qty ?? 1))), 0)
+})
+
 // Passport name validation functions
 function validatePassportName(name: string): { isValid: boolean; error?: string } {
 if (!name || name.trim().length === 0) {
@@ -1804,7 +1867,7 @@ const bookingData: BookingRequestViewModel = {
     isNeedReceipt: false,
     receiptTitle: '',
     uniformNumber: '',
-    isNeedFlightList: false
+    isNeedFlightList: isSummary.value  // 不論是否開立發票，都傳遞用戶選擇的選項
   },
 
   // 特殊需求資訊 (assistanceInfo) - 可選
