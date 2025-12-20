@@ -43,7 +43,7 @@
                   </div>
                   <div class="flex items-center gap-2 flex-wrap md:mb-7">
                     <span class="text-sm font-semibold text-others-gray7">名 Given Name</span>
-                    <span class="text-sm font-bold text-others-original">DA-MING</span>
+                    <span class="text-sm font-bold text-others-original">DAMING</span>
                     <span class="border border-others-original text-others-original text-xs px-2 py-1 rounded whitespace-nowrap">
                       請勿輸入符號或空格
                     </span>

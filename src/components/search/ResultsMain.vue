@@ -237,14 +237,26 @@
           <!-- FilterSideBar Content -->
           <div class="flex-1 overflow-y-auto min-h-0 px-4">
             <FilterSideBar
+              ref="filterSideBarRef"
               :stopsPricing="stopsPricing"
               :alliances="alliances"
               :airlines="airlines"
               :depAirports="depAirports"
               :arrAirports="arrAirports"
               :initial="filterInitialState"
-              @update:filters="onFiltersChange"
+              :confirm-mode="true"
+              @confirm="handleFilterConfirm"
             />
+          </div>
+
+          <!-- Footer: Confirm Button (Mobile only) -->
+          <div class="md:hidden bg-white px-6 py-5 sticky bottom-0 z-10 rounded-t-[20px]" style="box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);">
+            <button
+              class="w-full py-3 rounded-xl font-bold text-white transition bg-others-original hover:bg-others-hover"
+              @click="() => filterSideBarRef?.confirm()"
+            >
+              確認
+            </button>
           </div>
         </div>
       </div>
@@ -1147,6 +1159,17 @@ const activeFilterCount = computed(() => {
 // Mobile sort/filter button handlers
 const isFilterModalOpen = ref(false)
 const isSortModalOpen = ref(false)
+const filterSideBarRef = ref<InstanceType<typeof FilterSideBar> | null>(null)
+
+// Apply filters and close modal when confirm button is clicked
+function handleFilterConfirm(filters?: any) {
+  // If filters provided from @confirm event, use them; otherwise get from ref
+  const filtersToApply = filters || filterSideBarRef.value?.getCurrentFilters()
+  if (filtersToApply) {
+    onFiltersChange(filtersToApply)
+  }
+  isFilterModalOpen.value = false
+}
 
 // Computed for selected card data (selectedCardRefNumber is defined earlier)
 const selectedCardData = computed(() => {

@@ -160,7 +160,7 @@
                                     <input
                                         v-model="p.lastName"
                                         type="text"
-                                        placeholder="英文姓 例：SMITH"
+                                        placeholder="英文姓 例：LEE"
                                         :class="[
                                             'w-full px-4 py-2 border rounded-md focus:ring-2 focus:outline-none',
                                             getPassengerNameError(p.id, 'lastName')
@@ -178,7 +178,7 @@
                                     <input
                                         v-model="p.firstName"
                                         type="text" 
-                                        placeholder="英文名 例：JOHN"
+                                        placeholder="英文名 例：DAMING"
                                         :class="[
                                             'w-full px-4 py-2 border rounded-md focus:ring-2 focus:outline-none',
                                             getPassengerNameError(p.id, 'firstName')

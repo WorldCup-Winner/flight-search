@@ -206,7 +206,7 @@
 
         <!-- Footer: Mobile only -->
         <div
-            class="md:hidden bg-white px-6 py-5 sticky bottom-0 z-10"
+            class="md:hidden bg-white px-6 py-5 rounded-t-[20px] sticky bottom-0 z-10"
             style="box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);"
         >
             <button

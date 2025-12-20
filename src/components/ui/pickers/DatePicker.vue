@@ -27,7 +27,7 @@
             </button>
         </div>
 
-        <!-- Mobile: Sticky header with DOW + month controls/label -->
+        <!-- Mobile: Sticky header with DOW + month controls (keep sticky and yellow) -->
         <div class="md:hidden sticky top-[52px] z-10 bg-others-gray9 px-4 pt-4 pb-4">
             <!-- DOW row -->
             <div class="grid grid-cols-7 text-center text-[16px] leading-none">
@@ -81,11 +81,6 @@
                         <img src="@/assets/imgs/arrow-right.svg" alt="" />
                     </button>
                 </div>
-            </div>
-
-            <!-- Default (multi-month) mode: First month label -->
-            <div v-else-if="allMonths.length > 0" class="text-center text-[18px] leading-8 font-semibold text-gray-500 mt-2">
-                {{ monthLabel(allMonths[0]) }}
             </div>
         </div>
 
@@ -188,18 +183,8 @@
 
                 <!-- Default: multiple months -->
                 <template v-else>
-                    <!-- First month (days only, label is in sticky header) -->
-                    <div v-if="allMonths.length > 0">
-                        <MonthDays
-                            :month="allMonths[0]"
-                            :selected="localSelected"
-                            :min="min"
-                            :max="max"
-                            @pick="onPickMobile"
-                        />
-                    </div>
-                    <!-- Remaining months (with labels) -->
-                    <div v-for="month in allMonths.slice(1)" :key="month.getTime()">
+                    <!-- All months (with labels, including first month) -->
+                    <div v-for="month in allMonths" :key="month.getTime()">
                         <div class="text-center text-[18px] leading-8 font-semibold text-gray-500 mb-4">
                             {{ monthLabel(month) }}
                         </div>
@@ -215,10 +200,10 @@
             </div>
         </div>
 
-        <!-- Footer: Mobile only (optional) -->
+        <!-- Footer: Mobile only (always show for search contexts, conditional for compact/singleMonth) -->
         <div
-            v-if="props.mobileConfirm !== false"
-            class="md:hidden bg-white px-6 py-5 sticky bottom-0 z-10"
+            v-if="!props.compact || props.mobileConfirm !== false"
+            class="md:hidden bg-white px-6 py-5 sticky bottom-0 z-10 rounded-t-[20px]"
             style="box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);"
         >
             <!-- Row 1: Label -->
@@ -446,9 +431,14 @@ function onPickMobile(d: Date) {
     if (isDisabled(d)) return
     localSelected.value = d
     emit('update:modelValue', d)
-    if (props.mobileConfirm === false) {
+    // Only emit apply immediately if footer is hidden (mobileConfirm === false AND compact is true)
+    // For search contexts (footer always shows when compact is not set), wait for footer button click
+    const footerIsShowing = !props.compact || props.mobileConfirm !== false
+    if (!footerIsShowing) {
+        // Footer is hidden, apply immediately (like desktop behavior)
         emit('apply', d)
     }
+    // Otherwise, footer is showing, so don't emit apply - wait for footer button
 }
 
 function onConfirm() {

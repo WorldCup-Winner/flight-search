@@ -251,11 +251,23 @@ const props = defineProps<{
     departTime: [number, number]
     arriveTime: [number, number]
   }>
+  /** When true, don't emit on every change - wait for explicit confirm */
+  confirmMode?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'update:filters', v: any): void
+  (e: 'confirm', v: any): void
 }>()
+
+// Expose confirm method and getCurrentFilters for parent to call
+defineExpose({
+  confirm: () => {
+    const filters = getCurrentFilters()
+    emit('confirm', filters)
+  },
+  getCurrentFilters
+})
 
 /** ---------- State ---------- */
 const state = reactive({
@@ -293,21 +305,29 @@ for (const a of props.arrAirports) arrAirportsModel[a.id] = state.arrAirports.ha
 
 watch(airlinesModel, () => {
   state.airlines = new Set(Object.keys(airlinesModel).filter(k => airlinesModel[k]))
-  push()
+  if (!props.confirmMode) {
+    push()
+  }
 }, { deep: true })
 watch(depAirportsModel, () => {
   state.depAirports = new Set(Object.keys(depAirportsModel).filter(k => depAirportsModel[k]))
-  push()
+  if (!props.confirmMode) {
+    push()
+  }
 }, { deep: true })
 watch(arrAirportsModel, () => {
   state.arrAirports = new Set(Object.keys(arrAirportsModel).filter(k => arrAirportsModel[k]))
-  push()
+  if (!props.confirmMode) {
+    push()
+  }
 }, { deep: true })
 
 /** ---------- Interactions ---------- */
 function toggleAlliance(id: string) {
   state.alliances.has(id) ? state.alliances.delete(id) : state.alliances.add(id)
-  push()
+  if (!props.confirmMode) {
+    push()
+  }
 }
 
 function clearAll() {
@@ -323,14 +343,14 @@ function clearAll() {
   Object.keys(arrAirportsModel).forEach(k => (arrAirportsModel[k] = false))
   state.departTime = [0, 1439]
   state.arriveTime = [0, 1439]
-  push()
+  if (!props.confirmMode) {
+    push()
+  }
 }
 
 /** ---------- Emit ---------- */
-watch(() => [state.studentOnly, state.stops.direct, state.stops.oneStop, state.departTime[0], state.departTime[1], state.arriveTime[0], state.arriveTime[1]], push, { deep: true })
-
-function push() {
-  emit('update:filters', {
+function getCurrentFilters() {
+  return {
     studentOnly: state.studentOnly,
     stops: { ...state.stops },
     alliances: Array.from(state.alliances),
@@ -339,8 +359,20 @@ function push() {
     arrAirports: Array.from(state.arrAirports),
     departTime: [...state.departTime],
     arriveTime: [...state.arriveTime],
-  })
+  }
 }
+
+function push() {
+  const filters = getCurrentFilters()
+  emit('update:filters', filters)
+}
+
+// Only auto-emit if not in confirm mode
+watch(() => [state.studentOnly, state.stops.direct, state.stops.oneStop, state.departTime[0], state.departTime[1], state.arriveTime[0], state.arriveTime[1]], () => {
+  if (!props.confirmMode) {
+    push()
+  }
+}, { deep: true })
 
 function updateDepartStart(ev: any) {
   const next = Math.min(Number(ev.target.value), state.departTime[1] - 5)

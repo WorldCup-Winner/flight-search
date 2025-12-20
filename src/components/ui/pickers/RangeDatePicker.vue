@@ -22,7 +22,7 @@
             </button>
         </div>
 
-        <!-- Mobile: Sticky header with DOW + first month label -->
+        <!-- Mobile: Sticky header with DOW (keep sticky and yellow) -->
         <div class="md:hidden sticky top-[52px] z-10 bg-others-gray9 px-4 pt-4 pb-4">
             <!-- DOW row -->
             <div class="grid grid-cols-7 text-center text-[16px] leading-none">
@@ -34,10 +34,6 @@
                 >
                     {{ d }}
                 </div>
-            </div>
-            <!-- First month label -->
-            <div v-if="allMonths.length > 0" class="text-center text-[18px] leading-8 font-semibold text-gray-500 mt-2">
-                {{ monthLabel(allMonths[0]) }}
             </div>
         </div>
 
@@ -99,19 +95,8 @@
 
             <!-- Mobile: Vertical scrolling months -->
             <div class="md:hidden space-y-6">
-                <!-- First month (days only, label is in sticky header) -->
-                <div v-if="allMonths.length > 0">
-                    <MonthDays
-                        :month="allMonths[0]"
-                        :start="localStart"
-                        :end="localEnd"
-                        :min="min"
-                        :max="max"
-                        @pick="onPick"
-                    />
-                </div>
-                <!-- Remaining months (with labels) -->
-                <div v-for="month in allMonths.slice(1)" :key="month.getTime()">
+                <!-- All months (with labels, including first month) -->
+                <div v-for="month in allMonths" :key="month.getTime()">
                     <div class="text-center text-[18px] leading-8 font-semibold text-gray-500 mb-4">
                         {{ monthLabel(month) }}
                     </div>
