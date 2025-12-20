@@ -35,7 +35,6 @@ export const useLocationStore = defineStore('location', {
                         }))
                     }
                 })
-                console.log(sortedLocations)
                 this.locations = sortedLocations
             } catch (err: any) {
                 this.error = err.response?.data?.message || 'Failed to load locations'

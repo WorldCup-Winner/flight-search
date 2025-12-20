@@ -494,7 +494,9 @@ const props = defineProps<{
 
   // UI extras
   currency?: string
+  /** Calculated display price (based on taxMode) - this is what gets displayed */
   priceFrom?: number
+  /** Tax mode: 'in' = price with tax, 'ex' = price without tax */
   taxMode?: string
   roundTripIncluded?: boolean
   fareOptions?: FareOption[]
@@ -552,6 +554,16 @@ const expanded = ref(!!props.defaultOpen)
 const expanded1 = ref(!!props.defaultOpen1)
 
 /** -------------------- Composables -------------------- */
+/**
+ * Price Flow Documentation:
+ * - props.price: Raw API price (WITH tax included) - from v-bind="it"
+ * - props.priceFrom: Calculated display price (based on taxMode) - from displayPrice(it)
+ * - props.taxAmount: Tax portion (for reference) - from v-bind="it"
+ * - priceTotal: Final displayed value (uses priceFrom)
+ * 
+ * When taxMode === 'in': priceFrom = price (shows with tax)
+ * When taxMode === 'ex': priceFrom = price - taxAmount (shows without tax)
+ */
 const cardData = useFlightCardData(() => ({
   sectors: props.sectors,
   airlineCode: props.airlineCode,
@@ -564,7 +576,7 @@ const cardData = useFlightCardData(() => ({
   arrivalTerminal: props.arrivalTerminal,
   durationMinutes: props.durationMinutes,
   currency: props.currency,
-  priceFrom: props.priceFrom,
+  priceFrom: props.priceFrom, // This is the calculated display price (respects taxMode)
   taxMode: props.taxMode
 }))
 
@@ -705,10 +717,11 @@ async function proceedToBooking() {
     goBooking(availableFares[0])
   } else if (props.tripType === 'oneway' || props.tripType === 'multi') {
     // For oneway and multi trips, create default fare if no fare options available
+    // props.price already includes tax (per API contract)
     goBooking({
       id: 'default-fare',
       cabin: sectors.value[0]?.cabinDesc || '經濟艙',
-      price: priceTotal.value - (props.taxAmount ?? 0),
+      price: props.price ?? 0,
       taxAmount: props.taxAmount ?? 0,
       notes: []
     })
@@ -717,12 +730,16 @@ async function proceedToBooking() {
 
 /** -------------------- Emits -------------------- */
 function goReturn() {
+  /**
+   * When selecting a flight segment (for roundtrip/multi), always use the actual API price (with tax).
+   * The taxMode toggle is only for display/sorting purposes, not for actual booking calculations.
+   */
   emit('select', {
     refNumber: props.refNumber,
     sectors: sectors.value,
     totalMinutes: totalMinutes.value,
     stopsCount: stopsCount.value,
-    totalPrice: priceTotal.value,
+    totalPrice: props.price ?? 0, // Use raw API price (with tax), not display price
     taxAmount: props.taxAmount || 0,
     currency: currencyDisplay.value,
     roundTripIncluded: props.roundTripIncluded,

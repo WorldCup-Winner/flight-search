@@ -20,29 +20,9 @@ export function useRoundTripSummary(
   
   const returnResults = ref<CardRow[]>([])
   const isLoadingReturn = ref(false)
-  const cheapestOutbound = ref<CardRow | null>(null)
+  const currentOutboundRefNumber = ref<number | null>(null)
 
-  /**
-   * Find the cheapest flight from an array of flights
-   * Compares prices with tax included (price + taxAmount)
-   */
-  function findCheapestFlight(flights: CardRow[]): CardRow | null {
-    if (!flights || flights.length === 0) return null
-    console.log(flights)
-    
-    return flights.reduce((cheapest, flight) => {
-      if (!flight || typeof flight.price !== 'number') return cheapest
-      if (!cheapest) return flight
-      
-      // Compare prices with tax included
-      const cheapestPriceWithTax = cheapest.price + (cheapest.taxAmount ?? 0)
-      const flightPriceWithTax = flight.price + (flight.taxAmount ?? 0)
-      
-      return flightPriceWithTax < cheapestPriceWithTax ? flight : cheapest
-    }, null as CardRow | null)
-  }
-
-  // Auto-select cheapest outbound when outbound results arrive
+  // Auto-fetch return results with cheapest outbound when outbound results first arrive
   watch(
     () => props.value.outboundResults,
     (results) => {
@@ -51,17 +31,16 @@ export function useRoundTripSummary(
         props.value.currentSegmentIndex === 0 &&
         results &&
         results.length > 0 &&
-        !cheapestOutbound.value
+        currentOutboundRefNumber.value === null
       ) {
-        // Find cheapest outbound flight
-        const cheapest = findCheapestFlight(results)
-        console.log("CHEAPEST OUTBOUND", cheapest)
+        // Use first result (already sorted by price, cheapest first)
+        const firstFlight = results[0]
         
-        if (cheapest && cheapest.refNumber) {
-          cheapestOutbound.value = cheapest
+        if (firstFlight && firstFlight.refNumber) {
+          currentOutboundRefNumber.value = firstFlight.refNumber
           
-          // Fetch return results with cheapest outbound's refNumber
-          fetchReturnResults(cheapest.refNumber)
+          // Fetch return results with first (cheapest) outbound's refNumber
+          fetchReturnResults(firstFlight.refNumber)
         }
       }
     },
@@ -71,14 +50,20 @@ export function useRoundTripSummary(
   // Fetch return results with selected outbound refNumber
   async function fetchReturnResults(outboundRefNumber: number) {
     if (!props.value.searchRequest) return
-    if (isLoadingReturn.value) return
     
     const returnDate = props.value.searchRequest.flightSegments?.[0]?.returnDate
     if (!returnDate) return
 
+    // Update current outbound refNumber
+    currentOutboundRefNumber.value = outboundRefNumber
+    
+    // Clear previous results immediately to show skeleton when clicking a different card
+    returnResults.value = []
+    
+    // Show loading skeleton immediately
+    isLoadingReturn.value = true
+
     try {
-      isLoadingReturn.value = true
-      
       const returnRequest = {
         ...props.value.searchRequest,
         selectedRefNumbers: [outboundRefNumber]
@@ -86,22 +71,36 @@ export function useRoundTripSummary(
       
       const response = await flightSearch(returnRequest)
       
-      if (response.data?.data) {
-        returnResults.value = response.data.data as CardRow[]
-        onReturnResultsFetched?.(returnResults.value)
+      // Only update if this is still the current request (user didn't click another card)
+      if (currentOutboundRefNumber.value === outboundRefNumber) {
+        if (response.data?.data) {
+          // API returns results sorted by price (cheapest first), so first result is cheapest
+          returnResults.value = Array.isArray(response.data.data) ? response.data.data : []
+          onReturnResultsFetched?.(returnResults.value)
+        } else {
+          returnResults.value = []
+        }
       }
+      // If user clicked another card, this response is stale - ignore it
     } catch (error) {
-      console.error('Error fetching return results:', error)
-      returnResults.value = []
+      // Only handle error if this is still the current request
+      if (currentOutboundRefNumber.value === outboundRefNumber) {
+        console.error('Error fetching return results:', error)
+        returnResults.value = []
+      }
     } finally {
-      isLoadingReturn.value = false
+      // Only clear loading if this is still the current request
+      if (currentOutboundRefNumber.value === outboundRefNumber) {
+        isLoadingReturn.value = false
+      }
     }
   }
 
-  // Get cheapest return for summary
+  // Get cheapest return for summary (first result, already sorted by price)
   const cheapestReturn = computed(() => {
     if (returnResults.value.length === 0) return null
-    return findCheapestFlight(returnResults.value)
+    // First result is cheapest (API returns sorted by price ascending)
+    return returnResults.value[0] || null
   })
 
   // Get selected outbound for summary (when viewing return)
@@ -129,13 +128,14 @@ export function useRoundTripSummary(
         ? `${returnFlight.departureTime}-${returnFlight.arrivalTime}`
         : null
       
-      const priceWithTax = returnFlight.price + (returnFlight.taxAmount ?? 0)
+      // API price already includes tax, use it directly
+      const price = returnFlight.price ?? 0
       const currency = (returnFlight as any).currency || props.value.searchRequest?.currency || 'TWD'
 
       return {
         segmentTitle: '回程',
         timeRange,
-        price: priceWithTax,
+        price: price,
         currency
       }
     } else {
@@ -151,16 +151,19 @@ export function useRoundTripSummary(
         ? `${firstSector.departureTime}-${lastSector.arrivalTime}`
         : null
       
-      // Calculate price with tax included (same logic as return flight)
-      const basePrice = outbound.totalPrice || outbound.price || 0
-      const taxAmount = (outbound as any).taxAmount ?? 0
-      const priceWithTax = basePrice + taxAmount
+      /**
+       * Price handling:
+       * - If outbound has totalPrice (from segment selection), it's the raw API price (with tax)
+       * - If not, use price directly (API price already includes tax)
+       * - Never add taxAmount to price as it's already included
+       */
+      const price = outbound.totalPrice || outbound.price || 0
       const currency = (outbound as any).currency || props.value.searchRequest?.currency || 'TWD'
 
       return {
         segmentTitle: '去程',
         timeRange,
-        price: priceWithTax,
+        price: price,
         currency
       }
     }
@@ -169,7 +172,7 @@ export function useRoundTripSummary(
   return {
     returnResults,
     isLoadingReturn,
-    cheapestOutbound,
+    currentOutboundRefNumber,
     summaryData,
     fetchReturnResults
   }

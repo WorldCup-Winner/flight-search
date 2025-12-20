@@ -244,9 +244,12 @@ const props = defineProps<{
   totalAmount?: number
 }>()
 
+// Step navigation now handled by router (no longer using emit('update:step'))
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
 // Emits
 const emit = defineEmits<{
-  (e: 'update:step', v: number): void
   (e: 'payment-completed'): void
   (e: 'close'): void
 }>()
@@ -309,7 +312,7 @@ const handleIframeLoad = () => {
           const orderBasicInfo = sessionStorage.getItem('orderBasicInfo')
           if (orderBasicInfo) {
             // 導向 Step 4
-            emit('update:step', 4)
+            router.push({ name: 'booking-step-4' })
           }
         }
       }
@@ -331,7 +334,7 @@ if (typeof window !== 'undefined') {
       if (props.orderNumber) {
         emit('payment-completed')
       } else {
-        emit('update:step', 4)
+        router.push({ name: 'booking-step-4' })
       }
     }
   })
@@ -671,7 +674,7 @@ const handleNextStep = async () => {
           emit('payment-completed')
         } else {
           // 導向 Step 4（不重置 loading，因為會跳轉）
-          emit('update:step', 4)
+          router.push({ name: 'booking-step-4' })
         }
         break
       }
@@ -683,7 +686,7 @@ const handleNextStep = async () => {
           emit('payment-completed')
         } else {
           // 預設行為：導向 Step 4（不重置 loading）
-          emit('update:step', 4)
+          router.push({ name: 'booking-step-4' })
         }
     }
     
@@ -716,7 +719,7 @@ const handleCreditCardPayment = (bankUrl: string, key: string) => {
   alert('即將跳轉至銀行付款頁面，完成付款後請關閉付款視窗，系統將自動更新訂單狀態')
   
   // 原視窗導向 Step 4，並開始定時查詢訂單狀態
-  emit('update:step', 4)
+  router.push({ name: 'booking-step-4' })
 }
 
 // 處理外部導向付款 (A5 - LINE Pay 等) - 開新視窗，原視窗跳轉 Step 4
@@ -728,7 +731,7 @@ const handleExternalPayment = (externalUrl: string) => {
   // alert('即將開啟外部付款頁面，完成付款後請關閉付款視窗，系統將自動更新訂單狀態')
   
   // 原視窗導向 Step 4，並開始定時查詢訂單狀態
-  emit('update:step', 4)
+  router.push({ name: 'booking-step-4' })
 }
 
 // Handle manual jump to step 4
@@ -738,7 +741,7 @@ const handleManualJumpToStep4 = () => {
     emit('payment-completed')
   } else {
     // 導向 Step 4
-    emit('update:step', 4)
+    router.push({ name: 'booking-step-4' })
   }
 }
 

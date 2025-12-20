@@ -6,7 +6,7 @@
         <p class="text-others-gray1 text-center">為確保取得最新票價和機位資訊，網頁將重新整理</p>
         <button
           class="mt-6 px-4 py-1 w-[93px] h-[40px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition"
-          @click="step = 3"
+          @click="handleConfirm"
         >
           確認
         </button>
@@ -14,7 +14,13 @@
   </div>
 </template>
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 import WakeUp from "@/assets/imgs/icon-wake-up.svg"
 
-const step = defineModel('step')
+const router = useRouter()
+
+// Navigate to step 3 (payment) when user confirms
+function handleConfirm() {
+  router.push({ name: 'booking-step-3' })
+}
 </script>

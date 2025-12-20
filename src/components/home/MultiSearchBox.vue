@@ -633,11 +633,8 @@ function parseLocalDate(dateStr: string): Date {
 
 // Restore form from URL params
 function restoreFromParams(params: any) {
-  console.log('Restoring MultiSearchBox from params:', params)
-  
   // Only restore if params are for multi-trip
   if (params.tripType !== 'multi') {
-    console.log('Params are not for multi-trip, skipping restoration')
     return
   }
   
@@ -665,7 +662,6 @@ function restoreFromParams(params: any) {
     }))
   } else {
     // If no segments in params, ensure we have at least default segments
-    console.log('No segments in params, keeping default segments')
     if (segments.value.length === 0) {
       segments.value = [makeSeg(), makeSeg()]
       errors.value = [

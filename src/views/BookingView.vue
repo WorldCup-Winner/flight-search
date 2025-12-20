@@ -1,51 +1,49 @@
 <template>
   <main class="w-full flex flex-col items-center justify-center bg-[#EFEFEF]">
-    <div class = "hidden md:block">
-      <BookingProcessBar :step="step"/>
+    <div class="hidden md:block">
+      <BookingProcessBar :step="currentStep" />
     </div>
-    <StepTwo v-if="step === 2" v-model:step="step" />
-    <StepThree v-else-if="step === 3" v-model:step="step"/>
-    <StepFour v-else-if="step === 4" v-model:step="step" />
+    <!-- Route components render here -->
+    <router-view />
   </main>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useBookingStore } from '@/stores/booking'
-
 import BookingProcessBar from '@/components/booking/BookingProcessBar.vue'
-import StepTwo from '@/components/booking/StepTwo.vue'
-import StepThree from '@/components/booking/StepThree.vue'
-import StepFour from '@/components/booking/StepFour.vue'
 
+const route = useRoute()
+const router = useRouter()
 const bookingStore = useBookingStore()
 
-const getStoredStep = (): number => {
-  if (!bookingStore.segments || bookingStore.segments.length === 0) {
-    return 2
-  }
-  
-  const stored = sessionStorage.getItem('bookingStep')
-  if (stored) {
-    const stepNum = parseInt(stored, 10)
-    if (stepNum >= 2 && stepNum <= 4) {
-      return stepNum
-    }
-  }
-  return 2
-}
-
-const step = ref(getStoredStep())
-
-watch(step, (newStep) => {
-  sessionStorage.setItem('bookingStep', String(newStep))
+// Derive current step from route name
+const currentStep = computed(() => {
+  const routeName = route.name as string
+  if (routeName === 'booking-step-2') return 2
+  if (routeName === 'booking-step-3') return 3
+  if (routeName === 'booking-step-4') return 4
+  return 2 // Default
 })
 
-// With options for smooth scrolling
+// Validate booking data on mount
 onMounted(() => {
-  // Reset to step 2 if there's no valid booking data
+  // CRITICAL: Restore booking data from localStorage FIRST (before any validation)
+  // This must happen in BookingView (parent) so it works for all steps (2, 3, 4)
+  // If we only call it in StepTwo, refreshing on step 3/4 will lose data
+  bookingStore.getBookingData()
+  
+  // If no booking segments after restoration, redirect to home (user shouldn't be on booking page)
   if (!bookingStore.segments || bookingStore.segments.length === 0) {
-    step.value = 2
-    sessionStorage.setItem('bookingStep', '2')
+    // No booking data - user shouldn't be here, redirect to home
+    router.push({ name: 'home' })
+    return
+  }
+  
+  // If on /booking (without step), redirect to step-2
+  if (route.name === 'booking') {
+    router.replace({ name: 'booking-step-2' })
+    return
   }
   
   window.scrollTo({

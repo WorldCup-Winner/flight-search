@@ -20,11 +20,8 @@ export const useAirlineStore = defineStore('airline', {
             try {
                 const res = await getAirlines()
                 this.airlines = res.data.data
-
-                console.log(this.airlines)
             } catch (err: any) {
                 this.error = err.response?.data?.message || 'getAirlines failed'
-                console.log(err)
             }
             this.loading = false
         },
@@ -37,7 +34,6 @@ export const useAirlineStore = defineStore('airline', {
                 }
             } catch (err: any) {
                 this.error = err.response?.data?.message || 'AirlineAlliance Loading failed.'
-                console.log(err)
             }
             this.loading = false
         }

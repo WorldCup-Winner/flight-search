@@ -18,31 +18,21 @@
         <BannerImg />
         <RecommendedTrips />
       </div>
-      <template v-else-if="flightSearchStore.loading === 'loading'">
+      <div v-else-if="flightSearchStore.loading === 'loading'">
         <div class="relative">
           <SearchResultLoading v-model="state" :rows="11" :speed="1300" />
           <FlightSearchLoading />
         </div>
-      </template>
-      <ResultsMain
-        v-else-if="flightSearchStore.loading === 'success'"
-        :data="flightSearchStore.data"
-        :tripType="activeTab"
-        :searchRequest="currentSearchRequest"
-        :currentSegmentIndex="currentSegmentIndex"
-        :selectedSegments="selectedSegments"
-        @searchNextSegment="handleSearchNextSegment"
-        @edit-search="openSearchEditModal"
-      />
+      </div>
+      <!-- Results are now shown on /search/* routes, not here -->
     </div>
     
-    <Transition name="fade">
-        <BaggageInfoAndFeeRule 
-          :open="sharedValue?.isOpenBaggageInfoAndFeeRule" 
-          :fareRuleData="sharedValue?.fareRuleData"
-          @close="updateValue?.({ isOpenBaggageInfoAndFeeRule: false, fareRuleData: undefined })" 
-        />
-    </Transition>
+    <!-- BaggageInfoAndFeeRule handles its own transitions internally (uses Teleport) -->
+    <BaggageInfoAndFeeRule 
+      :open="sharedValue?.isOpenBaggageInfoAndFeeRule" 
+      :fareRuleData="sharedValue?.fareRuleData"
+      @close="updateValue?.({ isOpenBaggageInfoAndFeeRule: false, fareRuleData: undefined })" 
+    />
 
     <!-- Mobile search edit modal -->
     <SearchEditModal
@@ -59,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { inject, ref, onMounted, watch } from 'vue'
+import { inject, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 import { useFlightSearchStore } from '@/stores/flightSearch'
@@ -72,16 +62,16 @@ import RecommendedTrips from '@/components/home/RecommendedTrips.vue'
 import BannerImg from '@/components/home/BannerImg.vue'
 import FlightSearchLoading from '@/components/ui/loading/FlightSearchLoading.vue'
 import SearchResultLoading from '@/components/ui/loading/SearchResultLoading.vue'
-import ResultsMain from '@/components/search/ResultsMain.vue';
 import BaggageInfoAndFeeRule from '@/components/ui/booking/BaggageInfoAndFeeRule.vue'
 import { useAirlineStore } from '@/stores/airline'
 import { 
   serializeSearchParams, 
   deserializeSearchParams, 
-  buildSearchRequest,
   extractSearchParamsFromRequest,
-  hasSearchParams
+  hasSearchParams,
+  buildSearchRequest
 } from '@/utils/urlParamsSync'
+import { clearStoredSegments } from '@/utils/segmentStorage'
 
 // Store
 const flightSearchStore = useFlightSearchStore()
@@ -95,13 +85,6 @@ const route = useRoute()
 const activeTab = ref<'oneway' | 'roundtrip' | 'multi'>('roundtrip')
 
 const state = ref('default') // "default" | "loading" | "result"
-
-// Store the current search request to pass to ResultsMain
-const currentSearchRequest = ref<any>(null)
-// Track which segment we're currently viewing (0-based index)
-const currentSegmentIndex = ref(0)
-// Store selected flight segments across segment changes
-const selectedSegments = ref<any[]>([])
 
 // Store restored params from URL for passing to search box components
 const restoredParams = ref<any>(null)
@@ -124,81 +107,27 @@ function closeSearchEditModal() {
   isSearchEditModalOpen.value = false
 }
 
-// Function to restore search from URL params
-function restoreSearchFromUrl() {
-  if (hasSearchParams(route.query)) {
-    console.log('Restoring search from URL params:', route.query)
-    const searchParams = deserializeSearchParams(route.query)
-    
+// Derive restoredParams from route.query (simplified - Phase 5)
+// Watch route.query to update restoredParams for search box restoration
+watch(() => route.query, (query) => {
+  if (hasSearchParams(query)) {
+    const searchParams = deserializeSearchParams(query)
     if (searchParams) {
-      // Set active tab
       activeTab.value = searchParams.tripType
-      
-      // Store params for child components
       restoredParams.value = searchParams
-      
-      // Build search request
-      const payload = buildSearchRequest(searchParams)
-      currentSearchRequest.value = payload
-      const targetSegmentIndex = searchParams.currentSegmentIndex || 0
-      
-      // Restore selected refs if present
-      if (searchParams.selectedRefs && searchParams.selectedRefs.length > 0) {
-        payload.selectedRefNumbers = searchParams.selectedRefs.map(ref => parseInt(ref))
-      }
-      
-      console.log('Restored search request:', payload)
-      console.log('Target segment index:', targetSegmentIndex, 'Current:', currentSegmentIndex.value)
-      
-      // If segment index decreased (e.g., going back), clear selectedSegments beyond the target index
-      if (targetSegmentIndex < currentSegmentIndex.value) {
-        console.log('Segment index decreased, clearing selectedSegments beyond index:', targetSegmentIndex)
-        selectedSegments.value = selectedSegments.value.slice(0, targetSegmentIndex)
-      }
-      
-      // Check if we need to fetch (segment index changed or initial load)
-      const shouldFetch = currentSegmentIndex.value !== targetSegmentIndex || !flightSearchStore.data
-      
-      // Update segment index
-      currentSegmentIndex.value = targetSegmentIndex
-      
-      // Fetch flight search if needed
-      if (shouldFetch) {
-        console.log('Fetching flight search for segment:', targetSegmentIndex)
-        flightSearchStore.fetchFlightSearch(payload)
-        airlineStore.fetchAirlineAlliance()
-      }
-      
       updateValue?.({ isSearch: true })
     }
   } else {
-    // No URL params, reset all local state to initial values
     activeTab.value = 'roundtrip'
-    currentSearchRequest.value = null
-    currentSegmentIndex.value = 0
-    selectedSegments.value = []
     restoredParams.value = null
     isSearchEditModalOpen.value = false
-    // Explicitly reset isSearch to false
     updateValue?.({ isSearch: false })
   }
-}
+}, { immediate: true, deep: true })
 
-// Restore search from URL on mount
-onMounted(() => {
-  restoreSearchFromUrl()
-})
-
-// Watch route.query changes to restore when navigating back
-watch(() => route.query, (newQuery, oldQuery) => {
-  // Only restore if query actually changed (avoid infinite loops)
-  if (JSON.stringify(newQuery) !== JSON.stringify(oldQuery)) {
-    console.log('Route query changed, restoring search')
-    restoreSearchFromUrl()
-  }
-}, { deep: true })
-
-function updateUrlParams(payload: any, tripType: 'oneway' | 'roundtrip' | 'multi') {
+// Build search params and navigate to route (simplified - Phase 5)
+// Removed segment index management (handled by routes)
+function buildSearchParamsAndNavigate(payload: any, tripType: 'oneway' | 'roundtrip' | 'multi') {
   const searchParams = extractSearchParamsFromRequest(payload, tripType)
   
   // Fill city names from location store
@@ -213,17 +142,9 @@ function updateUrlParams(payload: any, tripType: 'oneway' | 'roundtrip' | 'multi
     searchParams.arrivalCity = getCityName(searchParams.arrivalCityCode)
   }
   
-  searchParams.currentSegmentIndex = currentSegmentIndex.value
-  
-  // Add selected refs if available
-  if (payload.selectedRefNumbers && payload.selectedRefNumbers.length > 0) {
-    searchParams.selectedRefs = payload.selectedRefNumbers.map((ref: number) => String(ref))
-  }
-  
   // Add filter preferences
   if (payload.carrierId) {
     searchParams.airlineCode = payload.carrierId
-    // Try to get airline name from store
     const airline = airlineStore.airlines.find((a: any) => a.iataCode === payload.carrierId)
     if (airline) {
       searchParams.airlineName = (airline as any).nameZhTw
@@ -242,10 +163,36 @@ function updateUrlParams(payload: any, tripType: 'oneway' | 'roundtrip' | 'multi
     searchParams.nonStop = true
   }
   
+  // Clear selectedRefs for new search (user is starting a new search, not continuing previous)
+  searchParams.selectedRefs = undefined
+  
+  // Clear stored segments from sessionStorage for new search
+  const searchRequest = buildSearchRequest(searchParams)
+  clearStoredSegments(tripType, searchRequest)
+  
   const query = serializeSearchParams(searchParams)
   
-  // Use router.push to add to browser history for proper back/forward navigation
-  router.push({ path: '/', query })
+  // Navigate to appropriate route (segment index handled by route structure)
+  let routeName: string
+  let routeParams: Record<string, string> | undefined
+  
+  if (tripType === 'oneway') {
+    routeName = 'search-oneway'
+  } else if (tripType === 'roundtrip') {
+    routeName = 'search-outbound'
+  } else if (tripType === 'multi') {
+    routeName = 'search-segment'
+    routeParams = { index: '0' }
+  } else {
+    router.push({ path: '/', query })
+    return
+  }
+  
+  router.push({
+    name: routeName,
+    params: routeParams,
+    query
+  })
 }
 
 function getCityName(code?: string): string {
@@ -261,22 +208,18 @@ function getCityName(code?: string): string {
   return code
 }
 
-function handleRoundSearch(payload: any) {
-  console.log('handleRoundSearch:', payload)
+async function handleRoundSearch(payload: any) {
   // 清除舊的訂票資料，避免從單程切到來回時，帶有舊的單程資料
   bookingStore.clearBookingInfo()
-  sessionStorage.setItem('bookingStep', '2')
-  
-  currentSearchRequest.value = payload
-  currentSegmentIndex.value = 0 // Reset to first segment
-  selectedSegments.value = [] // Clear selected segments for new search
-  flightSearchStore.fetchFlightSearch(payload)
-  airlineStore.fetchAirlineAlliance()
-  
-  // Update URL params
-  updateUrlParams(payload, 'roundtrip')
   
   updateValue?.({ isSearch: true })
+  
+  // Fetch data first, show loading skeleton on home page
+  await flightSearchStore.fetchFlightSearch(payload)
+  airlineStore.fetchAirlineAlliance()
+  
+  // Navigate to route only after data is loaded
+  buildSearchParamsAndNavigate(payload, 'roundtrip')
 }
 
 function handleRoundSearchFromModal(payload: any) {
@@ -284,22 +227,18 @@ function handleRoundSearchFromModal(payload: any) {
   closeSearchEditModal()
 }
 
-function handleSingleSearch(payload: any) {
-  console.log('handleSingleSearch:', payload)
+async function handleSingleSearch(payload: any) {
   // 清除舊的訂票資料，避免從來回切到單程時，帶有舊的回程資料
   bookingStore.clearBookingInfo()
-  sessionStorage.setItem('bookingStep', '2')
   
-  currentSearchRequest.value = payload
-  currentSegmentIndex.value = 0 // Single trip, always 0
-  selectedSegments.value = [] // Clear selected segments for new search
-  flightSearchStore.fetchFlightSearch(payload)
-  airlineStore.fetchAirlineAlliance()
-
-  // Update URL params
-  updateUrlParams(payload, 'oneway')
-
   updateValue?.({ isSearch: true })
+  
+  // Fetch data first, show loading skeleton on home page
+  await flightSearchStore.fetchFlightSearch(payload)
+  airlineStore.fetchAirlineAlliance()
+  
+  // Navigate to route only after data is loaded
+  buildSearchParamsAndNavigate(payload, 'oneway')
 }
 
 function handleSingleSearchFromModal(payload: any) {
@@ -307,23 +246,18 @@ function handleSingleSearchFromModal(payload: any) {
   closeSearchEditModal()
 }
 
-function handleMultiSearch(payload: any) {
-  console.log('handleMultiSearch:', payload)
+async function handleMultiSearch(payload: any) {
   // 清除舊的訂票資料，避免從其他行程類型切到多行程時，帶有舊資料
   bookingStore.clearBookingInfo()
-  // 重置訂票步驟
-  sessionStorage.setItem('bookingStep', '2')
-  
-  currentSearchRequest.value = payload
-  currentSegmentIndex.value = 0 // Reset to first segment
-  selectedSegments.value = [] // Clear selected segments for new search
-  flightSearchStore.fetchFlightSearch(payload)
-  airlineStore.fetchAirlineAlliance()
-  
-  // Update URL params
-  updateUrlParams(payload, 'multi')
   
   updateValue?.({ isSearch: true })
+  
+  // Fetch data first, show loading skeleton on home page
+  await flightSearchStore.fetchFlightSearch(payload)
+  airlineStore.fetchAirlineAlliance()
+  
+  // Navigate to route only after data is loaded
+  buildSearchParamsAndNavigate(payload, 'multi')
 }
 
 function handleMultiSearchFromModal(payload: any) {
@@ -331,33 +265,4 @@ function handleMultiSearchFromModal(payload: any) {
   closeSearchEditModal()
 }
 
-// Handle next segment search for round-trip or multi-trip
-function handleSearchNextSegment(payload: { selectedRefNumbers: number[]; selectedSegments?: any[] }) {
-  console.log('handleSearchNextSegment:', payload)
-  
-  // Store selected segments if provided
-  if (payload.selectedSegments && payload.selectedSegments.length > 0) {
-    selectedSegments.value = payload.selectedSegments
-    console.log('Selected segments stored in FlightSearchBox:', selectedSegments.value)
-  }
-  
-  if (currentSearchRequest.value) {
-    // Update the search request with selectedRefNumbers
-    const updatedRequest = {
-      ...currentSearchRequest.value,
-      selectedRefNumbers: payload.selectedRefNumbers
-    }
-    
-    // Increment segment index
-    currentSegmentIndex.value += 1
-    
-    console.log('Fetching next segment with:', updatedRequest)
-    console.log('Current segment index:', currentSegmentIndex.value)
-    flightSearchStore.fetchFlightSearch(updatedRequest)
-    
-    // Update URL params with new selected refs and segment index
-    const tripType = activeTab.value as 'oneway' | 'roundtrip' | 'multi'
-    updateUrlParams(updatedRequest, tripType)
-  }
-}
 </script>

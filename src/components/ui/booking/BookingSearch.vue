@@ -49,7 +49,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, defineProps, defineEmits } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router"
 import { queryOrder, viewOrder } from '@/api'
 
@@ -57,6 +57,7 @@ import PhoneField from '@/components/ui/forms/PhoneField.vue'
 
 const router = useRouter()
 
+// defineProps and defineEmits are compiler macros in <script setup>, no need to import
 const props = defineProps<{
   open: boolean;
 }>();

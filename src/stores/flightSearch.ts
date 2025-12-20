@@ -4,9 +4,9 @@ import { defineStore } from 'pinia'
 
 export const useFlightSearchStore = defineStore('flightSearch', {
     state: () => ({
-        data: [],
-        loading: 'default',
-        error: null,
+        data: [] as CardRow[],
+        loading: 'default' as 'default' | 'loading' | 'success',
+        error: null as string | null,
     }),
     getters: {
     },
@@ -15,12 +15,15 @@ export const useFlightSearchStore = defineStore('flightSearch', {
             this.loading = 'loading'
             try {
                 const res = await flightSearch(req)
-                this.data = res.data.data
+                const data = res.data.data
+                this.data = Array.isArray(data) ? data : []
+                this.loading = 'success'
+                return data
             } catch (err: any) {
                 this.error = err.response?.data?.message || 'flightSearch failed'
-                console.log(err)
+                this.loading = 'success' // Still set to success to allow UI to show error state
+                throw err
             }
-            this.loading = 'success'
         },
         reset() {
             this.data = []

@@ -49,6 +49,8 @@ export default {
           gray8: '#E5E5E5',
           gray9: '#FFF6DD',
           gray10: '#FFE6BD',
+          gray11: '#C2C2C2',
+          cardSelected: '#FFFBEF',
         }
       },
       screens: {

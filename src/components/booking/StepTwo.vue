@@ -646,7 +646,7 @@
         </transition>
     </div>
     <Transition name="fade">
-        <WakeUp v-if="isOpenWakeUp" v-model:step="step" />
+        <WakeUp v-if="isOpenWakeUp" />
     </Transition>
     <Transition name="fade">
         <BookingInstruction :open="isOpenBookingInstruction" @close="isOpenBookingInstruction = false" />
@@ -702,6 +702,7 @@
 </template>
 <script setup lang="ts">
 import { provide, computed, onBeforeUnmount, ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { formatDate, formatPrice, noteIcon, toDuration, formatDateToChinese } from '@/utils'
 import { booking, getPhoneCodes, getNationality } from '@/api'
 import { useBookingStore } from '@/stores/booking'
@@ -728,7 +729,6 @@ import { resolveAirlineLogo, onAirlineImageError, AirlineDefault } from '@/utils
 
 // 使用 BookingStore 取得訂票資料
 const bookingStore = useBookingStore()
-console.log('bookingStore', bookingStore)
 const authStore = useAuthStore()
 
 /** Image error handler */
@@ -1101,7 +1101,8 @@ const props = defineProps({
   },
 })
 
-const step = defineModel<number>('step')
+// Step navigation now handled by router (no longer using v-model:step)
+const router = useRouter()
 
 const activeDialog = ref(null)
 const isReceipt = ref(false)
@@ -1940,7 +1941,8 @@ booking(bookingData)
         passengers: bookingData.passengers
       });
       
-      step.value = 3; // Proceed to payment
+      // Navigate to step 3 (payment) using router
+      router.push({ name: 'booking-step-3' })
     } else {
       // 業務邏輯錯誤處理
       console.error('Booking API error:', response.data.head);

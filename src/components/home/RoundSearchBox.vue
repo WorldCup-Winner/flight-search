@@ -381,7 +381,6 @@ function parseLocalDate(dateStr: string): Date {
 }
 
 function restoreFromParams(params: any) {
-    console.log('Restoring RoundSearchBox from params:', params)
     
     // Only restore if params are for roundtrip
     if (params.tripType !== 'roundtrip') {

@@ -71,6 +71,12 @@ export function useFlightCardData(getProps: () => {
   const stopsCount = computed(() => Math.max(0, sectors.value.length - 1))
 
   const currencyDisplay = computed(() => props.value.currency ?? 'TWD')
+  /**
+   * priceTotal: Final price to display
+   * Uses priceFrom which is already calculated based on taxMode
+   * - If taxMode === 'in': priceFrom = price (with tax)
+   * - If taxMode === 'ex': priceFrom = price - taxAmount (without tax)
+   */
   const priceTotal = computed(() => (props.value.priceFrom ?? 0))
   const taxMode = computed<'in' | 'ex'>(() => (props.value.taxMode === 'ex' ? 'ex' : 'in'))
 

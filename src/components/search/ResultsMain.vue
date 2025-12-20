@@ -15,59 +15,118 @@
 
       <!-- MAIN -->
       <section class="col-span-12 md:col-span-9">
-        <template v-if="!isStepTwoMobileSummaryOpen">
         <!-- Round-trip mobile: HeaderStrip + HeaderStripSummary side by side (force same height) -->
         <div v-if="tripType === 'roundtrip'" class="md:hidden flex gap-2 mb-4 min-w-0 items-stretch">
-          <!-- Make wrapper a flex container so HeaderStrip can stretch -->
-          <div :class="[currentLeg === 'outbound' ? 'order-1' : 'order-2', 'flex-1 min-w-0 flex items-stretch']">
-            <HeaderStrip
-              class="w-full h-full"
+          <!-- Show skeleton for HeaderStrip only when main loading (fetching outbound/return results) -->
+          <template v-if="flightSearchStore.loading === 'loading'">
+            <!-- Skeleton for HeaderStrip (flex-1) -->
+            <div class="flex-1 min-w-0 h-[100px] bg-gray-200 rounded-[10px] animate-pulse"></div>
+            <!-- Skeleton for HeaderStripSummary (w-[100px]) -->
+            <div class="w-[100px] h-[100px] bg-gray-200 rounded-[10px] animate-pulse"></div>
+          </template>
+          <template v-else>
+            <!-- Make wrapper a flex container so HeaderStrip can stretch -->
+            <div :class="[currentLeg === 'outbound' ? 'order-1' : 'order-2', 'flex-1 min-w-0 flex items-stretch']">
+              <HeaderStrip
+                class="w-full h-full"
+                :current-leg="currentLeg"
+                :segment-title="segmentTitle"
+                :date-text="dateText"
+                :origin="origin"
+                :destination="destination"
+                :total-count="totalCount"
+                :no-margin="true"
+                @edit-segment="handleEditSegment"
+              />
+            </div>
+            <HeaderStripSummary
+              class="h-full"
               :current-leg="currentLeg"
-              :segment-title="segmentTitle"
-              :date-text="dateText"
-              :origin="origin"
-              :destination="destination"
-              :total-count="totalCount"
+              :class="currentLeg === 'outbound' ? 'order-2' : 'order-1'"
+              :segment-title="summaryData?.segmentTitle || (currentLeg === 'outbound' ? '回程' : '去程')"
+              :time-range="summaryData?.timeRange || null"
+              :price="summaryData?.price || null"
+              :currency="summaryData?.currency || 'TWD'"
               :no-margin="true"
-              @edit-segment="handleEditSegment"
+              :is-loading="roundTripSummary.isLoadingReturn.value && currentLeg === 'outbound'"
+              :is-clickable="tripType === 'roundtrip' && !(roundTripSummary.isLoadingReturn.value && currentLeg === 'outbound')"
+              @click="handleHeaderStripSummaryClick"
             />
-          </div>
-          <HeaderStripSummary
-            class="h-full"
-            :current-leg="currentLeg"
-            :class="currentLeg === 'outbound' ? 'order-2' : 'order-1'"
-            :segment-title="summaryData?.segmentTitle || (currentLeg === 'outbound' ? '回程' : '去程')"
-            :time-range="summaryData?.timeRange || null"
-            :price="summaryData?.price || null"
-            :currency="summaryData?.currency || 'TWD'"
-            :no-margin="true"
-          />
+          </template>
         </div>
 
         <!-- HEADER STRIP (Desktop and non-roundtrip mobile) -->
-        <div
-          v-for="item in headerItems"
-          :key="item.key"
-          :class="[
-            tripType === 'roundtrip' ? 'hidden md:block' : '',
-            !item.showOnDesktop ? 'md:hidden' : '',
-            !item.showOnMobile ? 'hidden md:block' : ''
-          ]"
-        >
-          <HeaderStrip
-            :current-leg="item.currentLeg"
-            :segment-title="item.segmentTitle"
-            :date-text="item.dateText"
-            :origin="item.origin"
-            :destination="item.destination"
-            :total-count="totalCount"
-            @edit-segment="handleEditSegment"
-          />
-        </div>
+        <!-- Show skeleton during main loading (not background return fetch) -->
+        <template v-if="flightSearchStore.loading === 'loading' && tripType !== 'roundtrip'">
+          <div
+            v-for="item in headerItems"
+            :key="`skeleton-${item.key}`"
+            :class="[
+              !item.showOnDesktop ? 'md:hidden' : '',
+              !item.showOnMobile ? 'hidden md:block' : ''
+            ]"
+          >
+            <div class="h-[100px] bg-gray-200 rounded-[10px] animate-pulse mb-4"></div>
+          </div>
+        </template>
+        <template v-else-if="flightSearchStore.loading === 'loading' && tripType === 'roundtrip'">
+          <!-- Roundtrip desktop: Show skeleton for HeaderStrip during main loading -->
+          <div
+            v-for="item in headerItems"
+            :key="`skeleton-${item.key}`"
+            :class="[
+              tripType === 'roundtrip' ? 'hidden md:block' : '',
+              !item.showOnDesktop ? 'md:hidden' : '',
+              !item.showOnMobile ? 'hidden md:block' : ''
+            ]"
+          >
+            <div class="h-[100px] bg-gray-200 rounded-[10px] animate-pulse mb-4"></div>
+          </div>
+        </template>
+        <template v-else>
+          <div
+            v-for="item in headerItems"
+            :key="item.key"
+            :class="[
+              tripType === 'roundtrip' ? 'hidden md:block' : '',
+              !item.showOnDesktop ? 'md:hidden' : '',
+              !item.showOnMobile ? 'hidden md:block' : ''
+            ]"
+          >
+            <HeaderStrip
+              :current-leg="item.currentLeg"
+              :segment-title="item.segmentTitle"
+              :date-text="item.dateText"
+              :origin="item.origin"
+              :destination="item.destination"
+              :total-count="totalCount"
+              @edit-segment="handleEditSegment"
+            />
+          </div>
+        </template>
 
         <!-- SORT BAR -->
         <div class="mb-4">
+          <!-- Show skeleton for SortBar only when main loading (not background return fetch) -->
+          <div v-if="flightSearchStore.loading === 'loading'" class="bg-white px-4 py-3 drop-shadow-[0px_2px_10px_rgba(0,0,0,0.15)] rounded-[10px]">
+            <div class="flex items-center justify-between md:hidden">
+              <div class="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+              <div class="flex items-center gap-3">
+                <div class="h-6 w-16 bg-gray-200 rounded animate-pulse"></div>
+                <div class="h-6 w-16 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+            <div class="hidden md:flex md:flex-wrap md:items-center md:gap-4">
+              <div class="h-10 w-24 bg-gray-200 rounded-[10px] animate-pulse"></div>
+              <div class="h-10 w-24 bg-gray-200 rounded-[10px] animate-pulse"></div>
+              <div class="h-10 w-24 bg-gray-200 rounded-[10px] animate-pulse"></div>
+              <div class="h-10 w-24 bg-gray-200 rounded-[10px] animate-pulse"></div>
+              <div class="h-10 w-32 bg-gray-200 rounded-[10px] animate-pulse ml-auto"></div>
+            </div>
+          </div>
+          <!-- Show actual SortBar when not main loading -->
           <SortBar
+            v-else
             :total-count="totalCount"
             :active-filter-count="activeFilterCount"
             :sort="sort"
@@ -76,12 +135,44 @@
             @filter-click="handleFilterClick"
             @sort-change="setSort"
             @sort-toggle="toggleSort"
-            @update:taxMode="taxMode = $event"
+            @update:taxMode="handleTaxModeChange"
           />
         </div>
         
+        <!-- LOADING MODAL: Show when main loading (not background return fetch) -->
+        <FlightSearchLoading v-if="flightSearchStore.loading === 'loading'" />
+        
+        <!-- LOADING STATE: Show skeleton flight cards only when main loading (not background return fetch) -->
+        <div v-if="flightSearchStore.loading === 'loading'" class="space-y-4">
+          <div
+            v-for="n in 5"
+            :key="`skeleton-${n}`"
+            class="rounded-[10px] bg-white shadow-2xl p-4 animate-pulse"
+          >
+            <div class="flex items-center gap-4">
+              <div class="h-10 w-10 rounded-lg bg-gray-200 shrink-0"></div>
+              <div class="flex-1 grid grid-cols-12 gap-3">
+                <div class="col-span-12 md:col-span-6 space-y-2">
+                  <div class="h-4 w-5/6 bg-gray-200 rounded"></div>
+                  <div class="h-4 w-2/3 bg-gray-200 rounded"></div>
+                </div>
+                <div class="hidden md:block md:col-span-3 space-y-2">
+                  <div class="h-4 w-3/4 bg-gray-200 rounded"></div>
+                  <div class="h-4 w-1/2 bg-gray-200 rounded"></div>
+                </div>
+                <div class="hidden md:block md:col-span-3">
+                  <div class="h-8 w-full bg-gray-200 rounded-xl"></div>
+                </div>
+              </div>
+              <div class="md:hidden w-16">
+                <div class="h-8 w-full bg-gray-200 rounded-xl"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- RESULTS LIST -->
-        <div v-if="shownFlights.length >= 1" class="space-y-4 relative isolate">
+        <div v-else-if="shownFlights.length >= 1" class="space-y-4 relative isolate">
           <TransitionGroup appear>
             <FlightResultCard
               v-for="(it, i) in shownFlights" :key="it.refNumber"
@@ -91,11 +182,12 @@
               :trip-type="tripType"
               :price-from="displayPrice(it)"
               :tax-mode="taxMode"
+              :tax-amount="it.taxAmount"
               :round-trip-included="tripType === 'roundtrip'"
               :adult-count="searchRequest?.adultCount ?? 1"
               :child-count="searchRequest?.childCount ?? 0"
               :baby-count="searchRequest?.babyCount ?? 0"
-              :previous-segments="props.selectedSegments"
+              :previous-segments="selectedSegments"
               :is-selected="selectedCardRefNumber !== null && selectedCardRefNumber === it.refNumber"
               currency="TWD"
               @select="handleSelect"
@@ -106,23 +198,17 @@
         </div>
 
         <!-- LOAD MORE -->
-        <div v-if="canLoadMore && shownFlights.length >= 1" class="py-8 text-center">
+        <div v-if="canLoadMore && shownFlights.length >= 1 && flightSearchStore.loading === 'success'" class="py-8 text-center">
           <div class="inline-flex items-center gap-3 text-others-original font-bold">
             <span>更多航班訊息載入中</span>
             <img src="@/assets/imgs/icon-loading.svg" class="animate-spin-slow w-8 h-8" alt="Loading" />
           </div>
         </div>
-        <div v-if="shownFlights.length <= 0">
+        
+        <!-- NO DATA (only show when loading is complete and no flights) -->
+        <div v-if="flightSearchStore.loading === 'success' && shownFlights.length <= 0">
           <SorryNoData />
         </div>
-        </template>
-
-        <!-- Mobile StepTwo summary (full-page replacement) -->
-        <StepTwoMobileSummary
-          v-else
-          @confirm="() => { isStepTwoMobileSummaryOpen = false; goToBooking() }"
-          @edit-segment="() => { isStepTwoMobileSummaryOpen = false; handleEditSegment() }"
-        />
       </section>
     </div>
 
@@ -208,8 +294,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, inject, onMounted, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useFlightSearchStore } from '@/stores/flightSearch'
 
 import { timeToMin, inWindow } from '@/utils'
 import type { CardRow } from '@/utils/types'
@@ -222,7 +309,6 @@ import SortBar from '@/components/search/SortBar.vue'
 import SortModal from '@/components/ui/modals/SortModal.vue'
 import FlightActionModal from '@/components/ui/modals/FlightActionModal.vue'
 import FlightInfoModal from '@/components/ui/modals/FlightInfoModal.vue'
-import StepTwoMobileSummary from '@/components/booking/StepTwoMobileSummary.vue'
 import FlightSearchLoading from '@/components/ui/loading/FlightSearchLoading.vue'
 import SorryNoData from '@/components/ui/feedback/SorryNoData.vue'
 import { useAirlineStore } from '@/stores/airline'
@@ -230,21 +316,108 @@ import { useBookingStore } from '@/stores/booking'
 import { useLocationStore } from '@/stores/location'
 import { useRoundTripSummary } from '@/composables/useRoundTripSummary'
 import { useFlightFareRule } from '@/composables/useFlightFareRule'
+import { rebuildSelectedSegments, storeSelectedSegment, createSearchHash } from '@/utils/segmentStorage'
+import { deserializeSearchParams, serializeSearchParams } from '@/utils/urlParamsSync'
+import { useFilterSortSync } from '@/composables/useFilterSortSync'
 
 const airlineStore = useAirlineStore()
 const locationStore = useLocationStore()
+const flightSearchStore = useFlightSearchStore()
+const router = useRouter()
+const route = useRoute()
 
-// ---------- Props ----------
+// ---------- Filter, Sort, TaxMode (with URL sync) ----------
+const {
+  filters,
+  sort,
+  taxMode,
+  filterInitialState,
+  onFiltersChange,
+  setSort,
+  toggleSort,
+  handleTaxModeChange,
+  displayPrice,
+  getFiltersForNavigation,
+  getSortForNavigation,
+  getTaxModeForNavigation
+} = useFilterSortSync()
+
+// ---------- Props (from route or direct usage) ----------
 const props = defineProps<{
-  data: CardRow[],
-  tripType: string,
-  searchRequest?: any, // The original search request
-  currentSegmentIndex?: number, // Current segment being displayed (0-based)
-  selectedSegments?: any[] // Previously selected flight segments from parent
+  tripType: 'oneway' | 'roundtrip' | 'multi'
+  segmentIndex?: number // Current segment being displayed (0-based, from route or direct usage)
+  searchRequest?: any // The original search request (from route or direct usage)
 }>()
 
-// ---------- Header context (derived from props.data) ----------
-const first = computed(() => props.data?.[0])
+// ---------- Data Management ----------
+// Data comes from store, not props
+const flightData = computed(() => flightSearchStore.data)
+const searchRequest = computed(() => props.searchRequest)
+
+// Fetch when searchRequest changes (new segment or different selectedRefNumbers)
+// Store the last fetched request signature to compare
+const lastFetchedSignature = ref<string>('')
+
+watch(
+  () => [props.searchRequest, route.name, props.segmentIndex] as [any, string, number],
+  ([newRequest, newRouteName, segmentIndex]) => {
+    const isSearchRoute = route.name?.toString().startsWith('search-') ?? false
+    if (!isSearchRoute || !newRequest) return
+    
+    // Create a signature from key fields that determine if we need a new fetch
+    // Include search criteria to detect when user changes search parameters
+    const selectedRefs = (newRequest.selectedRefNumbers || []).sort().join(',')
+    const searchHash = createSearchHash(newRequest) // Includes departure, arrival, dates, passengers
+    const currentSignature = `${segmentIndex}-${selectedRefs}-${searchHash}`
+    
+    // Skip if already fetching the same request (prevents duplicate calls)
+    if (flightSearchStore.loading === 'loading') {
+      if (currentSignature === lastFetchedSignature.value) {
+        return // Already fetching this exact request
+      }
+    }
+    
+    // If data already exists and loading is complete, check if signature matches
+    // Only skip fetch if signature matches (same search criteria + segment + selectedRefs)
+    if (flightSearchStore.data.length > 0 && flightSearchStore.loading === 'success') {
+      if (lastFetchedSignature.value === '') {
+        // First time mounting, data already loaded by FlightSearchBox
+        // Update signature without fetching
+        lastFetchedSignature.value = currentSignature
+        return
+      }
+      // If signature matches, data is already correct, no need to fetch
+      if (currentSignature === lastFetchedSignature.value) {
+        return
+      }
+    }
+    
+    // Fetch if:
+    // 1. Store is empty (F5 refresh)
+    // 2. Request signature changed (new segment/selectedRefs/search criteria)
+    const needsFetch = 
+      flightSearchStore.data.length === 0 || 
+      currentSignature !== lastFetchedSignature.value
+    
+    if (needsFetch) {
+      lastFetchedSignature.value = currentSignature
+      
+      // Clear data and set loading before fetch to show skeletons immediately
+      flightSearchStore.data = []
+      flightSearchStore.loading = 'loading'
+      
+      flightSearchStore.fetchFlightSearch(newRequest)
+      airlineStore.fetchAirlineAlliance()
+    } else {
+      // Data already matches, just update signature to prevent re-fetch
+      lastFetchedSignature.value = currentSignature
+    }
+  },
+  { immediate: true }
+)
+
+// ---------- Header context (derived from flightData) ----------
+const first = computed(() => flightData.value?.[0])
 
 // Helper function to get city name from IATA code
 const getCityInfoFromCode = (code: string): { code: string, name: string } => {
@@ -268,9 +441,9 @@ const dateText = computed(() => {
   // prefer itinerary-level date if provided, else first sector
   const d = first.value?.departureDate || first.value?.sectors?.[0]?.departureDate
   
-  // Fallback to searchRequest when props.data is empty
+  // Fallback to searchRequest when flightData is empty
   if (!d && props.searchRequest?.flightSegments) {
-    const segmentIndex = props.currentSegmentIndex ?? 0
+    const segmentIndex = props.segmentIndex ?? 0
     const segment = props.searchRequest.flightSegments[segmentIndex]
     return segment?.departureDate || ''
   }
@@ -282,9 +455,9 @@ const origin = computed(() => {
   const code = first.value?.departureCityCode ?? first.value?.sectors?.[0]?.departureCityCode ?? ''
   const name = first.value?.departureCityName ?? first.value?.sectors?.[0]?.departureCityName ?? ''
   
-  // Fallback to searchRequest when props.data is empty
+  // Fallback to searchRequest when flightData is empty
   if (!code && props.searchRequest?.flightSegments) {
-    const segmentIndex = props.currentSegmentIndex ?? 0
+    const segmentIndex = props.segmentIndex ?? 0
     const segment = props.searchRequest.flightSegments[segmentIndex]
     if (segment?.departureLocation) {
       return getCityInfoFromCode(segment.departureLocation)
@@ -298,9 +471,9 @@ const destination = computed(() => {
   const code = first.value?.arrivalCityCode ?? first.value?.sectors?.slice(-1)?.[0]?.arrivalCityCode ?? ''
   const name = first.value?.arrivalCityName ?? first.value?.sectors?.slice(-1)?.[0]?.arrivalCityName ?? ''
   
-  // Fallback to searchRequest when props.data is empty
+  // Fallback to searchRequest when flightData is empty
   if (!code && props.searchRequest?.flightSegments) {
-    const segmentIndex = props.currentSegmentIndex ?? 0
+    const segmentIndex = props.segmentIndex ?? 0
     const segment = props.searchRequest.flightSegments[segmentIndex]
     if (segment?.arrivalLocation) {
       return getCityInfoFromCode(segment.arrivalLocation)
@@ -327,15 +500,15 @@ function getLegForIndex(segmentIndex: number): 'outbound' | 'return' {
   }
 }
 
-// Determine current leg based on tripType and currentSegmentIndex
+// Determine current leg based on tripType and segmentIndex
 const currentLeg = computed<'outbound' | 'return'>(() => {
-  const segmentIndex = props.currentSegmentIndex ?? 0
+  const segmentIndex = props.segmentIndex ?? 0
   return getLegForIndex(segmentIndex)
 })
 
 // Determine if this is the last step
 const isLastStep = computed(() => {
-  const segmentIndex = props.currentSegmentIndex ?? 0
+  const segmentIndex = props.segmentIndex ?? 0
   if (tripType.value === 'roundtrip') {
     return segmentIndex === 1
   } else if (tripType.value === 'multi') {
@@ -348,7 +521,7 @@ const isLastStep = computed(() => {
 
 // Generate segment title (for current header)
 const segmentTitle = computed(() => {
-  const segmentIndex = props.currentSegmentIndex ?? 0
+  const segmentIndex = props.segmentIndex ?? 0
   
   if (props.tripType === 'roundtrip') {
     return segmentIndex === 0 ? '去程' : '回程'
@@ -372,7 +545,7 @@ interface HeaderItem {
 
 const headerItems = computed<HeaderItem[]>(() => {
   const items: HeaderItem[] = []
-  const currentIndex = props.currentSegmentIndex ?? 0
+  const currentIndex = props.segmentIndex ?? 0
 
   // Base header for current segment: used on desktop always,
   // and on mobile for non-multi trip types.
@@ -421,25 +594,65 @@ const headerItems = computed<HeaderItem[]>(() => {
 })
 
 // --- Mobile edit handler ---
+// Inject edit modal function from SearchView (route context)
+const openSearchEditModal = inject<(() => void) | undefined>('openSearchEditModal', undefined)
+
 function handleEditSegment() {
   // Close mobile modal when edit is clicked
   selectedCardRefNumber.value = null
   isFlightInfoModalOpen.value = false
-  emit('edit-search')
+  
+  // Use injected function if available (route context), otherwise emit (backward compatibility)
+  if (openSearchEditModal) {
+    openSearchEditModal()
+  } else {
+    emit('edit-search')
+  }
 }
 
 // (Other-leg summary logic removed for now; will be revisited later when UX is finalized)
 
+// ---------- Selected Segments Management ----------
+// Rebuild selectedSegments from URL + sessionStorage
+const selectedSegments = computed(() => {
+  const selectedRefs = route.query.selectedRefs
+  if (!selectedRefs || typeof selectedRefs !== 'string') {
+    return []
+  }
+  
+  const refsArray = selectedRefs.split(',').filter(ref => ref.length > 0)
+  if (refsArray.length === 0) {
+    return []
+  }
+  
+  // Rebuild from URL refs + sessionStorage
+  return rebuildSelectedSegments(
+    props.tripType,
+    props.searchRequest,
+    refsArray,
+    flightData.value
+  )
+})
+
 // State for managing selected flights (selectedRefNumbers)
-// Initialize from searchRequest if available (for subsequent segments in multi-trip)
-const selectedRefNumbers = ref<number[]>(props.searchRequest?.selectedRefNumbers ?? [])
+// Initialize from URL query if available
+const selectedRefNumbers = computed(() => {
+  const selectedRefs = route.query.selectedRefs
+  if (!selectedRefs || typeof selectedRefs !== 'string') {
+    return []
+  }
+  return selectedRefs.split(',').map(ref => parseInt(ref)).filter(n => !isNaN(n))
+})
 
 // Local copy of selected segments to accumulate during current session
-const accumulatedSegments = ref<any[]>([...(props.selectedSegments ?? [])])
+// This is used when selecting flights to build up the array
+const accumulatedSegments = computed(() => {
+  // Return all segments up to current index
+  return selectedSegments.value.slice(0, props.segmentIndex)
+})
 
 // Emit events to parent
 const emit = defineEmits<{
-  (e: 'searchNextSegment', payload: { selectedRefNumbers: number[]; selectedSegments: any[] }): void
   (e: 'edit-search'): void
 }>()
 
@@ -447,23 +660,23 @@ const emit = defineEmits<{
 const roundTripSummary = useRoundTripSummary(
   () => ({
     tripType: tripType.value,
-    currentSegmentIndex: props.currentSegmentIndex,
-    outboundResults: props.data,
+    currentSegmentIndex: props.segmentIndex,
+    outboundResults: flightData.value,
     searchRequest: props.searchRequest,
-    selectedSegments: props.selectedSegments
+    selectedSegments: selectedSegments.value
   })
 )
 
 // Extract summary data for template (handles null case)
 const summaryData = computed(() => roundTripSummary.summaryData.value)
 
-//---------- Sidebar data (derived from props.data) ----------
+//---------- Sidebar data (derived from flightData) ----------
 type OptionItem = { id: string; name: string; price: number }
 const alliances = computed(() => airlineStore.airlineAlliance ?? [])
 
 const airlines = computed<OptionItem[]>(() => {
   const map = new Map<string, { name: string; min: number }>()
-  for (const row of props.data ?? []) {
+  for (const row of flightData.value ?? []) {
     const codes = row.airlineCode ?? []
     const names = row.airlineName ?? []
     codes.forEach((code, idx) => {
@@ -478,7 +691,7 @@ const airlines = computed<OptionItem[]>(() => {
 
 const depAirports = computed<OptionItem[]>(() => {
   const map = new Map<string, { name: string; min: number }>()
-  for (const row of props.data ?? []) {
+  for (const row of flightData.value ?? []) {
     const id = row.departureAirportCode
     const name = row.departureAirportName || id
     const price = row.price
@@ -490,7 +703,7 @@ const depAirports = computed<OptionItem[]>(() => {
 
 const arrAirports = computed<OptionItem[]>(() => {
   const map = new Map<string, { name: string; min: number }>()
-  for (const row of props.data ?? []) {
+  for (const row of flightData.value ?? []) {
     const id = row.arrivalAirportCode
     const name = row.arrivalAirportName || id
     const price = row.price
@@ -504,7 +717,7 @@ const arrAirports = computed<OptionItem[]>(() => {
 const stopsPricing = computed(() => {
   let directMin = Infinity
   let oneStopMin = Infinity
-  for (const row of props.data ?? []) {
+  for (const row of flightData.value ?? []) {
     const stops = Math.max(0, (row.sectors?.length ?? 1) - 1)
     if (stops === 0) directMin = Math.min(directMin, row.price)
     else oneStopMin = Math.min(oneStopMin, row.price)
@@ -516,19 +729,21 @@ const stopsPricing = computed(() => {
 })
 
 // ---------- Router / handlers ----------
-const router = useRouter()
 const bookingStore = useBookingStore()
 
-// 控制行動版 StepTwo 摘要頁顯示與載入狀態
-const isStepTwoMobileSummaryOpen = ref(false)
+// 控制行動版載入狀態
 const isMobileBookingLoading = ref(false)
+
+// Shared state for selected card (mobile modal) - defined early as it's used in handleEditSegment
+const selectedCardRefNumber = ref<number | null>(null)
+const isFlightInfoModalOpen = ref(false)
 
 // 將目前選擇的航班與票價寫入 bookingStore，但不導頁
 function prepareBooking(payload: any) {
   const { fare, refNumber, fareRuleData } = payload
 
   // 找出當前航班的完整資訊
-  const currentFlight = props.data.find(flight => flight.refNumber === refNumber)
+  const currentFlight = flightData.value.find(flight => flight.refNumber === refNumber)
   if (!currentFlight) {
     console.error('Flight not found:', refNumber)
     return
@@ -568,7 +783,7 @@ function prepareBooking(payload: any) {
   }
 
   // 判斷行程類型和當前航段索引
-  const segmentIndex = props.currentSegmentIndex ?? 0
+  const segmentIndex = props.segmentIndex ?? 0
   const isReturnSegment = tripType.value === 'roundtrip' && segmentIndex === 1
   const isMultiTrip = tripType.value === 'multi'
 
@@ -578,8 +793,8 @@ function prepareBooking(payload: any) {
     const allSegments: any[] = []
 
     // 1. 加入之前選擇的所有航段
-    if (props.selectedSegments && props.selectedSegments.length > 0) {
-      props.selectedSegments.forEach((seg: any) => {
+    if (selectedSegments.value && selectedSegments.value.length > 0) {
+      selectedSegments.value.forEach((seg: any) => {
         allSegments.push({
           refNumber: seg.refNumber,
           sectors: seg.sectors || [],
@@ -607,8 +822,8 @@ function prepareBooking(payload: any) {
     // 來回票的回程
     bookingStore.setReturnSegment(currentSegment)
     // 去程資訊應該已經在 selectedSegments 中
-    if (props.selectedSegments && props.selectedSegments.length > 0) {
-      const outboundData = props.selectedSegments[0]
+    if (selectedSegments.value && selectedSegments.value.length > 0) {
+      const outboundData = selectedSegments.value[0]
       bookingStore.setOutboundSegment({
         refNumber: outboundData.refNumber,
         sectors: outboundData.sectors || [],
@@ -648,8 +863,8 @@ function prepareBooking(payload: any) {
     let searchArrivalCityCode = destination.value.code
 
     // 如果是回程航段，需要交換回來，使用去程的起訖點作為搜尋條件
-    if (isReturnSegment && props.selectedSegments && props.selectedSegments.length > 0) {
-      const outboundData = props.selectedSegments[0]
+    if (isReturnSegment && selectedSegments.value && selectedSegments.value.length > 0) {
+      const outboundData = selectedSegments.value[0]
       if (outboundData?.header) {
         // 使用去程的出發地和目的地作為搜尋參數
         searchDepartureCityCode = outboundData.header.departureAirportCode
@@ -701,9 +916,8 @@ function prepareBooking(payload: any) {
 
 // 導航到訂票頁面 - 保留 URL 查詢參數以支援瀏覽器返回功能
 function goToBooking() {
-  sessionStorage.setItem('bookingStep', '2')
   router.push({
-    path: '/booking',
+    name: 'booking-step-2',
     query: router.currentRoute.value.query,
   })
 }
@@ -714,70 +928,108 @@ function onPurchase(payload: any) {
 }
 
 const handleSelect = (payload: any) => {
-  
-  // Step 1: For non-final segments (outbound in round trip, or non-last in multi-trip)
-  // Add the selected refNumber and trigger next search
+  // Store selected segment and navigate to next route
   if (payload.refNumber !== undefined) {
-    selectedRefNumbers.value.push(payload.refNumber)
+    const segmentIndex = props.segmentIndex ?? 0
     
-    // Store the selected flight segments for later use in fare-rule API
-    if (payload.sectors && payload.sectors.length > 0) {
-      accumulatedSegments.value.push(payload)
+    // For roundtrip outbound: trigger return search when card is selected
+    // This updates HeaderStripSummary with cheapest return option
+    if (props.tripType === 'roundtrip' && segmentIndex === 0) {
+      // Trigger return search with clicked outbound card's refNumber
+      // This will show skeleton in HeaderStripSummary while loading, then show cheapest result
+      roundTripSummary.fetchReturnResults(payload.refNumber)
+      // Continue with navigation - user will see return results on next page
     }
     
-    // Emit to parent to trigger next flight search with updated selectedRefNumbers and segments
-    emit('searchNextSegment', { 
-      selectedRefNumbers: selectedRefNumbers.value,
-      selectedSegments: accumulatedSegments.value
+    // Store segment in sessionStorage
+    storeSelectedSegment(
+      props.tripType,
+      props.searchRequest,
+      segmentIndex,
+      payload
+    )
+    
+    // Build updated selectedRefs array
+    const currentRefs = selectedRefNumbers.value
+    const newRefs = [...currentRefs, payload.refNumber]
+    
+    // Extract search params from current route
+    const currentParams = deserializeSearchParams(route.query)
+    if (!currentParams) {
+      return
+    }
+    
+    // Update selectedRefs
+    currentParams.selectedRefs = newRefs.map(ref => String(ref))
+    
+    // Preserve filters, sort, and taxMode when navigating to next segment
+    // (These are already in currentParams from deserializeSearchParams, but ensure they're set)
+    const currentFilters = getFiltersForNavigation()
+    const currentSort = getSortForNavigation()
+    const currentTaxMode = getTaxModeForNavigation()
+    
+    if (!currentParams.filters && (currentFilters.studentOnly || currentFilters.stops.direct || currentFilters.stops.oneStop || 
+        currentFilters.alliances.length > 0 || currentFilters.airlines.length > 0 || 
+        currentFilters.depAirports.length > 0 || currentFilters.arrAirports.length > 0 ||
+        currentFilters.departTime[0] !== 0 || currentFilters.departTime[1] !== 1439 ||
+        currentFilters.arriveTime[0] !== 0 || currentFilters.arriveTime[1] !== 1439)) {
+      currentParams.filters = {
+        studentOnly: currentFilters.studentOnly || undefined,
+        stops: {
+          direct: currentFilters.stops.direct || undefined,
+          oneStop: currentFilters.stops.oneStop || undefined
+        },
+        alliances: currentFilters.alliances.length > 0 ? currentFilters.alliances : undefined,
+        airlines: currentFilters.airlines.length > 0 ? currentFilters.airlines : undefined,
+        depAirports: currentFilters.depAirports.length > 0 ? currentFilters.depAirports : undefined,
+        arrAirports: currentFilters.arrAirports.length > 0 ? currentFilters.arrAirports : undefined,
+        departTime: (currentFilters.departTime[0] !== 0 || currentFilters.departTime[1] !== 1439) ? currentFilters.departTime : undefined,
+        arriveTime: (currentFilters.arriveTime[0] !== 0 || currentFilters.arriveTime[1] !== 1439) ? currentFilters.arriveTime : undefined
+      }
+    }
+    if (!currentParams.sort && (currentSort.key !== 'price' || currentSort.dir !== 'asc')) {
+      currentParams.sort = { key: currentSort.key, dir: currentSort.dir }
+    }
+    if (!currentParams.taxMode && currentTaxMode !== 'in') {
+      currentParams.taxMode = currentTaxMode
+    }
+    
+    // Determine next route
+    let nextRouteName: string
+    let nextParams: Record<string, string> | undefined
+    
+    if (props.tripType === 'roundtrip') {
+      // Roundtrip: navigate to return segment
+      nextRouteName = 'search-return'
+      // Note: currentSegmentIndex not needed - route structure determines segment index
+    } else if (props.tripType === 'multi') {
+      // Multi-trip: navigate to next segment
+      const nextIndex = segmentIndex + 1
+      nextRouteName = 'search-segment'
+      nextParams = { index: String(nextIndex) }
+      // Note: currentSegmentIndex not needed - route params determine segment index
+    } else {
+      // Oneway: should not reach here (isLastStep should be true)
+      return
+    }
+    
+    // Serialize updated params (includes filters, sort, taxMode)
+    const query = serializeSearchParams(currentParams)
+    
+    // Navigate to next route
+    router.push({
+      name: nextRouteName,
+      params: nextParams,
+      query
     })
   }
 }
 
-// ---------- Filters (from sidebar) ----------
-const filters = reactive<{
-  studentOnly: boolean
-  stops: { direct: boolean; oneStop: boolean }
-  alliances: string[]
-  airlines: string[]
-  depAirports: string[]
-  arrAirports: string[]
-  departTime: [number, number]
-  arriveTime: [number, number]
-}>({
-  studentOnly: false,
-  stops: { direct: false, oneStop: false },
-  alliances: [],
-  airlines: [],
-  depAirports: [],
-  arrAirports: [],
-  departTime: [0, 1439],
-  arriveTime: [0, 1439]
-})
-
-function onFiltersChange(v: any) { Object.assign(filters, v) }
-
-// ---------- Sort ----------
-const sort = reactive<{ key: 'direct' | 'price' | 'depTime' | 'arrTime' | 'duration', dir: 'asc' | 'desc' }>({
-  key: 'direct', dir: 'asc'
-})
-function setSort(key: typeof sort.key, dir: typeof sort.dir) { sort.key = key; sort.dir = dir }
-function toggleSort(key: typeof sort.key) {
-  if (sort.key !== key) { sort.key = key; sort.dir = 'asc'; return }
-  sort.dir = sort.dir === 'asc' ? 'desc' : 'asc'
-}
-
-// ---------- Tax toggle & price display ----------
-const taxMode = ref<'in' | 'ex'>('in')
-function displayPrice(row: CardRow) {
-  // API 回傳的 price 已經含稅
-  // 含稅模式：直接顯示 price
-  // 未稅模式：顯示 price - taxAmount
-  return taxMode.value === 'in' ? row.price : row.price - (row.taxAmount ?? 0)
-}
+// (Filter, Sort, TaxMode logic moved to useFilterSortSync composable)
 
 // ---------- Derived, filtered & sorted list ----------
 const filteredFlights = computed(() => {
-  let arr = (props.data ?? []).slice()
+  let arr = (flightData.value ?? []).slice()
 
   // stops filter
   const wantDirect = filters.stops.direct
@@ -809,7 +1061,10 @@ const filteredFlights = computed(() => {
     inWindow(timeToMin(f.arrivalTime), arrWin)
   )
 
-  // Helper to get price for sorting (matches displayPrice logic)
+  /**
+   * Helper to get price for sorting (matches displayPrice logic)
+   * Ensures sorting matches what user sees based on taxMode
+   */
   const getPriceForSort = (row: CardRow) => {
     // API 回傳的 price 已經含稅
     return taxMode.value === 'in' 
@@ -817,7 +1072,8 @@ const filteredFlights = computed(() => {
       : row.price - (row.taxAmount ?? 0)  // When tax excluded, subtract tax
   }
 
-  // sort
+  // Sort: Default is 'price' (ascending) to match store's initial sort
+  // User can change sort via SortBar
   arr.sort((a, b) => {
     const dir = sort.dir === 'asc' ? 1 : -1
     if (sort.key === 'direct') {
@@ -892,13 +1148,54 @@ const activeFilterCount = computed(() => {
 const isFilterModalOpen = ref(false)
 const isSortModalOpen = ref(false)
 
-// Shared state for selected card (mobile modal)
-const selectedCardRefNumber = ref<number | null>(null)
-const isFlightInfoModalOpen = ref(false)
+// Computed for selected card data (selectedCardRefNumber is defined earlier)
 const selectedCardData = computed(() => {
   if (selectedCardRefNumber.value === null) return null
   return filteredFlights.value.find(card => card.refNumber === selectedCardRefNumber.value) || null
 })
+
+// ---------- Auto-select first card on mobile after results load ----------
+// Track if we've already auto-selected to prevent re-selection on filter/sort changes
+const hasAutoSelected = ref(false)
+
+// Watch for when results are loaded and auto-select first card (mobile only)
+watch(
+  () => [flightSearchStore.loading, filteredFlights.value] as [string, CardRow[]],
+  ([loading, flights]) => {
+    // Only on mobile
+    if (window.innerWidth >= 768) return
+    
+    // Only when results are successfully loaded and there are flights
+    if (loading !== 'success' || flights.length === 0) return
+    
+    // Don't auto-select if user has already selected a card manually
+    if (selectedCardRefNumber.value !== null) return
+    
+    // Don't auto-select if we've already done it (prevents re-selection on filter/sort changes)
+    if (hasAutoSelected.value) return
+    
+    // Set first card as selected (this will show it as clicked and open the modal)
+    const firstFlight = flights[0]
+    if (firstFlight?.refNumber !== undefined && firstFlight.refNumber !== null) {
+      selectedCardRefNumber.value = firstFlight.refNumber
+      hasAutoSelected.value = true
+    }
+  },
+  { immediate: true }
+)
+
+// Reset auto-selection flag when new search starts (loading becomes 'loading')
+// This allows auto-selection to happen again for the new search results
+watch(
+  () => flightSearchStore.loading,
+  (loading) => {
+    if (loading === 'loading') {
+      hasAutoSelected.value = false
+      // Also clear selected card when new search starts
+      selectedCardRefNumber.value = null
+    }
+  }
+)
 
 // Initialize fare rule composable for mobile purchase flow
 // Uses reactive getter to access current selected card data
@@ -907,7 +1204,7 @@ const fareRuleForPurchase = useFlightFareRule(() => {
   if (!card || !card.sectors) {
     return {
       sectors: [],
-      previousSegments: props.selectedSegments,
+      previousSegments: selectedSegments.value,
       tripType: tripType.value,
       leg: currentLeg.value,
       adultCount: props.searchRequest?.adultCount || props.searchRequest?.adults || 1,
@@ -920,11 +1217,11 @@ const fareRuleForPurchase = useFlightFareRule(() => {
   }
   
   // Find full flight data to get validatingAirlineCode and itineraryRBDs
-  const currentFlight = props.data.find(flight => flight.refNumber === card.refNumber)
+  const currentFlight = flightData.value.find(flight => flight.refNumber === card.refNumber)
   
   return {
     sectors: card.sectors,
-    previousSegments: props.selectedSegments,
+    previousSegments: selectedSegments.value,
     tripType: tripType.value,
     leg: currentLeg.value,
     adultCount: props.searchRequest?.adultCount || props.searchRequest?.adults || 1,
@@ -939,9 +1236,57 @@ const fareRuleForPurchase = useFlightFareRule(() => {
 function handleCardClick(card: CardRow) {
   // Only handle on mobile
   if (window.innerWidth >= 768) return
+  
   // Set selected card (opens modal if not already open, or switches content if already open)
   if (card.refNumber !== undefined && card.refNumber !== null) {
     selectedCardRefNumber.value = card.refNumber
+    
+    // For roundtrip outbound on mobile: trigger return search when card is clicked
+    // This will show skeleton in HeaderStripSummary while loading, then show cheapest result
+    if (props.tripType === 'roundtrip' && (props.segmentIndex ?? 0) === 0) {
+      roundTripSummary.fetchReturnResults(card.refNumber)
+    }
+  }
+}
+
+// Handle HeaderStripSummary click - navigate to next/previous segment
+function handleHeaderStripSummaryClick() {
+  if (props.tripType !== 'roundtrip') return
+  
+  if (currentLeg.value === 'outbound') {
+    // On outbound: navigate to return using the currently selected outbound
+    // (the one that triggered the return search shown in HeaderStripSummary)
+    const selectedRefNumber = roundTripSummary.currentOutboundRefNumber.value
+    
+    // Find the card with this refNumber, or fallback to cheapest (first in filteredFlights)
+    const selectedCard = selectedRefNumber 
+      ? filteredFlights.value.find(card => card.refNumber === selectedRefNumber)
+      : null
+    const card = selectedCard || filteredFlights.value[0]
+    
+    if (card && card.refNumber !== undefined) {
+      handleSelect({
+        refNumber: card.refNumber,
+        sectors: card.sectors || [],
+        totalMinutes: card.durationMinutes || 0,
+        stopsCount: Math.max(0, (card.sectors?.length ?? 1) - 1),
+        totalPrice: card.price || 0,
+        taxAmount: card.taxAmount || 0,
+        currency: 'TWD',
+        roundTripIncluded: true,
+        header: {
+          departureTime: card.departureTime || '',
+          arrivalTime: card.arrivalTime || '',
+          departureAirportCode: card.departureAirportCode || '',
+          arrivalAirportCode: card.arrivalAirportCode || '',
+          departureTerminal: card.departureTerminal || '',
+          arrivalTerminal: card.arrivalTerminal || ''
+        }
+      })
+    }
+  } else if (currentLeg.value === 'return') {
+    // On return: navigate back to outbound (simple router.back)
+    router.back()
   }
 }
 
@@ -964,10 +1309,15 @@ async function handleFlightInfoNextStep() {
       // 行動版：顯示載入中畫面（保留 selectedCardRefNumber，讓 fareRuleForPurchase 有 sectors）
       isMobileBookingLoading.value = true
 
+      /**
+       * Temporary baseFare placeholder (will be replaced by fare-rule API response)
+       * Note: card.price includes tax, but this is just a placeholder structure
+       * The actual fare-rule API will return the correct price structure
+       */
       const baseFare: any = {
         id: 'default-fare',
         cabin: card.sectors?.[0]?.cabinDesc || '經濟艙',
-        price: (card.price || 0) - (card.taxAmount || 0),
+        price: (card.price || 0) - (card.taxAmount || 0), // Placeholder: price without tax
         taxAmount: card.taxAmount || 0,
         notes: []
       }
@@ -992,7 +1342,7 @@ async function handleFlightInfoNextStep() {
         }
       }
 
-      // 將結果寫入 bookingStore，關閉載入畫面並顯示摘要頁
+      // 將結果寫入 bookingStore，關閉載入畫面並導航到摘要頁
       prepareBooking({
         fare: fareWithNotes,
         refNumber: card.refNumber,
@@ -1000,14 +1350,55 @@ async function handleFlightInfoNextStep() {
       })
 
       isMobileBookingLoading.value = false
-      isStepTwoMobileSummaryOpen.value = true
+      
+      // Store final segment and navigate to summary route
+      storeSelectedSegment(
+        props.tripType,
+        props.searchRequest,
+        props.segmentIndex ?? 0,
+        {
+          refNumber: card.refNumber,
+          sectors: card.sectors || [],
+          totalMinutes: card.durationMinutes || 0,
+          stopsCount: Math.max(0, (card.sectors?.length ?? 1) - 1),
+          totalPrice: card.price || 0,
+          taxAmount: card.taxAmount || 0,
+          currency: 'TWD',
+          roundTripIncluded: props.tripType === 'roundtrip',
+          header: {
+            departureTime: card.departureTime || '',
+            arrivalTime: card.arrivalTime || '',
+            departureAirportCode: card.departureAirportCode || '',
+            arrivalAirportCode: card.arrivalAirportCode || '',
+            departureTerminal: card.departureTerminal || '',
+            arrivalTerminal: card.arrivalTerminal || ''
+          }
+        }
+      )
+      
+      // Update URL with final selectedRefs
+      const currentParams = deserializeSearchParams(route.query)
+      if (currentParams) {
+        const finalRefs = [...selectedRefNumbers.value, card.refNumber]
+        currentParams.selectedRefs = finalRefs.map(ref => String(ref))
+        const query = serializeSearchParams(currentParams)
+        
+        router.push({
+          name: 'search-summary',
+          query
+        })
+      }
     } else {
       // 桌機版：維持原本流程，先取得 fare-rule 再導頁
       let fareRuleData = null
+      /**
+       * Temporary fare placeholder (will be replaced by fare-rule API response)
+       * Note: card.price includes tax, but this is just a placeholder structure
+       */
       let fareWithNotes: any = {
         id: 'default-fare',
         cabin: card.sectors?.[0]?.cabinDesc || '經濟艙',
-        price: (card.price || 0) - (card.taxAmount || 0),
+        price: (card.price || 0) - (card.taxAmount || 0), // Placeholder: price without tax
         taxAmount: card.taxAmount || 0,
         notes: []
       }
@@ -1080,17 +1471,7 @@ function handleSortOptionClick(key: typeof sort.key, dir: typeof sort.dir) {
   setSort(key, dir)
 }
 
-// Filter initial state for FilterSideBar (to persist checked state)
-const filterInitialState = computed(() => ({
-  studentOnly: filters.studentOnly,
-  stops: { ...filters.stops },
-  alliances: [...filters.alliances],
-  airlines: [...filters.airlines],
-  depAirports: [...filters.depAirports],
-  arrAirports: [...filters.arrAirports],
-  departTime: [filters.departTime[0], filters.departTime[1]] as [number, number],
-  arriveTime: [filters.arriveTime[0], filters.arriveTime[1]] as [number, number],
-}))
+// (filterInitialState moved to useFilterSortSync composable)
 
 // Lock body scroll when filter or sort modal is open
 let savedScrollY = 0

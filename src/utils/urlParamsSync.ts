@@ -43,6 +43,27 @@ export interface SearchParams {
   
   // Current segment index (for multi-segment flows)
   currentSegmentIndex?: number
+  
+  // Filter state (for ResultsMain)
+  filters?: {
+    studentOnly?: boolean
+    stops?: { direct?: boolean; oneStop?: boolean }
+    alliances?: string[]
+    airlines?: string[]
+    depAirports?: string[]
+    arrAirports?: string[]
+    departTime?: [number, number]
+    arriveTime?: [number, number]
+  }
+  
+  // Sort state (for ResultsMain)
+  sort?: {
+    key?: 'direct' | 'price' | 'depTime' | 'arrTime' | 'duration'
+    dir?: 'asc' | 'desc'
+  }
+  
+  // Tax mode (for ResultsMain)
+  taxMode?: 'in' | 'ex'
 }
 
 /**
@@ -89,6 +110,35 @@ export function serializeSearchParams(params: SearchParams): Record<string, stri
   // Current segment index (for step navigation)
   if (params.currentSegmentIndex !== undefined && params.currentSegmentIndex > 0) {
     query.step = String(params.currentSegmentIndex)
+  }
+  
+  // Filter state
+  if (params.filters) {
+    const f = params.filters
+    if (f.studentOnly) query.filterStudent = 'true'
+    if (f.stops?.direct) query.filterDirect = 'true'
+    if (f.stops?.oneStop) query.filterOneStop = 'true'
+    if (f.alliances && f.alliances.length > 0) query.filterAlliances = f.alliances.join(',')
+    if (f.airlines && f.airlines.length > 0) query.filterAirlines = f.airlines.join(',')
+    if (f.depAirports && f.depAirports.length > 0) query.filterDepAirports = f.depAirports.join(',')
+    if (f.arrAirports && f.arrAirports.length > 0) query.filterArrAirports = f.arrAirports.join(',')
+    if (f.departTime && (f.departTime[0] !== 0 || f.departTime[1] !== 1439)) {
+      query.filterDepartTime = `${f.departTime[0]},${f.departTime[1]}`
+    }
+    if (f.arriveTime && (f.arriveTime[0] !== 0 || f.arriveTime[1] !== 1439)) {
+      query.filterArriveTime = `${f.arriveTime[0]},${f.arriveTime[1]}`
+    }
+  }
+  
+  // Sort state
+  if (params.sort) {
+    if (params.sort.key && params.sort.key !== 'price') query.sortKey = params.sort.key
+    if (params.sort.dir && params.sort.dir !== 'asc') query.sortDir = params.sort.dir
+  }
+  
+  // Tax mode
+  if (params.taxMode && params.taxMode !== 'in') {
+    query.taxMode = params.taxMode
   }
   
   return query
@@ -170,6 +220,66 @@ export function deserializeSearchParams(query: LocationQuery): SearchParams | nu
   // Current segment index
   if (query.step) {
     params.currentSegmentIndex = parseInt(query.step as string) || 0
+  }
+  
+  // Filter state
+  const filters: SearchParams['filters'] = {}
+  if (query.filterStudent === 'true') filters.studentOnly = true
+  if (query.filterDirect === 'true') {
+    filters.stops = { ...filters.stops, direct: true }
+  }
+  if (query.filterOneStop === 'true') {
+    filters.stops = { ...filters.stops, oneStop: true }
+  }
+  if (query.filterAlliances) {
+    filters.alliances = (query.filterAlliances as string).split(',').filter(s => s.length > 0)
+  }
+  if (query.filterAirlines) {
+    filters.airlines = (query.filterAirlines as string).split(',').filter(s => s.length > 0)
+  }
+  if (query.filterDepAirports) {
+    filters.depAirports = (query.filterDepAirports as string).split(',').filter(s => s.length > 0)
+  }
+  if (query.filterArrAirports) {
+    filters.arrAirports = (query.filterArrAirports as string).split(',').filter(s => s.length > 0)
+  }
+  if (query.filterDepartTime) {
+    const [start, end] = (query.filterDepartTime as string).split(',').map(Number)
+    if (!isNaN(start) && !isNaN(end)) {
+      filters.departTime = [start, end] as [number, number]
+    }
+  }
+  if (query.filterArriveTime) {
+    const [start, end] = (query.filterArriveTime as string).split(',').map(Number)
+    if (!isNaN(start) && !isNaN(end)) {
+      filters.arriveTime = [start, end] as [number, number]
+    }
+  }
+  // Only add filters object if it has any properties
+  if (Object.keys(filters).length > 0) {
+    params.filters = filters
+  }
+  
+  // Sort state
+  if (query.sortKey || query.sortDir) {
+    params.sort = {}
+    if (query.sortKey) {
+      const validKeys = ['direct', 'price', 'depTime', 'arrTime', 'duration']
+      if (validKeys.includes(query.sortKey as string)) {
+        params.sort.key = query.sortKey as 'direct' | 'price' | 'depTime' | 'arrTime' | 'duration'
+      }
+    }
+    if (query.sortDir) {
+      if (query.sortDir === 'asc' || query.sortDir === 'desc') {
+        params.sort = params.sort || {}
+        params.sort.dir = query.sortDir as 'asc' | 'desc'
+      }
+    }
+  }
+  
+  // Tax mode
+  if (query.taxMode === 'ex' || query.taxMode === 'in') {
+    params.taxMode = query.taxMode
   }
   
   return params

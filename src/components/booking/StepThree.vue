@@ -13,7 +13,7 @@
         </div>
         <template v-else>
             <TicketBookingCard />
-            <PaymentMethodCard v-model:step="step" />
+            <PaymentMethodCard />
         </template>
     </div>
 </template>
@@ -24,7 +24,7 @@ import { viewOrder } from '@/api'
 import TicketBookingCard from './TicketBookingCard.vue'
 import PaymentMethodCard from './PaymentMethodCard.vue'
 
-const step = defineModel('step')
+// Step navigation now handled by router (no longer using v-model:step)
 const bookingStore = useBookingStore()
 const isLoading = ref(true)
 const error = ref('')
@@ -80,6 +80,9 @@ const loadOrderData = async () => {
 }
 
 onMounted(() => {
+  // Restore booking data from localStorage (safety net, though BookingView should already do this)
+  bookingStore.getBookingData()
+  
   window.scrollTo({
     top: 0,
     left: 0,

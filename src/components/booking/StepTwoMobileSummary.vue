@@ -232,13 +232,38 @@
   </template>
   
   <script setup lang="ts">
-  import { computed, ref } from 'vue'
+  import { computed, ref, inject } from 'vue'
+  import { useRouter } from 'vue-router'
   import { formatDateToChinese, formatPrice, toDuration, noteIcon } from '@/utils'
   import { useBookingStore } from '@/stores/booking'
   import BaggageInfoAndFeeRule from '@/components/ui/booking/BaggageInfoAndFeeRule.vue'
   import { resolveAirlineLogo, onAirlineImageError, AirlineDefault } from '@/utils/airlineLogo'
+  import type { SearchParams } from '@/utils/urlParamsSync'
 
+  // Define props to prevent Vue from trying to set HTML attributes
+  // The route passes SearchParams, but we don't actually use it as props
+  // We get data from bookingStore instead
+  const props = defineProps<{
+    // Accept SearchParams but don't use it - just to prevent prop warnings
+    tripType?: 'oneway' | 'roundtrip' | 'multi'
+    adults?: number
+    children?: number
+    infants?: number
+    [key: string]: any // Allow other SearchParams properties
+  }>()
+  
+  // Explicitly mark props as component props (not HTML attributes)
+  // This prevents Vue from trying to set them as DOM attributes
+  if (import.meta.env.DEV) {
+    // In dev mode, ensure props are recognized
+    void props
+  }
+
+  const router = useRouter()
   const bookingStore = useBookingStore()
+
+  // Inject edit modal function from SearchView (route context)
+  const openSearchEditModal = inject<(() => void) | undefined>('openSearchEditModal', undefined)
 
   const segments = computed(() => bookingStore.segments || [])
   const selectedFare = computed<any | null>(() => (bookingStore.selectedFare as any) || null)
@@ -271,9 +296,8 @@
   const totalWithTax = computed(() => {
     const fare = selectedFare.value
     if (!fare) return 0
-    const base = Number(fare.price ?? 0)
-    const tax = Number(fare.taxAmount ?? 0)
-    return base + tax
+    // fare.price already includes tax (per API contract)
+    return Number(fare.price ?? 0)
   })
   
   const isBaggageInfoOpen = ref(false)
@@ -282,18 +306,20 @@
     isBaggageInfoOpen.value = true
   }
   
-  const emit = defineEmits<{
-    (e: 'confirm'): void
-    (e: 'edit-segment'): void
-  }>()
-  
+  // Navigate to booking step 2 when user clicks "訂購"
   function handleConfirm() {
-    emit('confirm')
+    router.push({ name: 'booking-step-2' })
   }
-  
-  // Edit search – delegate to ResultsMain, same as HeaderStrip
+
+  // Edit search – open search edit modal (mobile) or navigate back (fallback)
   function handleEditSearch() {
-    emit('edit-segment')
+    // Use injected function if available (route context), otherwise navigate back
+    if (openSearchEditModal) {
+      openSearchEditModal()
+    } else {
+      // Fallback: navigate back to the previous search route
+      router.back()
+    }
   }
   
   // Segment helpers (duplicated from StepTwo for clarity and isolation)

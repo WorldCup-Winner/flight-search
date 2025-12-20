@@ -170,13 +170,12 @@ const router = useRouter()
 // Match "/order" and any sub-paths like "/order/123"
 const isOrderPage = computed(() => {
   const p = route.fullPath.toLowerCase()
-  console.log(window.innerWidth)
   return (
     p === '/booking' ||
     p.startsWith('/booking/') ||
     p.startsWith('/booking-search-result') ||
     p === '/404-page' ||
-    (p.startsWith('/?triptype=') && typeof window !== 'undefined' && window.innerWidth < 768)
+    (p.startsWith('/search') && typeof window !== 'undefined' && window.innerWidth < 768)
   )
 })
 
