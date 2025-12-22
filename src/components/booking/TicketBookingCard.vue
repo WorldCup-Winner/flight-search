@@ -114,7 +114,7 @@
   </div>
 
   <!-- Mobile Version -->
-  <div class="md:hidden bg-white mt-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-4 py-12 w-full">
+  <div class="md:hidden bg-white mt-20 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.2)] mx-6 px-4 pt-6 pb-8">
     <!-- Header -->
     <div class="flex items-center justify-between mb-4">
       <h2 class="font-semibold text-primary-gold text-lg">機票商品資料</h2>
@@ -122,7 +122,7 @@
         class="text-primary-gold text-md font-bold flex items-center gap-2"
         @click="isDetailModalOpen = true"
       >
-        查看詳情 <span>></span>
+        查看詳情<font-awesome-icon icon="chevron-right" class="text-sm" />
       </button>
     </div>
 
@@ -157,9 +157,9 @@
           <!-- Route/Airline info - full width -->
           <div class="text-others-gray1 text-sm mb-2">{{ item.productName }}</div>
           <!-- Passenger name (left) and payment info (right) on same row -->
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between text-sm">
             <div class="text-black font-semibold">{{ formatPassengerName(item.name) }}</div>
-            <div class="text-others-original font-semibold">
+            <div class="text-others-original">
               未付 <span class="font-bold">NTD {{ formatPrice(item.totalWithTax - item.paid) }}</span>
             </div>
           </div>
@@ -168,11 +168,11 @@
     </div>
 
     <!-- Total Amount and Payment Deadline -->
-    <div class="flex flex-col items-end gap-3">
-      <div class="flex items-baseline gap-2">
-        <span class="text-primary-gold text-sm">應付總額 </span>
-        <span class="text-others-original font-bold ">TWD</span>
-        <span class="text-others-original font-bold text-2xl">{{ formatPrice(total) }}</span>
+    <div class="flex flex-col items-end gap-2">
+      <div class="flex items-baseline ">
+        <span class="text-primary-gold text-sm mr-2">應付總額 </span>
+        <span class="text-others-original font-bold text-[14px] mr-0.5">TWD</span>
+        <span class="text-others-original font-bold text-[26px]">{{ formatPrice(total) }}</span>
       </div>
       <div class="border border-others-original rounded-md px-3 py-1.5">
         <p class="text-others-original text-sm font-semibold">
@@ -193,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref} from "vue";
 import { formatPrice } from "@/utils";
 import { useBookingStore } from "@/stores/booking";
 import BookingHeaderStrip from "./BookingHeaderStrip.vue";
@@ -209,8 +209,10 @@ const orderNumber = computed(() => {
 type Flight = {
   departTime: string;
   departAirport: string;
+  departureAirportCode: string;
   arriveTime: string;
   arriveAirport: string;
+  arrivalAirportCode: string;
   flight: string;
   cabin: string;
   status: string;
@@ -234,8 +236,10 @@ const flights = computed<Flight[]>(() => {
         return orderData.fly_list.map((fly: any) => ({
             departTime: `${fly.FPD05A || ''} ${fly.FPD05B || ''}`.trim(),
             departAirport: fly.FPD07S || fly.FPD07 || '', // FPD07S
+            departureAirportCode: fly.FPD07 || '', // FPD07 is the depart airport code
             arriveTime: `${fly.FPD06A || ''} ${fly.FPD06B || ''}`.trim(),
             arriveAirport: fly.FPD08S || fly.FPD08 || '', // FPD08S
+            arrivalAirportCode: fly.FPD08 || '', // FPD08 is the arrival airport code
             flight: fly.FPD03S || fly.FPD04 || '',        // FPD03S
             cabin: fly.FPD09 || fly.FPD11S || fly.FPD11 || '-', // FPD09
             status: fly.FPD15S || '處理中',
@@ -249,8 +253,10 @@ const flights = computed<Flight[]>(() => {
             segments.push(...bookingStore.outboundSegment.sectors.map((sector: any) => ({
                 departTime: `${sector.departureDate} ${sector.departureTime}`,
                 departAirport: sector.departureAirportCode,
+                departureAirportCode: sector.departureAirportCode || '',
                 arriveTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
                 arriveAirport: sector.arrivalAirportCode,
+                arrivalAirportCode: sector.arrivalAirportCode || '',
                 flight: `${sector.marketingAirlineCode} ${sector.flightNo}`,
                 airlineName: sector.marketingAirlineName || sector.operatingAirlineName || '',
                 cabin: sector.bookingClass || 'Y',
@@ -261,8 +267,10 @@ const flights = computed<Flight[]>(() => {
             segments.push(...bookingStore.returnSegment.sectors.map((sector: any) => ({
                 departTime: `${sector.departureDate} ${sector.departureTime}`,
                 departAirport: sector.departureAirportCode,
+                departureAirportCode: sector.departureAirportCode || '',
                 arriveTime: `${sector.arrivalDate} ${sector.arrivalTime}`,
                 arriveAirport: sector.arrivalAirportCode,
+                arrivalAirportCode: sector.arrivalAirportCode || '',
                 flight: `${sector.marketingAirlineCode} ${sector.flightNo}`,
                 airlineName: sector.marketingAirlineName || sector.operatingAirlineName || '',
                 cabin: sector.bookingClass || 'Y',
@@ -285,6 +293,7 @@ const flights = computed<Flight[]>(() => {
         }))
     );
 });
+
 
 const items = computed<Item[]>(() => {
     // 優先使用 FP02 API 的 cust_list 資料
@@ -366,6 +375,8 @@ const total = computed(() =>
     .reduce((sum, i) => sum + i.totalWithTax - i.paid, 0)
 );
 
+
+
 // Mobile version helpers - using existing flights data
 const groupedFlights = computed(() => {
   // Group flights by outbound/return (assuming first half is outbound, second half is return)
@@ -404,14 +415,14 @@ function getFlightDepartureTime(flightGroup: Flight[]): string {
 function getFlightOrigin(flightGroup: Flight[]): { name: string; code: string } {
   if (flightGroup.length === 0) return { name: '出發地', code: '' }
   // Use airport code as name for now (can be enhanced with airport name lookup if needed)
-  return { name: flightGroup[0].departAirport, code: flightGroup[0].departAirport }
+  return { name: flightGroup[0].departAirport, code: flightGroup[0].departureAirportCode }
 }
 
 function getFlightDestination(flightGroup: Flight[]): { name: string; code: string } {
   if (flightGroup.length === 0) return { name: '目的地', code: '' }
   const lastFlight = flightGroup[flightGroup.length - 1]
   // Use airport code as name for now (can be enhanced with airport name lookup if needed)
-  return { name: lastFlight.arriveAirport, code: lastFlight.arriveAirport }
+  return { name: lastFlight.arriveAirport, code: lastFlight.arrivalAirportCode }
 }
 
 function getCabinLabel(cabinCode: string): string {

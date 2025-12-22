@@ -2,7 +2,7 @@
   <div :class="noMargin ? 'bg-none' : 'mb-6 bg-none'">
     <div
       class="relative mb-4 flex rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)]"
-      :class="[ currentLeg === 'outbound' ? 'bg-primary-gold2' : 'bg-others-gray4' ]"
+      :class="'bg-primary-gold'"
     >
       <!-- Main leg card -->
       <div 
@@ -17,9 +17,9 @@
 
         <div class="flex flex-col gap-1 md:gap-2">
           <!-- First row: date on left, cabin on right (when showDetailedInfo is true) -->
-          <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
             <!-- Date: simple format when showDetailedInfo is false, detailed format when true -->
-            <div class="text-base md:text-[18px] font-semibold">
+            <div class="text-sm md:text-[18px] font-semibold">
               <template v-if="showDetailedInfo && departureTime">
                 {{ formatDateWithWeekAndTime(dateText, departureTime) }}
               </template>

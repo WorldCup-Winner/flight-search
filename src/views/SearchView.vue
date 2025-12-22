@@ -14,6 +14,7 @@
         <SearchPanel
           :active-tab="activeTab as any"
           :restored-params="restoredParams"
+          instance-id="search-view"
           @update:activeTab="val => (activeTab = val)"
           @roundtrip-search="handleRoundSearch"
           @oneway-search="handleSingleSearch"
@@ -22,7 +23,7 @@
       </div>
       
       <!-- Results or Summary (router-view) -->
-      <div class="mt-24 px-4 md:px-0">
+      <div>
         <router-view />
       </div>
     </div>

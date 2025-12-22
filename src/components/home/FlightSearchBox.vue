@@ -7,6 +7,7 @@
       <SearchPanel
         :active-tab="activeTab as any"
         :restored-params="restoredParams"
+        instance-id="flight-search-box"
         @update:activeTab="val => (activeTab = val)"
         @roundtrip-search="handleRoundSearch"
         @oneway-search="handleSingleSearch"

@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white my-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-4 md:px-10 py-4 md:py-8 w-full">
+  <div class="bg-white my-6 rounded-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.2)] md:drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] px-4 md:px-10 py-4 md:py-8 mx-6 md:mx-0 md:w-full">
       <!-- A4 IFRAME 付款顯示區域 -->
       <div v-if="showIframePayment" class="w-full">
           <h2 class="font-semibold text-primary-gold mb-4">線上刷卡付款</h2>

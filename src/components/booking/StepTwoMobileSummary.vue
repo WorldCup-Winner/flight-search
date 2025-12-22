@@ -1,8 +1,8 @@
-<template>
-    <div class="w-full min-h-screen flex flex-col items-center">
+  <template>
+    <div class="w-full min-h-screen flex flex-col items-center bg-white">
       <div class="max-w-6xl w-full">
-        <!-- Main white card -->
-        <div class="bg-white rounded-[10px]  w-full">
+        <!-- Main content (no outer card; page itself is white) -->
+        <div class="w-full mt-16">
           <!-- Route header -->
           <div class="w-full flex items-center gap-2 bg-white text-others-gray7 text-[17px] rounded-t-[10px] px-5 py-4 font-bold">
             <!-- Round-trip: Show origin ↔ destination -->
@@ -74,7 +74,7 @@
                 class="ml-2 mt-2"
               >
                 <div class="grid grid-cols-12 gap-4 p-4">
-                  <div class="flex items-center flex-col text-xs justify-between col-span-4">
+                  <div class="flex items-center flex-col text-[10px] justify-between col-span-4">
                     <div class="flex flex-row items-center justify-between gap-2">
                       <div class="text-others-gray1">
                         {{ formatDateToChinese(sec.departureDate) }}
@@ -102,7 +102,7 @@
                     <span class="absolute -left-[6px] bottom-0 w-[14px] h-[14px] rounded-full bg-others-gray3"></span>
                   </div>
   
-                  <div class="col-span-7 space-y-2 text-xs">
+                  <div class="col-span-7 space-y-2 text-[10px]">
                     <div class="font-bold text-others-gray7">
                       {{ sec.departureAirportCode }} {{ sec.departureAirportName }}
                       {{ sec.departureTerminal }} {{ sec.departureCityName }}
@@ -119,10 +119,10 @@
                       <span class="text-others-gray1">
                         {{ sec.marketingAirlineName || sec.operatingAirlineName }}
                       </span>
-                      <span class="text-others-gray1">
-                        {{ sec.craft?.craftName ? ' ' + sec.craft.craftName : '' }}
-                      </span>
                     </div>
+                    <span class="text-others-gray1">
+                        {{ sec.craft?.craftName ? ' ' + sec.craft.craftName : '' }}
+                    </span>
                     <div class="font-bold text-others-gray7">
                       {{ sec.arrivalAirportCode }} {{ sec.arrivalAirportName }}
                       {{ sec.arrivalTerminal }} {{ sec.arrivalCityName }}
@@ -165,55 +165,60 @@
           </div>
   
           <!-- Selected fare summary -->
-          <!-- Selected fare summary (with loading skeleton) -->
           <div
-            class="relative bg-white rounded-b-[10px] drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] mx-4 mb-4 p-4"
+            class="relative bg-white rounded-b-[10px] drop-shadow-[0px_4px_16px_rgba(0,0,0,0.3)] mx-8 mb-4 px-8 py-6 rounded-[10px]"
           >
             <template v-if="selectedFare">
             <div class="text-others-gray1 font-bold text-lg mb-4">
               {{ selectedFare.cabin }}
             </div>
   
-            <!-- Price -->
-            <div class="flex flex-col items-end mb-4">
-              <div class="flex items-end font-bold">
-                <div class="text-[12px] text-others-original pr-1">{{ currency }}</div>
-                <div class="text-[28px] text-others-original leading-none">
-                  {{ formatPrice(totalWithTax) }}
+            <!-- Notes + Price / CTA row -->
+            <div class="flex flex-row justify-between items-stretch gap-4">
+
+              <!-- Notes -->
+              <ul class="space-y-2 mb-4">
+                <li
+                  v-for="(n, i) in selectedFare.notes"
+                  :key="i"
+                  class="flex items-center gap-2 text-others-gray1"
+                >
+                  <img :src="noteIcon(n.type, n.icon)" class="w-5 h-5 flex-shrink-0" />
+                  <span class="text-[10px]">{{ n.text }}</span>
+                </li>
+                <button
+                  class="text-others-original text-[12px] font-semibold hover:text-others-hover transition-colors"
+                  @click="openBaggageInfoAndFeeRule"
+                >
+                  行李資訊及票價規定
+                </button>
+              </ul>
+
+              <!-- Price + CTA (aligned right, button at bottom) -->
+              <div class="flex flex-col items-end justify-between self-stretch">
+                <div>
+                  <div class="flex items-end font-bold">
+                    <div class="text-[11px] text-others-original pr-1">{{ currency }}</div>
+                    <div class="text-[24px] text-others-original leading-none">
+                      {{ formatPrice(totalWithTax) }}
+                    </div>
+                  </div>
+                  <div class="text-[10px] text-others-gray1 mt-1">
+                    每人均價(含稅及附加費)
+                  </div>
                 </div>
+
+                <button
+                  class="px-6 py-3 text-sm rounded-[15px] text-white bg-others-original font-bold hover:bg-others-hover transition-colors whitespace-nowrap"
+                  @click="handleConfirm"
+                >
+                  訂購
+                </button>
               </div>
-              <div class="text-[12px] text-others-gray1 mt-1">
-                每人均價(含稅及附加費)
-              </div>
-            </div>
   
-            <!-- Notes -->
-            <ul class="space-y-2 mb-4">
-              <li
-                v-for="(n, i) in selectedFare.notes"
-                :key="i"
-                class="flex items-center gap-2 text-others-gray1"
-              >
-                <img :src="noteIcon(n.type, n.icon)" class="w-5 h-5 flex-shrink-0" />
-                <span class="text-[14px]">{{ n.text }}</span>
-              </li>
-            </ul>
+            
+          </div>
   
-            <!-- Bottom actions -->
-            <div class="flex items-center justify-between pt-4 border-t border-others-gray3">
-              <button
-                class="text-others-original text-[14px] font-semibold hover:text-others-hover transition-colors"
-                @click="openBaggageInfoAndFeeRule"
-              >
-                行李資訊及票價規定
-              </button>
-              <button
-                class="px-6 py-3 rounded-[10px] text-white bg-others-original font-bold hover:bg-others-hover transition-colors whitespace-nowrap"
-                @click="handleConfirm"
-              >
-                訂購
-              </button>
-            </div>
             </template>
           </div>
         </div>
@@ -373,7 +378,6 @@
     onAirlineImageError(event)
   }
   
-  // Local reimplementation of formatDateToChineseWithWeek (kept here to avoid cross-file coupling)
   function formatDateToChineseWithWeek(dateStr: string): string {
     if (!dateStr) return ''
     try {
@@ -381,12 +385,12 @@
       if (isNaN(date.getTime())) return ''
   
       const weekdays = ['日', '一', '二', '三', '四', '五', '六']
-      const year = date.getFullYear()
       const month = date.getMonth() + 1
       const day = date.getDate()
       const weekday = weekdays[date.getDay()]
   
-      return `${year}年${month}月${day}日 (${weekday})`
+      // Example: "8月27日 週三"
+      return `${month}月${day}日 週${weekday}`
     } catch {
       return ''
     }

@@ -244,8 +244,8 @@
 
             <!-- Direct Flight -->
             <div class="relative flex-1 md:flex-none">
-                <input id="directFlight" type="checkbox" v-model="isNonStopFlight" class="sr-only" />
-                <label for="directFlight"
+                <input :id="`directFlight-${instanceId}`" type="checkbox" v-model="isNonStopFlight" class="sr-only" />
+                <label :for="`directFlight-${instanceId}`"
                     class="flex items-center justify-between w-full md:min-w-[120px] bg-divider-soft text-others-gray1 px-3 md:px-4 py-2 md:py-3 rounded-xl text-xs md:text-sm font-medium transition-colors duration-200 cursor-pointer">
                     <span>直飛</span>
                     <div class="w-3 h-3 md:w-4 md:h-4 rounded-full border-2 transition-colors duration-200 flex items-center justify-center flex-shrink-0"
@@ -281,6 +281,7 @@ import type { Airline } from '@/utils/types'
 // Props
 const props = defineProps<{
   initialParams?: any
+  instanceId?: string
 }>()
 
 // Stores

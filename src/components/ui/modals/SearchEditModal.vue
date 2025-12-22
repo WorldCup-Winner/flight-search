@@ -27,6 +27,7 @@
             <SearchPanel
               :active-tab="activeTab"
               :restored-params="restoredParams"
+              instance-id="search-modal"
               :hide-title="true"
               @update:activeTab="$emit('update:activeTab', $event)"
               @roundtrip-search="$emit('roundtrip-search', $event)"
@@ -66,6 +67,7 @@
               <SearchPanel
                 :active-tab="activeTab"
                 :restored-params="restoredParams"
+                instance-id="search-modal"
                 :hide-title="true"
                 @update:activeTab="$emit('update:activeTab', $event)"
                 @roundtrip-search="$emit('roundtrip-search', $event)"

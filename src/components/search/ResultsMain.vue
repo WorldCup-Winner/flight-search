@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-6xl pb-6">
+  <div class="mx-auto max-w-6xl mt-24 px-4 md:px-0 pb-6">
     <div class="grid grid-cols-12 gap-3">
       <!-- SIDEBAR (Desktop only) -->
       <aside class="hidden md:block md:col-span-3">

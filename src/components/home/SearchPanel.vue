@@ -36,24 +36,27 @@
       </div>
     </div>
 
-    <div v-if="activeTab === 'roundtrip'">
-      <RoundSearchBox
-        @search="payload => emit('roundtrip-search', payload)"
-        :initialParams="restoredParams"
-      />
-    </div>
-    <div v-else-if="activeTab === 'oneway'">
-      <SingleSearchBox
-        @search="payload => emit('oneway-search', payload)"
-        :initialParams="restoredParams"
-      />
-    </div>
-    <div v-else-if="activeTab === 'multi'">
-      <MultiSearchBox
-        @search="payload => emit('multi-search', payload)"
-        :initialParams="restoredParams"
-      />
-    </div>
+      <div v-if="activeTab === 'roundtrip'">
+        <RoundSearchBox
+          @search="payload => emit('roundtrip-search', payload)"
+          :initialParams="restoredParams"
+          :instance-id="props.instanceId || 'main'"
+        />
+      </div>
+      <div v-else-if="activeTab === 'oneway'">
+        <SingleSearchBox
+          @search="payload => emit('oneway-search', payload)"
+          :initialParams="restoredParams"
+          :instance-id="props.instanceId || 'main'"
+        />
+      </div>
+      <div v-else-if="activeTab === 'multi'">
+        <MultiSearchBox
+          @search="payload => emit('multi-search', payload)"
+          :initialParams="restoredParams"
+          :instance-id="props.instanceId || 'main'"
+        />
+      </div>
   </div>
 </template>
 
@@ -68,6 +71,8 @@ const props = defineProps<{
   activeTab: TripTab
   restoredParams?: any | null
   hideTitle?: boolean
+  // Optional unique key to avoid duplicated element IDs when multiple panels exist (e.g. modal)
+  instanceId?: string
 }>()
 
 const emit = defineEmits<{
