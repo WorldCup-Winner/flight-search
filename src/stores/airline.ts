@@ -29,7 +29,7 @@ export const useAirlineStore = defineStore('airline', {
             this.loading = true
             try {
                 const res = await getAirlineAlliance()
-                if (res.data.code == 0) {
+                if (res.data.head.code === 0) {
                     this.airlineAlliance = res.data.data
                 }
             } catch (err: any) {

@@ -1,6 +1,13 @@
 
 import type { CardRow, FareIconType, FareNoteType } from '@/utils/types'
 
+// Alliance logo base URL
+export const ALLIANCE_LOGO_BASE_URL = 'http://image-test-galilee.com.tw/images/'
+
+export const getAllianceLogoUrl = (nameZh: string): string => {
+  return `${ALLIANCE_LOGO_BASE_URL}${nameZh}.png`
+}
+
 export const minutesToText = (min: number) => {
   const h = Math.floor(min / 60)
     .toString()

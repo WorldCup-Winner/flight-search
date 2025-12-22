@@ -15,6 +15,11 @@
             <TicketBookingCard />
             <PaymentMethodCard />
         </template>
+
+        <!-- Inactivity timeout modal -->
+        <Transition name="fade">
+            <WakeUp v-if="showWakeUp" :close-modal="closeWakeUpModal" />
+        </Transition>
     </div>
 </template>
 <script setup>
@@ -23,11 +28,16 @@ import { useBookingStore } from '@/stores/booking'
 import { viewOrder } from '@/api'
 import TicketBookingCard from './TicketBookingCard.vue'
 import PaymentMethodCard from './PaymentMethodCard.vue'
+import WakeUp from '@/components/ui/feedback/WakeUp.vue'
+import { useInactivityTimeout } from '@/composables/useInactivityTimeout'
 
 // Step navigation now handled by router (no longer using v-model:step)
 const bookingStore = useBookingStore()
 const isLoading = ref(true)
 const error = ref('')
+
+// ---------- Inactivity Timeout (15 minutes) ----------
+const { showWakeUp, closeModal: closeWakeUpModal } = useInactivityTimeout()
 
 const loadOrderData = async () => {
   isLoading.value = true

@@ -253,7 +253,7 @@
           <div class="md:hidden bg-white px-6 py-5 sticky bottom-0 z-10 rounded-t-[20px]" style="box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);">
             <button
               class="w-full py-3 rounded-xl font-bold text-white transition bg-others-original hover:bg-others-hover"
-              @click="handleFilterConfirm"
+              @click="filterSideBarRef?.confirm()"
             >
               確認
             </button>
@@ -303,6 +303,11 @@
     <transition name="fade">
       <FlightSearchLoading v-if="isMobileBookingLoading" />
     </transition>
+
+    <!-- Inactivity timeout modal -->
+    <transition name="fade">
+      <WakeUp v-if="showWakeUp" :close-modal="closeWakeUpModal" />
+    </transition>
   </div>
 </template>
 <script setup lang="ts">
@@ -323,6 +328,7 @@ import FlightActionModal from '@/components/ui/modals/FlightActionModal.vue'
 import FlightInfoModal from '@/components/ui/modals/FlightInfoModal.vue'
 import FlightSearchLoading from '@/components/ui/loading/FlightSearchLoading.vue'
 import SorryNoData from '@/components/ui/feedback/SorryNoData.vue'
+import WakeUp from '@/components/ui/feedback/WakeUp.vue'
 import { useAirlineStore } from '@/stores/airline'
 import { useBookingStore } from '@/stores/booking'
 import { useLocationStore } from '@/stores/location'
@@ -331,12 +337,16 @@ import { useFlightFareRule } from '@/composables/useFlightFareRule'
 import { rebuildSelectedSegments, storeSelectedSegment, createSearchHash } from '@/utils/segmentStorage'
 import { deserializeSearchParams, serializeSearchParams } from '@/utils/urlParamsSync'
 import { useFilterSortSync } from '@/composables/useFilterSortSync'
+import { useInactivityTimeout } from '@/composables/useInactivityTimeout'
 
 const airlineStore = useAirlineStore()
 const locationStore = useLocationStore()
 const flightSearchStore = useFlightSearchStore()
 const router = useRouter()
 const route = useRoute()
+
+// ---------- Inactivity Timeout (15 minutes) ----------
+const { showWakeUp, closeModal: closeWakeUpModal } = useInactivityTimeout()
 
 // ---------- Filter, Sort, TaxMode (with URL sync) ----------
 const {

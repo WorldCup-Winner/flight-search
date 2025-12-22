@@ -14,13 +14,88 @@
   </div>
 </template>
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { useBookingStore } from '@/stores/booking'
+import { useFlightSearchStore } from '@/stores/flightSearch'
+import { useAirlineStore } from '@/stores/airline'
+import { deserializeSearchParams, buildSearchRequest, serializeSearchParams } from '@/utils/urlParamsSync'
+import { clearStoredSegments } from '@/utils/segmentStorage'
 import WakeUp from "@/assets/imgs/icon-wake-up.svg"
 
-const router = useRouter()
+const props = defineProps<{
+  closeModal: () => void
+}>()
 
-// Navigate to step 3 (payment) when user confirms
+const router = useRouter()
+const route = useRoute()
+const bookingStore = useBookingStore()
+const flightSearchStore = useFlightSearchStore()
+const airlineStore = useAirlineStore()
+
 function handleConfirm() {
-  router.push({ name: 'booking-step-3' })
+  // Close modal
+  props.closeModal()
+  
+  // Get search params
+  bookingStore.getBookingData()
+  let searchParams = null
+  
+  // Try to get from route query first (if on search page)
+  searchParams = deserializeSearchParams(route.query)
+  
+  // If not in route, get from bookingStore (if on booking page)
+  if (!searchParams && bookingStore.searchParams) {
+    searchParams = {
+      tripType: bookingStore.searchParams.tripType,
+      departureCity: bookingStore.searchParams.departureCity,
+      arrivalCity: bookingStore.searchParams.arrivalCity,
+      departureCityCode: bookingStore.searchParams.departureCityCode,
+      arrivalCityCode: bookingStore.searchParams.arrivalCityCode,
+      departureDate: bookingStore.searchParams.departureDate,
+      returnDate: bookingStore.searchParams.returnDate,
+      adults: bookingStore.searchParams.adults,
+      children: bookingStore.searchParams.children,
+      infants: bookingStore.searchParams.infants,
+      selectedRefs: undefined
+    }
+  }
+  
+  if (!searchParams) {
+    // No search params, just go home
+    router.push({ name: 'home', query: {} })
+    return
+  }
+  
+  // Clear selectedRefs for fresh search
+  searchParams.selectedRefs = undefined
+  
+  // Clear old data (shows skeleton immediately)
+  bookingStore.clearBookingInfo()
+  flightSearchStore.reset()
+  
+  // Build search request
+  const searchRequest = buildSearchRequest(searchParams)
+  clearStoredSegments(searchParams.tripType, searchRequest)
+  
+  // Determine route name
+  const routeName = searchParams.tripType === 'roundtrip' ? 'search-outbound' 
+    : searchParams.tripType === 'multi' ? 'search-segment' 
+    : 'search-oneway'
+  
+  // Navigate to search route if not already there
+  const isSearchRoute = route.name?.toString().startsWith('search-')
+  if (!isSearchRoute) {
+    const query = serializeSearchParams(searchParams)
+    router.push({
+      name: routeName,
+      params: searchParams.tripType === 'multi' ? { index: '0' } : {},
+      query
+    })
+  }
+  
+  // Directly trigger API call (this is the key!)
+  // This bypasses all watch logic and just fetches fresh data
+  flightSearchStore.fetchFlightSearch(searchRequest)
+  airlineStore.fetchAirlineAlliance()
 }
 </script>

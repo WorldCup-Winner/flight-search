@@ -687,7 +687,7 @@
         </transition>
     </div>
     <Transition name="fade">
-        <WakeUp v-if="isOpenWakeUp" />
+        <WakeUp v-if="showWakeUp" :close-modal="closeWakeUpModal" />
     </Transition>
     <Transition name="fade">
         <BookingInstruction :open="isOpenBookingInstruction" @close="isOpenBookingInstruction = false" />
@@ -770,6 +770,7 @@ import DatePicker from '@/components/ui/pickers/DatePicker.vue'
 
 // Airline logo utility
 import { resolveAirlineLogo, onAirlineImageError, AirlineDefault } from '@/utils/airlineLogo'
+import { useInactivityTimeout } from '@/composables/useInactivityTimeout'
 
 // 使用 BookingStore 取得訂票資料
 const bookingStore = useBookingStore()
@@ -1152,8 +1153,10 @@ const activeDialog = ref(null)
 const isReceipt = ref(false)
 const isSummary = ref(false)
 const isSpecialNeed = ref(false)
-const isOpenWakeUp = ref(false)
 const isOpenBookingInstruction = ref(false)
+
+// ---------- Inactivity Timeout (15 minutes) ----------
+const { showWakeUp, closeModal: closeWakeUpModal } = useInactivityTimeout()
 
 const code  = ref('+886')
 const phoneNumber  = ref('')

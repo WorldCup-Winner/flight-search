@@ -228,6 +228,11 @@
           @close="isBaggageInfoOpen = false"
         />
       </Transition>
+
+      <!-- Inactivity timeout modal -->
+      <Transition name="fade">
+        <WakeUp v-if="showWakeUp" :close-modal="closeWakeUpModal" />
+      </Transition>
     </div>
   </template>
   
@@ -237,8 +242,10 @@
   import { formatDateToChinese, formatPrice, toDuration, noteIcon } from '@/utils'
   import { useBookingStore } from '@/stores/booking'
   import BaggageInfoAndFeeRule from '@/components/ui/booking/BaggageInfoAndFeeRule.vue'
+  import WakeUp from '@/components/ui/feedback/WakeUp.vue'
   import { resolveAirlineLogo, onAirlineImageError, AirlineDefault } from '@/utils/airlineLogo'
   import type { SearchParams } from '@/utils/urlParamsSync'
+  import { useInactivityTimeout } from '@/composables/useInactivityTimeout'
 
   // Define props to prevent Vue from trying to set HTML attributes
   // The route passes SearchParams, but we don't actually use it as props
@@ -261,6 +268,9 @@
 
   const router = useRouter()
   const bookingStore = useBookingStore()
+
+  // ---------- Inactivity Timeout (15 minutes) ----------
+  const { showWakeUp, closeModal: closeWakeUpModal } = useInactivityTimeout()
 
   // Inject edit modal function from SearchView (route context)
   const openSearchEditModal = inject<(() => void) | undefined>('openSearchEditModal', undefined)
