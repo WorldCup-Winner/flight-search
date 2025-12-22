@@ -289,6 +289,7 @@ const showMoreDepAirports = ref(false)
 const visibleAirlines = computed(() =>
   showMoreAirlines.value ? props.airlines : props.airlines.slice(0, airlineLimit)
 )
+console.log(props.airlines)
 const visibleDepAirports = computed(() =>
   showMoreDepAirports.value ? props.depAirports : props.depAirports.slice(0, airportLimit)
 )
