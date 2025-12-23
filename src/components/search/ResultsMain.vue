@@ -678,12 +678,120 @@ const emit = defineEmits<{
   (e: 'edit-search'): void
 }>()
 
+// ---------- Derived, filtered & sorted list ----------
+// Must be defined before useRoundTripSummary (which uses filteredFlights.value)
+const filteredFlights = computed(() => {
+  let arr = (flightData.value ?? []).slice()
+
+  // stops filter
+  const wantDirect = filters.stops.direct
+  const wantOne = filters.stops.oneStop
+  if (wantDirect && !wantOne) arr = arr.filter(f => Math.max(0, (f.sectors?.length ?? 1) - 1) === 0)
+  if (wantOne && !wantDirect) arr = arr.filter(f => Math.max(0, (f.sectors?.length ?? 1) - 1) >= 1)
+
+  // airline filter
+  if (filters.airlines?.length) {
+    const set = new Set(filters.airlines)
+    arr = arr.filter(f => (f.airlineCode ?? []).some(c => set.has(c)))
+  }
+
+  // airports filter
+  if (filters.depAirports?.length) {
+    const set = new Set(filters.depAirports)
+    arr = arr.filter(f => set.has(f.departureAirportCode))
+  }
+  if (filters.arrAirports?.length) {
+    const set = new Set(filters.arrAirports)
+    arr = arr.filter(f => set.has(f.arrivalAirportCode))
+  }
+
+  // time windows — use itinerary header time (departureTime / arrivalTime) in "HH:mm"
+  const depWin = filters.departTime || [0, 1439]
+  const arrWin = filters.arriveTime || [0, 1439]
+  arr = arr.filter(f =>
+    inWindow(timeToMin(f.departureTime), depWin) &&
+    inWindow(timeToMin(f.arrivalTime), arrWin)
+  )
+
+  /**
+   * Helper to get price for sorting (matches displayPrice logic)
+   * Ensures sorting matches what user sees based on taxMode
+   */
+  const getPriceForSort = (row: CardRow) => {
+    // API 回傳的 price 已經含稅
+    return taxMode.value === 'in' 
+      ? row.price  // When tax included, use price directly
+      : row.price - (row.taxAmount ?? 0)  // When tax excluded, subtract tax
+  }
+
+  /**
+   * Sophisticated multi-criteria sort
+   *
+   * Base priority set (ascending for each):
+   * - direct: fewer stops first
+   * - price: lower first
+   * - depTime: earlier departure first
+   * - arrTime: earlier arrival first
+   * - duration: shorter first
+   *
+   * The selected sort.key becomes the primary criterion (respecting sort.dir),
+   * followed by the remaining criteria in the base order above (always ascending).
+   */
+  const getStops = (row: CardRow) => Math.max(0, (row.sectors?.length ?? 1) - 1)
+  const getDepTime = (row: CardRow) => timeToMin(row.departureTime)
+  const getArrTime = (row: CardRow) => timeToMin(row.arrivalTime)
+  const getDuration = (row: CardRow) => row.durationMinutes
+
+  type CriterionKey = 'direct' | 'price' | 'depTime' | 'arrTime' | 'duration'
+
+  const baseOrder: CriterionKey[] = ['direct', 'price', 'depTime', 'arrTime', 'duration']
+  const primary: CriterionKey = sort.key as CriterionKey
+  const criteria: CriterionKey[] = [
+    primary,
+    ...baseOrder.filter(k => k !== primary)
+  ]
+
+  const getValue = (row: CardRow, key: CriterionKey) => {
+    switch (key) {
+      case 'direct':
+        return getStops(row)
+      case 'price':
+        return getPriceForSort(row)
+      case 'depTime':
+        return getDepTime(row)
+      case 'arrTime':
+        return getArrTime(row)
+      case 'duration':
+        return getDuration(row)
+      default:
+        return 0
+    }
+  }
+
+  arr.sort((a, b) => {
+    return criteria.reduce((acc, key, index) => {
+      if (acc !== 0) return acc
+
+      const av = getValue(a, key)
+      const bv = getValue(b, key)
+
+      if (av === bv) return 0
+
+      const dir = (index === 0 && sort.dir === 'desc') ? -1 : 1
+      return av < bv ? -1 * dir : 1 * dir
+    }, 0)
+  })
+
+  return arr
+})
+
 // Round-trip summary logic
+// Use filteredFlights (after sorting/filtering) instead of raw flightData
 const roundTripSummary = useRoundTripSummary(
   () => ({
     tripType: tripType.value,
     currentSegmentIndex: props.segmentIndex,
-    outboundResults: flightData.value,
+    outboundResults: filteredFlights.value, // Use filteredFlights (sorted/filtered) instead of raw flightData
     searchRequest: props.searchRequest,
     selectedSegments: selectedSegments.value
   })
@@ -1048,79 +1156,7 @@ const handleSelect = (payload: any) => {
 }
 
 // (Filter, Sort, TaxMode logic moved to useFilterSortSync composable)
-
-// ---------- Derived, filtered & sorted list ----------
-const filteredFlights = computed(() => {
-  let arr = (flightData.value ?? []).slice()
-
-  // stops filter
-  const wantDirect = filters.stops.direct
-  const wantOne = filters.stops.oneStop
-  if (wantDirect && !wantOne) arr = arr.filter(f => Math.max(0, (f.sectors?.length ?? 1) - 1) === 0)
-  if (wantOne && !wantDirect) arr = arr.filter(f => Math.max(0, (f.sectors?.length ?? 1) - 1) >= 1)
-
-  // airline filter
-  if (filters.airlines?.length) {
-    const set = new Set(filters.airlines)
-    arr = arr.filter(f => (f.airlineCode ?? []).some(c => set.has(c)))
-  }
-
-  // airports filter
-  if (filters.depAirports?.length) {
-    const set = new Set(filters.depAirports)
-    arr = arr.filter(f => set.has(f.departureAirportCode))
-  }
-  if (filters.arrAirports?.length) {
-    const set = new Set(filters.arrAirports)
-    arr = arr.filter(f => set.has(f.arrivalAirportCode))
-  }
-
-  // time windows — use itinerary header time (departureTime / arrivalTime) in "HH:mm"
-  const depWin = filters.departTime || [0, 1439]
-  const arrWin = filters.arriveTime || [0, 1439]
-  arr = arr.filter(f =>
-    inWindow(timeToMin(f.departureTime), depWin) &&
-    inWindow(timeToMin(f.arrivalTime), arrWin)
-  )
-
-  /**
-   * Helper to get price for sorting (matches displayPrice logic)
-   * Ensures sorting matches what user sees based on taxMode
-   */
-  const getPriceForSort = (row: CardRow) => {
-    // API 回傳的 price 已經含稅
-    return taxMode.value === 'in' 
-      ? row.price  // When tax included, use price directly
-      : row.price - (row.taxAmount ?? 0)  // When tax excluded, subtract tax
-  }
-
-  // Sort: Default is 'price' (ascending) to match store's initial sort
-  // User can change sort via SortBar
-  arr.sort((a, b) => {
-    const dir = sort.dir === 'asc' ? 1 : -1
-    if (sort.key === 'direct') {
-      const sa = Math.max(0, (a.sectors?.length ?? 1) - 1)
-      const sb = Math.max(0, (b.sectors?.length ?? 1) - 1)
-      if (sa !== sb) return (sa - sb)
-      // Use price with tax consideration for tiebreaker
-      const pa = getPriceForSort(a)
-      const pb = getPriceForSort(b)
-      return (pa - pb) * dir
-    }
-    if (sort.key === 'price') {
-      // Sort by price respecting tax mode (matches what user sees)
-      const pa = getPriceForSort(a)
-      const pb = getPriceForSort(b)
-      return (pa - pb) * dir
-    }
-    if (sort.key === 'depTime') return (timeToMin(a.departureTime) - timeToMin(b.departureTime)) * dir
-    if (sort.key === 'arrTime') return (timeToMin(a.arrivalTime) - timeToMin(b.arrivalTime)) * dir
-    if (sort.key === 'duration') return (a.durationMinutes - b.durationMinutes) * dir
-    return 0
-  })
-
-  return arr
-})
+// filteredFlights is now defined earlier (before useRoundTripSummary)
 
 const totalCount = computed(() => filteredFlights.value.length)
 

@@ -44,11 +44,11 @@ export function useFilterSortSync() {
   })
   
   // ---------- Sort ----------
-  // Initialize from URL if available, otherwise default to price sort (ascending)
+  // Initialize from URL if available, otherwise default to "direct" (fewest stops) ascending
   type SortKey = 'direct' | 'price' | 'depTime' | 'arrTime' | 'duration'
   type SortDir = 'asc' | 'desc'
   const sort = reactive<{ key: SortKey; dir: SortDir }>({
-    key: (searchParamsFromUrl.value?.sort?.key ?? 'price') as SortKey,
+    key: (searchParamsFromUrl.value?.sort?.key ?? 'direct') as SortKey,
     dir: (searchParamsFromUrl.value?.sort?.dir ?? 'asc') as SortDir
   })
   
@@ -94,8 +94,8 @@ export function useFilterSortSync() {
     const currentParams = deserializeSearchParams(route.query)
     if (!currentParams) return
     
-    // Only store sort if it's not the default (price asc)
-    if (sort.key === 'price' && sort.dir === 'asc') {
+    // Only store sort if it's not the default (direct asc)
+    if (sort.key === 'direct' && sort.dir === 'asc') {
       delete currentParams.sort
     } else {
       currentParams.sort = {

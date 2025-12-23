@@ -4,7 +4,7 @@ import type { CardRow } from '@/utils/types'
 
 /**
  * Composable for managing round-trip summary logic
- * Handles auto-selecting cheapest outbound and fetching return results
+ * Handles auto-fetching return results when outbound results arrive
  */
 export function useRoundTripSummary(
   getProps: () => {
@@ -22,7 +22,7 @@ export function useRoundTripSummary(
   const isLoadingReturn = ref(false)
   const currentOutboundRefNumber = ref<number | null>(null)
 
-  // Auto-fetch return results with cheapest outbound when outbound results first arrive
+  // Auto-fetch return results with first outbound when outbound results first arrive
   watch(
     () => props.value.outboundResults,
     (results) => {
@@ -33,13 +33,13 @@ export function useRoundTripSummary(
         results.length > 0 &&
         currentOutboundRefNumber.value === null
       ) {
-        // Use first result (already sorted by price, cheapest first)
+        // Use first result
         const firstFlight = results[0]
         
         if (firstFlight && firstFlight.refNumber) {
           currentOutboundRefNumber.value = firstFlight.refNumber
           
-          // Fetch return results with first (cheapest) outbound's refNumber
+          // Fetch return results with first outbound's refNumber
           fetchReturnResults(firstFlight.refNumber)
         }
       }
@@ -74,7 +74,6 @@ export function useRoundTripSummary(
       // Only update if this is still the current request (user didn't click another card)
       if (currentOutboundRefNumber.value === outboundRefNumber) {
         if (response.data?.data) {
-          // API returns results sorted by price (cheapest first), so first result is cheapest
           returnResults.value = Array.isArray(response.data.data) ? response.data.data : []
           onReturnResultsFetched?.(returnResults.value)
         } else {
@@ -96,10 +95,9 @@ export function useRoundTripSummary(
     }
   }
 
-  // Get cheapest return for summary (first result, already sorted by price)
-  const cheapestReturn = computed(() => {
+  // Get first return result for summary
+  const firstReturn = computed(() => {
     if (returnResults.value.length === 0) return null
-    // First result is cheapest (API returns sorted by price ascending)
     return returnResults.value[0] || null
   })
 
@@ -120,8 +118,8 @@ export function useRoundTripSummary(
     const isViewingOutbound = props.value.currentSegmentIndex === 0
 
     if (isViewingOutbound) {
-      // Show cheapest return
-      const returnFlight = cheapestReturn.value
+      // Show first return result
+      const returnFlight = firstReturn.value
       if (!returnFlight) return null
 
       const timeRange = returnFlight.departureTime && returnFlight.arrivalTime
