@@ -1,22 +1,24 @@
 <template>
-  <div :class="noMargin ? 'bg-none' : 'mb-4 bg-none'">
+  <div :class="[noMargin ? 'h-full bg-none' : 'mb-4 bg-none']">
     <div 
       :class="[
-        'relative flex rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] h-full',
-        currentLeg === 'outbound' ? 'bg-others-gray11' : 'bg-primary-gold',
+        'relative flex drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] h-full',
+        attachRight ? 'rounded-l-[10px]' : attachLeft ? 'rounded-r-[10px]' : 'rounded-[10px]',
+        // Outbound leg shows gold, return leg shows gray11
+        currentLeg === 'outbound' ? 'bg-primary-gold' : 'bg-others-gray11',
         isClickable ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''
         ]"
       @click="handleClick"
     >
       <!-- Summary card: compact version for other leg -->
-      <div class="relative flex flex-col justify-between px-3 py-2.5 w-[100px] flex-shrink-0 h-full">
+      <div class="relative flex flex-col justify-between px-2 py-1.5 w-[100px] flex-shrink-0 h-full">
         <!-- Skeleton state -->
         <template v-if="isLoading">
           <!-- Title skeleton -->
-          <div class="skel h-4 w-16 rounded mb-1.5"></div>
+          <div class="skel h-3 w-16 rounded mb-0.5"></div>
           
           <!-- Time range skeleton -->
-          <div class="skel h-3 w-20 rounded mb-0.5"></div>
+          <div class="skel h-2 w-20 rounded mb-0.5"></div>
           
           <!-- Price skeleton -->
           <div class="space-y-1">
@@ -28,24 +30,24 @@
         <!-- Actual content -->
         <template v-else>
           <!-- Title -->
-          <div class="text-white text-sm font-semibold mb-1.5">
+          <div class="text-white text-[11px] font-semibold mb-0.5">
             {{ segmentTitle }}
           </div>
 
           <!-- Time range -->
-          <div v-if="timeRange" class="text-white text-xs mb-0.5">
+          <div v-if="timeRange" class="text-white text-[12px]">
             {{ timeRange }}
           </div>
-          <div v-else class="text-white/60 text-xs mb-0.5">
+          <div v-else class="text-white/60 text-xs">
             未選擇
           </div>
 
           <!-- Price -->
           <div v-if="price" class="text-white">
             <span class="text-xs">{{ currency }}&nbsp;</span>
-            <span class="text-md font-bold">{{ formatPrice(price) }}</span>
+            <span class="text-[14px] font-bold">{{ formatPrice(price) }}</span>
           </div>
-          <div v-else class="text-white/60 text-md">
+          <div v-else class="text-white/60 text-[14px]">
             --
           </div>
         </template>
@@ -66,6 +68,8 @@ const props = defineProps<{
   noMargin?: boolean
   isLoading?: boolean
   isClickable?: boolean
+  attachRight?: boolean
+  attachLeft?: boolean
 }>()
 
 const emit = defineEmits<{

@@ -15,18 +15,33 @@
 
       <!-- MAIN -->
       <section class="col-span-12 md:col-span-9">
-        <!-- Round-trip mobile: HeaderStrip + HeaderStripSummary side by side (force same height) -->
-        <div v-if="tripType === 'roundtrip'" class="md:hidden flex gap-2 mb-4 min-w-0 items-stretch">
-          <!-- Show skeleton for HeaderStrip only when main loading (fetching outbound/return results) -->
+        <!-- Round-trip mobile: HeaderStrip + HeaderStripSummary side by side (force same height, attached to edge) -->
+        <div 
+          v-if="tripType === 'roundtrip'" 
+          class="md:hidden flex gap-1.5 min-w-0 items-stretch"
+          :class="roundTripContainerClass"
+        >
+          <!-- Skeleton loading state -->
           <template v-if="flightSearchStore.loading === 'loading'">
-            <!-- Skeleton for HeaderStrip (flex-1) -->
-            <div class="flex-1 min-w-0 h-[100px] bg-gray-200 rounded-[10px] animate-pulse"></div>
-            <!-- Skeleton for HeaderStripSummary (w-[100px]) -->
-            <div class="w-[100px] h-[100px] bg-gray-200 rounded-[10px] animate-pulse"></div>
+            <div 
+              class="flex-1 min-w-0 h-[100px] bg-gray-200 rounded-[10px] animate-pulse"
+              :class="headerStripOrder"
+            ></div>
+            <div 
+              class="w-[100px] h-[100px] bg-gray-200 animate-pulse"
+              :class="[
+                headerStripSummaryOrder,
+                currentLeg === 'outbound' ? 'rounded-l-[10px]' : 'rounded-r-[10px]'
+              ]"
+            ></div>
           </template>
+          
+          <!-- Actual content -->
           <template v-else>
-            <!-- Make wrapper a flex container so HeaderStrip can stretch -->
-            <div :class="[currentLeg === 'outbound' ? 'order-1' : 'order-2', 'flex-1 min-w-0 flex items-stretch']">
+            <div 
+              class="flex-1 min-w-0 flex items-stretch h-full"
+              :class="headerStripOrder"
+            >
               <HeaderStrip
                 class="w-full h-full"
                 :current-leg="currentLeg"
@@ -39,17 +54,11 @@
                 @edit-segment="handleEditSegment"
               />
             </div>
+            
             <HeaderStripSummary
               class="h-full"
-              :current-leg="currentLeg"
-              :class="currentLeg === 'outbound' ? 'order-2' : 'order-1'"
-              :segment-title="summaryData?.segmentTitle || (currentLeg === 'outbound' ? '回程' : '去程')"
-              :time-range="summaryData?.timeRange || null"
-              :price="summaryData?.price || null"
-              :currency="summaryData?.currency || 'TWD'"
-              :no-margin="true"
-              :is-loading="roundTripSummary.isLoadingReturn.value && currentLeg === 'outbound'"
-              :is-clickable="tripType === 'roundtrip' && !(roundTripSummary.isLoadingReturn.value && currentLeg === 'outbound')"
+              :class="headerStripSummaryOrder"
+              v-bind="headerStripSummaryProps"
               @click="handleHeaderStripSummaryClick"
             />
           </template>
@@ -181,6 +190,7 @@
               :leg="currentLeg"
               :trip-type="tripType"
               :price-from="displayPrice(it)"
+              :visual-price="getVisualDisplayPrice(it)"
               :tax-mode="taxMode"
               :tax-amount="it.taxAmount"
               :round-trip-included="tripType === 'roundtrip'"
@@ -799,6 +809,68 @@ const roundTripSummary = useRoundTripSummary(
 
 // Extract summary data for template (handles null case)
 const summaryData = computed(() => roundTripSummary.summaryData.value)
+
+/**
+ * Calculate visual display price for mobile only
+ * - Roundtrip return: shows difference from selected outbound (e.g., "+TWD 200", "-TWD 100")
+ * - Multi-trip subsequent segments: shows cumulative sum (e.g., "TWD 5,000")
+ * - Everything else: returns null (use actual price)
+ */
+function getVisualDisplayPrice(card: CardRow): { value: number; isDifference: boolean; difference?: number } | null {
+  // Only apply visual pricing on mobile
+  if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+    return null
+  }
+
+  const segmentIndex = props.segmentIndex ?? 0
+  
+  // Roundtrip: return leg shows difference from selected outbound
+  if (tripType.value === 'roundtrip' && currentLeg.value === 'return' && selectedSegments.value.length > 0) {
+    const outboundPrice = selectedSegments.value[0]?.totalPrice ?? 0
+    const currentPrice = displayPrice(card)
+    const difference = currentPrice - outboundPrice
+    return { value: Math.abs(difference), isDifference: true, difference }
+  }
+  
+  // Multi-trip: subsequent segments show cumulative sum
+  if (tripType.value === 'multi' && segmentIndex > 0 && selectedSegments.value.length > 0) {
+    const previousSum = selectedSegments.value.reduce((sum, seg) => sum + (seg.totalPrice ?? 0), 0)
+    const currentPrice = displayPrice(card)
+    const cumulativeSum = previousSum + currentPrice
+    return { value: cumulativeSum, isDifference: false }
+  }
+  
+  return null
+}
+
+// Round-trip mobile layout: computed properties for cleaner template
+const otherLeg = computed<'outbound' | 'return'>(() => 
+  currentLeg.value === 'outbound' ? 'return' : 'outbound'
+)
+
+const roundTripContainerClass = computed(() => 
+  currentLeg.value === 'outbound' ? '-mr-4' : '-ml-4'
+)
+
+const headerStripOrder = computed(() => 
+  currentLeg.value === 'outbound' ? 'order-1' : 'order-2'
+)
+
+const headerStripSummaryOrder = computed(() => 
+  currentLeg.value === 'outbound' ? 'order-2' : 'order-1'
+)
+
+const headerStripSummaryProps = computed(() => ({
+  currentLeg: otherLeg.value,
+  segmentTitle: summaryData.value?.segmentTitle || (otherLeg.value === 'outbound' ? '去程' : '回程'),
+  timeRange: summaryData.value?.timeRange || null,
+  price: summaryData.value?.price || null,
+  currency: summaryData.value?.currency || 'TWD',
+  isLoading: roundTripSummary.isLoadingReturn.value && currentLeg.value === 'outbound',
+  isClickable: tripType.value === 'roundtrip' && !(roundTripSummary.isLoadingReturn.value && currentLeg.value === 'outbound'),
+  attachRight: currentLeg.value === 'outbound',
+  attachLeft: currentLeg.value === 'return'
+}))
 
 //---------- Sidebar data (derived from flightData) ----------
 type OptionItem = { id: string; name: string; price: number }

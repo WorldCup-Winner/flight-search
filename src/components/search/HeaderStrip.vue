@@ -1,62 +1,65 @@
 <template>
-  <div :class="noMargin ? 'bg-none' : 'mb-4 bg-none'">
+  <div :class="[noMargin ? 'h-full' : 'mb-4']">
     <div
-      class="relative flex rounded-[10px] drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] h-full"
+      class="relative flex drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] h-full overflow-hidden"
       :class="[
-        noMargin ? '' : 'mb-4',
+        attachLeft ? 'rounded-l-[10px]' : 'rounded-[10px]',
+        'md:bg-primary-gold md:rounded-[10px]',
+        // Mobile roundtrip: gold for outbound, gray11 for return
         currentLeg === 'outbound' ? 'bg-primary-gold' : 'bg-others-gray11'
       ]"
     >
-      <!-- Main leg card -->
+      <!-- Desktop: Left vertical orange section -->
+      <div 
+        class="hidden md:absolute md:inset-y-0 md:w-28 md:bg-others-original md:text-white md:grid md:place-items-center md:left-0 md:rounded-l-[10px]"
+      >
+        <span class="text-[22px]">{{ segmentTitle }}</span>
+      </div>
+
+      <!-- Mobile: Left orange section with vertical text (always on left) -->
+      <div 
+        class="md:hidden w-12 bg-others-original text-white flex items-center justify-center rounded-l-[10px] shrink-0"
+      >
+        <span class="text-lg font-semibold" style="writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 0.15em;">{{ segmentTitle }}</span>
+      </div>
+
+      <!-- Main content area -->
       <div 
         class="relative flex-1 py-3 text-white md:py-5 md:pl-48 md:pr-6"
         :class="[
-          currentLeg === 'outbound' 
-            ? 'pl-4 pr-24' 
-            : 'pl-24 pr-4'
+          'md:pl-48',
+          'pl-3 pr-3',
+          'md:bg-transparent',
+          currentLeg === 'outbound' ? 'bg-primary-gold' : 'bg-others-gray11'
         ]"
       >
-        <!-- Orange tab: always left on PC, dynamic on mobile -->
-        <div 
-          class="absolute inset-y-0 w-20 md:w-28 bg-others-original text-white grid place-items-center md:left-0 md:rounded-l-[10px]"
-          :class="[
-            currentLeg === 'outbound' 
-              ? 'right-0 rounded-r-[10px]' 
-              : 'left-0 rounded-l-[10px]'
-          ]"
-        >
-          <span class="text-xl md:text-[22px]">{{ segmentTitle }}</span>
-        </div>
-
-        <div class="flex flex-col gap-1 md:gap-2">
-          <!-- Top row: date, mobile edit button, route (PC keeps date+route on one line) -->
-          <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <!-- Date + Edit (ALWAYS same row on mobile) -->
-            <div class="order-1 flex w-full md:w-auto items-center gap-2 min-w-0 flex-nowrap">
-              <!-- Date (truncate so edit button never drops) -->
-              <div class="text-[11px] md:text-[18px] font-semibold truncate min-w-0">
-                <span class="md:hidden">{{ formatChineseDateToYYYYMMDD(new Date(dateText)) }}</span>
-                <span class="hidden md:inline">{{ formatDateToChinese(dateText) }}</span>
+        <div class="flex flex-col gap-1 md:gap-x-4 h-full relative">
+          <!-- Mobile: Date row with edit button in top right -->
+           <div class="flex flex-col md:flex-row items-start gap-3 md:gap-4 w-full">
+            <div class="flex items-center justify-between md:flex-wrap md:gap-x-4 md:gap-y-2 w-full md:w-auto">
+              <!-- Date -->
+              <div class="text-[11px] md:text-[18px] font-semibold">
+                <span>{{ formatChineseDateToYYYYMMDD(new Date(dateText)) }}</span>
               </div>
 
-              <!-- Mobile edit button -->
+              <!-- Mobile edit button (top right corner) with border -->
               <button
                 type="button"
-                class="ml-auto shrink-0 inline-flex items-center gap-0.5 rounded-md border border-white bg-black/5 px-1.5 py-1 text-xs font-medium text-white transition hover:text-others-original md:hidden"
+                class="md:hidden shrink-0 inline-flex items-center gap-0.5 rounded-md border border-white bg-black/5 px-1.5 py-1 text-xs font-medium text-white transition hover:text-others-original"
                 @click="$emit('edit-segment')"
+                aria-label="編輯"
               >
                 <font-awesome-icon icon="pen" class="w-2.5 h-2.5" />
-                <span class="leading-none text-[11px]">修改</span>
               </button>
             </div>
 
-            <!-- Route: on mobile it wraps to second line; on PC it sits beside the date -->
-            <div class="order-3 flex w-full flex-row items-center text-[12px] md:text-[16px] md:order-2 md:w-auto gap-1.5 md:gap-3 font-semibold">
+            <!-- Route: second line on mobile, same row on desktop -->
+            <div class="flex flex-row items-center text-[10px] md:text-[16px] gap-1.5 md:gap-5 font-semibold">
               <span>{{ origin.name }}({{ origin.code }})</span>
-              <img src="@/assets/imgs/icon-arrow-right-white.svg" class="w-5 h-5 md:w-4 md:h-4" />
+              <img src="@/assets/imgs/icon-arrow-right-white.svg" class="w-4 h-4" />
               <span>{{ destination.name }}({{ destination.code }})</span>
             </div>
-          </div>
+           </div>
 
           <!-- Total count / helper text: desktop & tablet only -->
           <div class="hidden text-[13px] text-others-gray7 md:block md:text-[15px]">
@@ -79,6 +82,7 @@ defineProps<{
   destination: { name: string; code: string }
   totalCount: number
   noMargin?: boolean
+  attachLeft?: boolean
 }>()
 
 defineEmits<{

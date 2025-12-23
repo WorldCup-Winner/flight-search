@@ -40,13 +40,13 @@
           </div>
 
           <!-- Footer with Price and Buttons -->
-          <div class="bg-white px-6 py-4 flex-shrink-0 border-t border-others-gray3">
+          <div class="bg-white px-5 py-4 flex-shrink-0 border-t border-others-gray3">
             <div class="flex items-center justify-between gap-4">
               <!-- Price on Left -->
               <div class="flex-shrink-0">
                 <div class="flex items-end font-bold whitespace-nowrap">
                   <div class="text-[12px] text-others-original">{{ currencyDisplay }}</div>
-                  <div class="text-[28px] text-others-original leading-none">{{ formatPrice(priceTotal) }}</div>
+                  <div class="text-[22px] text-others-original leading-none">{{ formatPrice(priceTotal) }}</div>
                 </div>
                 <div v-if="taxMode === 'in'" class="text-[12px] pt-1 text-others-gray1">
                   <span class="font-bold text-[14px]">每人均價</span>(含稅及附加費)
@@ -57,17 +57,17 @@
               </div>
 
               <!-- Buttons on Right -->
-              <div class="flex gap-3 flex-shrink-0">
+              <div class="flex gap-3 flex-shrink-0 text-[14px]">
                 <button
                   type="button"
-                  class="px-4 py-3 rounded-[10px] text-others-gray7 bg-others-gray3 font-bold opacity-50 cursor-not-allowed transition whitespace-nowrap"
+                  class="px-4 py-3 rounded-[15px] text-others-gray7 bg-others-gray3 font-bold opacity-50 cursor-not-allowed transition whitespace-nowrap"
                   disabled
                 >
                   航班資訊
                 </button>
                 <button
                   type="button"
-                  class="px-4 py-3 rounded-[10px] text-white bg-others-original font-bold hover:bg-others-hover transition whitespace-nowrap"
+                  class="px-4 py-3 rounded-[15px] text-white bg-others-original font-bold hover:bg-others-hover transition whitespace-nowrap"
                   @click="handleNextStep"
                 >
                   {{ isLastStep ? '訂購' : '下一步' }}

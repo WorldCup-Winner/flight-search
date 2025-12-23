@@ -1178,8 +1178,8 @@ const { showWakeUp, closeModal: closeWakeUpModal } = useInactivityTimeout()
 
 const code  = ref('+886')
 const phoneNumber  = ref('')
-const phoneCodes = ref<Array<{ label: string; value: string }>>([
-{ label: '台灣 (+886)', value: '+886' },
+const phoneCodes = ref<Array<{ label: string; value: string; countryCode: string }>>([
+{ label: '台灣 (+886)', value: '+886', countryCode: 'TW' },
 ])
 const nationalities = ref<Array<{
   countryCode: string,
@@ -2189,7 +2189,8 @@ try {
       .filter((item: any) => item.phoneCountryCode) // 過濾掉沒有電話國碼的項目
       .map((item: any) => ({
         label: `${item.countryNameZh || item.countryCode || ''} (${item.phoneCountryCode})`, // 顯示：國家名稱 (國碼)
-        value: item.phoneCountryCode // 實際值：國碼
+        value: item.phoneCountryCode, // 實際值：國碼
+        countryCode: item.countryCode || 'UNKNOWN' // 國家代碼，用於唯一識別
       }))
     
     // 如果有資料但目前的 code 不在清單中，設定預設值為 +886 或第一個
@@ -2227,10 +2228,10 @@ loading.value = false
 // 設定預設國碼清單
 function setDefaultPhoneCodes() {
 phoneCodes.value = [
-  { label: '台灣 (+886)', value: '+886' },
-  { label: '香港 (+852)', value: '+852' },
-  { label: '日本 (+81)', value: '+81' },
-  { label: '美國/加拿大 (+1)', value: '+1' },
+  { label: '台灣 (+886)', value: '+886', countryCode: 'TW' },
+  { label: '香港 (+852)', value: '+852', countryCode: 'HK' },
+  { label: '日本 (+81)', value: '+81', countryCode: 'JP' },
+  { label: '美國/加拿大 (+1)', value: '+1', countryCode: 'US' },
 ]
 }
 

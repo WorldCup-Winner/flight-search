@@ -73,8 +73,16 @@
         <!-- Price (Right) -->
         <div class="text-right flex-shrink-0" :class="{ 'invisible': leg === 'return' && expanded1 }">
           <div class="flex items-end justify-end font-bold whitespace-nowrap">
-            <div class="text-[10px] text-others-original">{{ currencyDisplay }}&nbsp;&nbsp;</div>
-            <div class="text-[21px] text-others-original leading-none">{{ formatPrice(priceTotal) }}</div>
+            <template v-if="visualPriceDisplay">
+              <!-- Visual price (mobile only: difference or cumulative) -->
+              <div class="text-[10px]" v-html="visualCurrencyDisplay || currencyDisplay"></div>
+              <div class="text-[21px] text-others-original leading-none">{{ visualPriceDisplay }}</div>
+            </template>
+            <template v-else>
+              <!-- Actual price (desktop or when no visual price) -->
+              <div class="text-[10px] text-others-original">{{ currencyDisplay }}&nbsp;&nbsp;</div>
+              <div class="text-[21px] text-others-original leading-none">{{ formatPrice(priceTotal) }}</div>
+            </template>
           </div>
         </div>
       </div>
@@ -496,6 +504,8 @@ const props = defineProps<{
   currency?: string
   /** Calculated display price (based on taxMode) - this is what gets displayed */
   priceFrom?: number
+  /** Visual price for mobile display (difference or cumulative sum) */
+  visualPrice?: { value: number; isDifference: boolean; difference?: number } | null
   /** Tax mode: 'in' = price with tax, 'ex' = price without tax */
   taxMode?: string
   roundTripIncluded?: boolean
@@ -614,6 +624,63 @@ const currencyDisplay = cardData.currencyDisplay
 const priceTotal = cardData.priceTotal
 const taxMode = cardData.taxMode
 const visibleFares = fareRule.visibleFares
+
+/**
+ * Visual currency display for mobile only (includes sign for roundtrip return)
+ * - Roundtrip return: shows "+ TWD" or "- TWD"
+ * - Multi-trip or no visual price: shows "TWD"
+ */
+const visualCurrencyDisplay = computed(() => {
+  // Desktop: always use actual currency
+  if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+    return null
+  }
+  
+  // No visual price provided: use actual currency
+  if (!props.visualPrice) {
+    return null
+  }
+  
+  const { isDifference, difference } = props.visualPrice
+  
+  // Roundtrip return: show sign with currency
+  if (isDifference && difference !== undefined) {
+    const sign = difference >= 0 ? '+' : '-'
+    return `<span class="text-others-gray1">${sign}</span>&nbsp;<span class="text-others-original">${currencyDisplay.value}</span>&nbsp;&nbsp;`
+  }
+  
+  // Multi-trip: just show currency
+  return `${currencyDisplay.value}&nbsp;&nbsp;`
+})
+
+/**
+ * Visual price display for mobile only (just the number)
+ * - Roundtrip return: shows difference amount
+ * - Multi-trip subsequent: shows cumulative sum
+ * - Desktop or no visual price: returns null (use actual priceTotal)
+ */
+const visualPriceDisplay = computed(() => {
+  // Desktop: always use actual price
+  if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+    return null
+  }
+  
+  // No visual price provided: use actual price
+  if (!props.visualPrice) {
+    return null
+  }
+  
+  const { value, isDifference } = props.visualPrice
+  
+  // Roundtrip return: show difference amount
+  if (isDifference && props.visualPrice.difference !== undefined) {
+    const difference = props.visualPrice.difference
+    return formatPrice(Math.abs(difference))
+  }
+  
+  // Multi-trip: show cumulative sum
+  return formatPrice(value)
+})
 
 function airlineLogoFor(sec: Sector) {
   return cardData.airlineLogoFor(sec)
