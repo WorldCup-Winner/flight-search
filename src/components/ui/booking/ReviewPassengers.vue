@@ -7,10 +7,10 @@
           <img :src="AwesomeIcon" alt="提醒" class="w-20 h-20 md:w-24 md:h-24 mb-4" />
           <div class="md:flex md:flex-col md:items-start">
             <h3 class="text-others-gray1 text-xl md:text-2xl font-bold text-center mb-3">
-              訂購前,請務必仔細檢查以下資料
+              訂購前，請務必仔細檢查以下資料
             </h3>
             <p class="text-others-original text-sm md:text-base text-left w-full">
-              姓名為開票依據,必須與護照拼音完全相同,若有錯誤將無法搭機
+              姓名為開票依據，必須與護照拼音完全相同，若有錯誤將無法搭機
             </p>
           </div>
         </div>

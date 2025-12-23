@@ -194,7 +194,7 @@
 
 <script setup lang="ts">
 import { computed, ref} from "vue";
-import { formatPrice } from "@/utils";
+import { formatPrice, formatFPA55, getPaymentDeadline30MinutesFromNow } from "@/utils";
 import { useBookingStore } from "@/stores/booking";
 import BookingHeaderStrip from "./BookingHeaderStrip.vue";
 import TicketBookingDetailModal from "./TicketBookingDetailModal.vue";
@@ -309,7 +309,7 @@ const items = computed<Item[]>(() => {
                 totalWithTax: fare,                       // FPC52 商品金額（含稅）
                 tax: 0,                                   // FP02 沒有單獨的稅額欄位
                 paid: paid,
-                deadline: formatDateTime(orderData.FPA55) || '2025/12/31 23:59', // FPA55 付款期限
+                deadline: formatFPA55(orderData.FPA55) || getPaymentDeadline30MinutesFromNow(), // FPA55 付款期限
             }
         })
     }
@@ -456,18 +456,6 @@ function getPaymentDeadline(): string {
   return '2025/8/31 14:20'
 }
 
-// Helper function to format FPA55 datetime (format: YYYYMMDDHHMM)
-function formatDateTime(dateTime: string): string {
-  if (!dateTime || dateTime.length !== 12) return ''
-  
-  const year = dateTime.substring(0, 4)
-  const month = dateTime.substring(4, 6)
-  const day = dateTime.substring(6, 8)
-  const hour = dateTime.substring(8, 10)
-  const minute = dateTime.substring(10, 12)
-  
-  return `${year}/${parseInt(month)}/${parseInt(day)} ${hour}:${minute}`
-}
 </script>
 
 <style scoped>

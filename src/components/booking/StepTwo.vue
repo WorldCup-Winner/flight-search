@@ -237,8 +237,8 @@
                                                 <div
                                                 v-if="isDatePickerOpen"
                                                 ref="datePopoverRef"
-                                                class="fixed z-[10000]"
-                                                :style="popoverStyle"
+                                                class="fixed z-[10000] inset-0 bg-black/40 md:inset-auto md:bg-transparent"
+                                                :style="datePickerWrapperStyle"
                                                 @click.stop
                                                 >
                                                 <DatePicker
@@ -466,7 +466,16 @@
                                     v-model="taxId"
                                     type="text" 
                                     placeholder="請填統一編號"
-                                    class="w-full px-4 py-2 border rounded-md border-primary-gold focus:ring-2 focus:ring-others-original focus:outline-none" />
+                                    maxlength="8"
+                                    @input="handleTaxIdInput"
+                                    @blur="validateTaxId"
+                                    :class="[
+                                        'w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-others-original focus:outline-none',
+                                        taxIdError ? 'border-text-error' : 'border-primary-gold'
+                                    ]" />
+                                <p v-if="taxIdError" class="text-text-error text-sm mt-1">
+                                    {{ taxIdError }}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -807,6 +816,15 @@ const isDatePickerOpen = ref(false)
 const activeInputEl = ref<HTMLElement | null>(null)
 const activeDateField = ref<{ passenger?: any; field: string } | null>(null)
 const popoverStyle = ref<Record<string, string>>({})
+
+// Only apply popoverStyle on desktop (md breakpoint: 768px+)
+// On mobile, return empty object so inset-0 works for full-screen modal
+const datePickerWrapperStyle = computed(() => {
+  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    return {} // Mobile: let inset-0 handle full-screen positioning
+  }
+  return popoverStyle.value // Desktop: apply positioned popover
+})
 
 const datePickerModelValue = computed(() => {
 if (!activeDateField.value) return new Date();
@@ -1253,6 +1271,7 @@ function fillContactInfoFromAuth() {
 // 發票資訊
 const companyName = ref('')
 const taxId = ref('')
+const taxIdError = ref<string | null>(null)
 
 // 特殊需求
 const specialNeedsText = ref('')
@@ -1395,11 +1414,40 @@ const cleaned = name.replace(/\s/g, '')
 if (!lettersOnly.test(cleaned)) {
   return {
     isValid: false,
-    error: '請填英文,不可含空格和其它符號'
+    error: '請填英文，不可含空格和其它符號'
   }
 }
 
 return { isValid: true }
+}
+
+function handleTaxIdInput(event: Event) {
+  const target = event.target as HTMLInputElement
+  // Only allow numbers
+  const value = target.value.replace(/\D/g, '')
+  // Limit to 8 digits
+  taxId.value = value.slice(0, 8)
+  // Clear error on input
+  if (taxIdError.value) {
+    taxIdError.value = null
+  }
+}
+
+function validateTaxId() {
+  const value = taxId.value.trim()
+  
+  if (!value) {
+    taxIdError.value = null // Empty is handled by required validation
+    return
+  }
+  
+  // Must be exactly 8 digits
+  if (!/^\d{8}$/.test(value)) {
+    taxIdError.value = '統一編號必須為8位數字'
+    return
+  }
+  
+  taxIdError.value = null
 }
 
 function handleNameBlur(passenger: any, field: 'firstName' | 'lastName') {
@@ -1657,12 +1705,23 @@ if (!emailValidation.isValid) {
 }
 
 // 檢查發票資訊是否完整（如果選擇要開立發票）
-if (isReceipt.value && (!companyName.value || !taxId.value)) {
-  bookingError.value = {
-    title: '訂單提交失敗',
-    message: '請填寫完整的發票資訊'
-  };
-  return
+if (isReceipt.value) {
+  if (!companyName.value || !taxId.value) {
+    bookingError.value = {
+      title: '訂單提交失敗',
+      message: '請填寫完整的發票資訊'
+    };
+    return
+  }
+  // Validate tax ID format (must be exactly 8 digits)
+  if (!/^\d{8}$/.test(taxId.value.trim())) {
+    taxIdError.value = '統一編號必須為8位數字'
+    bookingError.value = {
+      title: '訂單提交失敗',
+      message: '統一編號格式不正確，必須為8位數字'
+    };
+    return
+  }
 }
 
 // 檢查特殊需求是否已填寫（如果選擇有特殊需求）
@@ -1707,7 +1766,7 @@ passengers.value.forEach((p, index) => {
 if (invalidNamePassengers.length > 0) {
   bookingError.value = {
     title: '訂單提交失敗',
-    message: `${invalidNamePassengers.join('、')}的姓名格式不正確，請填英文,不可含空格和其它符號`
+    message: `${invalidNamePassengers.join('、')}的姓名格式不正確，請填英文，不可含空格和其它符號`
   };
   return
 }
@@ -2116,7 +2175,6 @@ return input;
 onMounted(async () => {
 // 載入 localStorage 中的訂票資料
 bookingStore.getBookingData()
-
 // Auto-fill contact info if user is already authenticated
 fillContactInfoFromAuth()
 

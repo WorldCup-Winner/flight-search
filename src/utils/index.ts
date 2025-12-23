@@ -179,3 +179,76 @@ export function formatChineseDateToYYYYMMDD(date: Date): string {
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}年${month}月${day}日`
 }
+
+/**
+ * Get payment deadline 30 minutes from now
+ * @returns Formatted string in "YYYY/MM/DD HH:mm" format
+ */
+export function getPaymentDeadline30MinutesFromNow(): string {
+  const now = new Date()
+  const deadline = new Date(now.getTime() + 30 * 60 * 1000) // Add 30 minutes
+  
+  const year = deadline.getFullYear()
+  const month = String(deadline.getMonth() + 1).padStart(2, '0')
+  const day = String(deadline.getDate()).padStart(2, '0')
+  const hour = String(deadline.getHours()).padStart(2, '0')
+  const minute = String(deadline.getMinutes()).padStart(2, '0')
+  
+  return `${year}/${month}/${day} ${hour}:${minute}`
+}
+
+/**
+ * Format FPA55 payment deadline field
+ * Handles multiple formats: YYYYMMDDHHMM, YYYY/MM/DD, YYYY-MM-DD HH:mm, etc.
+ * @param fpa55 - FPA55 value from API
+ * @returns Formatted string in "YYYY/MM/DD HH:mm" format, or null if invalid
+ */
+export function formatFPA55(fpa55: string | null | undefined): string | null {
+  if (!fpa55 || typeof fpa55 !== 'string') {
+    return null
+  }
+  
+  const trimmed = fpa55.trim()
+  if (!trimmed) {
+    return null
+  }
+  
+  // Format 1: YYYYMMDDHHMM (12 digits)
+  if (/^\d{12}$/.test(trimmed)) {
+    const year = trimmed.substring(0, 4)
+    const month = trimmed.substring(4, 6)
+    const day = trimmed.substring(6, 8)
+    const hour = trimmed.substring(8, 10)
+    const minute = trimmed.substring(10, 12)
+    return `${year}/${parseInt(month)}/${parseInt(day)} ${hour}:${minute}`
+  }
+  
+  // Format 2: YYYY/MM/DD or YYYY-MM-DD (date only, use current time or 23:59)
+  if (/^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}$/.test(trimmed)) {
+    const normalized = trimmed.replace(/-/g, '/')
+    // If only date provided, append 23:59 as default time
+    return `${normalized} 23:59`
+  }
+  
+  // Format 3: YYYY/MM/DD HH:mm or YYYY-MM-DD HH:mm
+  if (/^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}\s+\d{1,2}:\d{1,2}$/.test(trimmed)) {
+    return trimmed.replace(/-/g, '/')
+  }
+  
+  // Format 4: ISO format (YYYY-MM-DDTHH:mm:ss or similar)
+  try {
+    const date = new Date(trimmed)
+    if (!isNaN(date.getTime())) {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hour = String(date.getHours()).padStart(2, '0')
+      const minute = String(date.getMinutes()).padStart(2, '0')
+      return `${year}/${month}/${day} ${hour}:${minute}`
+    }
+  } catch {
+    // Fall through to return null
+  }
+  
+  return null
+}

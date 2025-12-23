@@ -418,7 +418,7 @@
 </template>
 <script setup lang="ts">
 import { reactive, computed, ref, onMounted } from "vue";
-import { formatPrice } from "@/utils";
+import { formatPrice, formatFPA55, getPaymentDeadline30MinutesFromNow } from "@/utils";
 
 type Flight = {
   departTime: string;
@@ -727,7 +727,7 @@ const processOrderData = () => {
         fare: parseInt(cust.FPC52) || 0,
         tax: 0,
         paid: parseInt(cust.FPC53) || 0,
-        deadline: formatDateTime(orderData.value.FPA55) || '2025/12/31 23:59'
+        deadline: formatFPA55(orderData.value.FPA55) || getPaymentDeadline30MinutesFromNow()
       })
     })
   }

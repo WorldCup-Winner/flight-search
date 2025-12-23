@@ -2,11 +2,14 @@
     <div
         :class="[
             'shadow-2xl flex flex-col bg-white',
-            props.compact
-                ? (props.mobileConfirm === false
-                    ? 'w-full h-fit md:w-[560px] md:max-w-[90vw] md:h-auto md:rounded-2xl'
-                    : 'w-full h-[70vh] md:w-[560px] md:max-w-[90vw] md:h-auto md:rounded-2xl')
-                : 'w-full h-full md:w-[730px] md:max-w-[95vw] md:h-auto md:rounded-2xl'
+            // When singleMonth is true on mobile, use full-width full-height (like RangeDatePicker)
+            props.singleMonth
+                ? 'w-full h-full md:w-[560px] md:max-w-[90vw] md:h-auto md:rounded-2xl'
+                : props.compact
+                    ? (props.mobileConfirm === false
+                        ? 'w-full h-fit md:w-[560px] md:max-w-[90vw] md:h-auto md:rounded-2xl'
+                        : 'w-full h-[70vh] md:w-[560px] md:max-w-[90vw] md:h-auto md:rounded-2xl')
+                    : 'w-full h-full md:w-[730px] md:max-w-[95vw] md:h-auto md:rounded-2xl'
         ]"
     >
         <!-- Header -->
@@ -200,9 +203,9 @@
             </div>
         </div>
 
-        <!-- Footer: Mobile only (always show for search contexts, conditional for compact/singleMonth) -->
+        <!-- Footer: Mobile only (always show when singleMonth is true, conditional for compact otherwise) -->
         <div
-            v-if="!props.compact || props.mobileConfirm !== false"
+            v-if="props.singleMonth || !props.compact || props.mobileConfirm !== false"
             class="md:hidden bg-white px-6 py-5 sticky bottom-0 z-10 rounded-t-[20px]"
             style="box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);"
         >
@@ -431,9 +434,9 @@ function onPickMobile(d: Date) {
     if (isDisabled(d)) return
     localSelected.value = d
     emit('update:modelValue', d)
-    // Only emit apply immediately if footer is hidden (mobileConfirm === false AND compact is true)
-    // For search contexts (footer always shows when compact is not set), wait for footer button click
-    const footerIsShowing = !props.compact || props.mobileConfirm !== false
+    // Only emit apply immediately if footer is hidden
+    // Footer is showing when: singleMonth is true OR (!compact OR mobileConfirm !== false)
+    const footerIsShowing = props.singleMonth || !props.compact || props.mobileConfirm !== false
     if (!footerIsShowing) {
         // Footer is hidden, apply immediately (like desktop behavior)
         emit('apply', d)

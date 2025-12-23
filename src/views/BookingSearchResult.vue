@@ -407,7 +407,7 @@
 </template>
 <script setup lang="ts">
 import { reactive, computed, ref, onMounted, watch } from "vue";
-import { formatPrice } from "@/utils";
+import { formatPrice, formatFPA55, getPaymentDeadline30MinutesFromNow } from "@/utils";
 import PaymentMethodCard from "@/components/booking/PaymentMethodCard.vue";
 import { useRouter, useRoute } from "vue-router";
 
@@ -553,7 +553,7 @@ const processOrderData = () => {
         fare: parseInt(cust.FPC52) || 0,
         tax: 0, // FP02 沒有單獨的稅額欄位
         paid: parseInt(cust.FPC53) || 0,
-        deadline: formatDateTime(orderData.value.FPA55) || '2025/12/31 23:59'
+        deadline: formatFPA55(orderData.value.FPA55) || getPaymentDeadline30MinutesFromNow()
       })
     })
   }
