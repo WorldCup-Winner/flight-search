@@ -39,7 +39,7 @@ const acceptPrivacy = () => {
       />
       <div class="md:col-span-9 flex flex-col justify-between gap-3">
         <h3 class="text-others-gray1 text-h2-d md:text-h3-d">隱私權聲明</h3>
-        <p class="text-others-gray1 text-left md:text-center">
+        <p class="text-others-gray1 text-left">
           為提供您最佳的網站使用體驗，本網站使用Cookie以改善我們的網頁，作為技術、分析、行銷之用，繼續使用本網站表示您同意我們使用Cookie。進一步的資訊可閱讀我們
           <span class="text-others-original cursor-pointer" @click="goPrivacy">隱私權政策</span>
           說明。

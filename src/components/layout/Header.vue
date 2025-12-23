@@ -140,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
@@ -160,9 +160,6 @@ const authStore = useAuthStore()
 const flightSearchStore = useFlightSearchStore()
 const bookingStore = useBookingStore()
 const locationStore = useLocationStore()
-
-// 監聽來自 HomeView 的訂單查詢請求
-import { onMounted, onUnmounted } from 'vue'
 
 const activeDialog = ref(null)
 const isOpenBookingSearch = ref(false)
@@ -210,6 +207,18 @@ const isOrderPage = computed(() => {
 // Text color for links based on background
 const linkCls = computed(() =>
   isOrderPage.value ? 'text-others-gray1 hover:text-others-gray2' : 'text-white hover:text-gray-200'
+)
+
+// Close global login/signup modal whenever the route changes
+// This ensures that pressing the browser Back/Forward buttons
+// (or navigating programmatically) will always clear the overlay.
+watch(
+  () => route.fullPath,
+  () => {
+    if (activeDialog.value) {
+      activeDialog.value = null
+    }
+  }
 )
 
 // 監聽來自其他組件的訂單查詢請求
