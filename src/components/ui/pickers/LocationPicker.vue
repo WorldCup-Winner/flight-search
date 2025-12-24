@@ -2,7 +2,7 @@
     <div
         class="shadow-2xl flex flex-col bg-white
                w-full h-[50vh] rounded-t-3xl
-               md:w-[750px] md:max-w-[85vw] md:h-auto md:rounded-2xl"
+               md:w-[750px] md:max-w-[85vw] md:h-auto md:max-h-[80vh] md:rounded-2xl"
     >
         <!-- Header -->
         <div
@@ -33,7 +33,7 @@
         </div>
 
         <!-- Content -->
-        <div class="flex-1 overflow-y-auto p-4">
+        <div class="flex-1 overflow-y-auto p-4 min-h-0">
             <!-- Loading State -->
             <div v-if="loading" class="text-center py-8 text-others-gray5">
                 載入中...

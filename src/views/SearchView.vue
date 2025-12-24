@@ -146,11 +146,15 @@ function getCityName(code?: string): string {
 }
 
 // Search handlers - navigate to appropriate route
-function handleRoundSearch(payload: any) {
+async function handleRoundSearch(payload: any) {
   bookingStore.clearBookingInfo()
   
   // Reset flight search store to clear old data and show skeletons immediately
   flightSearchStore.reset()
+  
+  // Fetch data first, show loading skeleton
+  await flightSearchStore.fetchFlightSearch(payload)
+  airlineStore.fetchAirlineAlliance()
   
   const searchParams = extractSearchParamsFromRequest(payload, 'roundtrip')
   

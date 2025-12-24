@@ -52,8 +52,7 @@
         <label class="cursor-pointer text-others-gray1">
           直飛
         </label>
-        <label v-if="stopsPricing?.direct" class="ml-auto text-others-gray1">{{
-          formatCurrency(stopsPricing.direct) }}</label>
+        <label v-if="stopsPricing?.direct" class="ml-auto text-others-gray1">{{ formatCurrency(stopsPricing.direct) }}</label>
       </div>
 
       <div class="flex items-center gap-3">
@@ -74,8 +73,7 @@
         <label class="cursor-pointer text-others-gray1">
           轉機 / 中停1次
         </label>
-        <label v-if="stopsPricing?.oneStop" class="ml-auto text-others-gray1">{{
-          formatCurrency(stopsPricing.oneStop) }}</label>
+        <label v-if="stopsPricing?.oneStop" class="ml-auto text-others-gray1">{{ formatCurrency(stopsPricing.oneStop) }}</label>
       </div>
     </div>
 
@@ -132,8 +130,7 @@
         <label class="cursor-pointer text-others-gray1">
           {{ air.name }}
         </label>
-        <label v-if="air.price" class="ml-auto text-others-gray1">{{
-          formatCurrency(air.price) }}</label>
+        <label v-if="air.price" class="ml-auto text-others-gray1">{{ formatCurrency(air.price) }}</label>
       </div>
       <button v-if="airlines.length > airlineLimit"
         class="ml-auto block text-others-original font-bold hover:opacity-80"
@@ -202,8 +199,7 @@
         <label class="cursor-pointer text-others-gray1">
           {{ a.name }}
         </label>
-        <label v-if="a.price" class="ml-auto text-others-gray1">{{
-          formatCurrency(a.price) }}</label>
+        <label v-if="a.price" class="ml-auto text-others-gray1">{{ formatCurrency(a.price) }}</label>
       </div>
 
     </div>

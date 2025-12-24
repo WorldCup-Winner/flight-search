@@ -40,7 +40,7 @@
                 [mask-position:center] 
                 [mask-size:contain] 
                 [-webkit-mask-image:url('@/assets/imgs/icon-search.svg')]"
-            :class="[isOrderPage ? 'bg-others-gray4' : 'bg-white']"
+            :class="[isOrderPage ? 'bg-others-gray5' : 'bg-white']"
           ></div>
           <span class="hidden md:inline">訂單查詢</span>
           <span class="md:hidden text-sm">訂單</span>
@@ -63,7 +63,7 @@
                 [mask-position:center] 
                 [mask-size:contain] 
                 [-webkit-mask-image:url('@/assets/imgs/icon-customer.svg')]"
-            :class="[isOrderPage ? 'bg-others-gray4' : 'bg-white']"
+            :class="[isOrderPage ? 'bg-others-gray5' : 'bg-white']"
           ></div>
           <span class="hidden md:inline">客服中心</span>
           <span class="md:hidden">客服</span>
@@ -104,7 +104,7 @@
                   [mask-position:center]
                   [mask-size:contain]
                   [-webkit-mask-image:url('@/assets/imgs/icon-avatar.svg')]"
-              :class="[isOrderPage ? 'bg-others-gray4' : 'bg-white']"
+              :class="[isOrderPage ? 'bg-others-gray5' : 'bg-white']"
             ></div>
             <span class="hidden md:inline">Hi, {{ authStore.user.name }}</span>
           </div>
