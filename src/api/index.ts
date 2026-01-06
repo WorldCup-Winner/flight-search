@@ -122,7 +122,76 @@ apiClient.interceptors.response.use(
     }
 )
 
+// ============ Homepage API Types ============
+
+export interface HomepagePicture {
+    id: string
+    pictureType: number  // 0: PC, 1: Mobile
+    fileSize: number
+    contentType: string
+    pictureUrl: string
+}
+
+export interface KeyVisual {
+    id: string
+    name: string
+    displayOrder: number
+    pictures: HomepagePicture[]
+}
+
+export interface PromotionBig {
+    id: string
+    name: string
+    link: string
+    targetWindow: number  // 0: _blank, 1: _self
+    displayOrder: number
+    pictures: HomepagePicture[]
+}
+
+export interface PromotionSmall {
+    id: string
+    title: string
+    content: string
+    link: string
+    targetWindow: number  // 0: _blank, 1: _self
+    displayOrder: number
+    pictures: HomepagePicture[]
+}
+
+export interface FooterLink {
+    id: string
+    name: string
+    link: string
+    targetWindow: number  // 0: _blank, 1: _self
+    displayOrder: number
+}
+
+export interface HomepageResponse<T> {
+    head: {
+        code: number
+        message: string
+    }
+    data: T[]
+}
+
 // ============ 公開 API (不需要 Auth) ============
+
+// Homepage APIs
+export function getKeyVisuals() {
+    return apiClient.get<HomepageResponse<KeyVisual>>('/Homepage/key-visuals')
+}
+
+export function getPromotionBigs() {
+    return apiClient.get<HomepageResponse<PromotionBig>>('/Homepage/promotion-bigs')
+}
+
+export function getPromotionSmalls() {
+    return apiClient.get<HomepageResponse<PromotionSmall>>('/Homepage/promotion-smalls')
+}
+
+export function getFooterLinks() {
+    return apiClient.get<HomepageResponse<FooterLink>>('/Homepage/footer-links')
+}
 
 export function getAirlines() {
     return apiClient.get('/airline')
@@ -198,6 +267,11 @@ export function createPayment(req: any) {
 // 查詢付款結果 (Auth)
 export function queryPaymentResult(req: any) {
     return apiClient.post('/Liyi/FP03R', req)
+}
+
+// 查詢付款單資訊 (FP03B) (Auth)
+export function getPaymentInfo(req: any) {
+    return apiClient.post('/Liyi/FP03B', req)
 }
 
 // 查詢訂單 (FP04) (Auth)

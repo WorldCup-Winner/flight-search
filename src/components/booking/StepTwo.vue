@@ -5,8 +5,32 @@
                 <div class=" relative mt-[0px] w-full">
                     <div v-if="!loading">
                         <div class="w-full md:bg-white md:rounded-t-[10px] md:drop-shadow-[0px_2px_10px_rgba(0,0,0,0.05)] flex items-center gap-2 text-others-gray7 text-base md:text-[17px] px-4 md:px-10 py-4 font-bold">
-                            <!-- Display all segments in the route -->
-                            <template v-if="bookingStore.segments.length > 0 && !bookingStore.isRoundTrip">
+                            <!-- Multi-trip: Show simplified label on mobile, full route on desktop -->
+                            <template v-if="bookingStore.isMultiTrip && bookingStore.segments.length > 0">
+                                <!-- Mobile: Simplified display -->
+                                <span class="md:hidden text-others-gray7 font-bold text-lg">多行程&nbsp;|&nbsp;</span>
+                                <span class="md:hidden text-others-gray5 text-lg">確認與預訂</span>
+                                <!-- Desktop: Show all segments -->
+                                <div class="hidden md:flex md:items-center md:gap-2">
+                                    <template v-for="(segment, index) in bookingStore.segments" :key="index">
+                                        <span>{{ getSegmentDeparture(segment) }}</span>
+                                        <img src="@/assets/imgs/arrow-right.svg" />
+                                        <span>{{ getLastSegmentArrival(segment) }}</span>
+                                        <span v-if="index < bookingStore.segments.length - 1" class="mx-2 text-divider-medium">|</span>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- Round-trip: Show origin ↔ destination -->
+                            <template v-else-if="bookingStore.segments.length > 0 && bookingStore.isRoundTrip">
+                                <span>{{ getSegmentDeparture(bookingStore.segments[0]) || '出發地' }}</span>
+                                <img v-if="bookingStore.isRoundTrip" src="@/assets/imgs/arrow-both.svg" />
+                                <img v-else src="@/assets/imgs/arrow-right.svg" />
+                                <span>{{ getSegmentDeparture(bookingStore.segments[1]) || '目的地' }}</span>
+                            </template>
+
+                            <!-- One-way: Display all segments in the route -->
+                            <template v-else-if="bookingStore.segments.length > 0">
                                 <template v-for="(segment, index) in bookingStore.segments" :key="index">
                                     <span>{{ getSegmentDeparture(segment) }}</span>
                                     <img src="@/assets/imgs/arrow-right.svg" />
@@ -14,14 +38,6 @@
                                     <span v-if="index < bookingStore.segments.length - 1" class="mx-2 text-divider-medium">|</span>
                                 </template>
                             </template>
-
-                          <!-- Fallback for old data structure -->
-                          <template v-else-if="bookingStore.segments.length > 0 && bookingStore.isRoundTrip">
-                              <span>{{ getSegmentDeparture(bookingStore.segments[0]) || '出發地' }}</span>
-                              <img v-if="bookingStore.isRoundTrip" src="@/assets/imgs/arrow-both.svg" />
-                              <img v-else src="@/assets/imgs/arrow-right.svg" />
-                              <span>{{ getSegmentDeparture(bookingStore.segments[1]) || '目的地' }}</span>
-                          </template>
                         </div>
                     </div>
 

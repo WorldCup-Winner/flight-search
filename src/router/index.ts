@@ -71,6 +71,27 @@ const router = createRouter({
       name: 'query-order',
       component: () => import('../views/HomeView.vue')
     },
+    // Payment Callback Routes
+    {
+      path: '/nccc_pay',
+      name: 'nccc-pay-callback',
+      component: () => import('../views/PaymentCallback.vue')
+    },
+    {
+      path: '/line_pay',
+      name: 'line-pay-callback',
+      component: () => import('../views/PaymentCallback.vue')
+    },
+    {
+      path: '/card_pay',
+      name: 'card-pay-callback',
+      component: () => import('../views/PaymentCallback.vue')
+    },
+    {
+      path: '/PayInfo/:paymentId/:uniqId',
+      name: 'pay-info-callback',
+      component: () => import('../views/PaymentCallback.vue')
+    },
     {
       path: '/booking',
       component: () => import('../views/BookingView.vue'),
@@ -109,8 +130,17 @@ const router = createRouter({
           path: 'step-4',
           name: 'booking-step-4',
           component: () => import('../components/booking/StepFour.vue'),
-          // Guard: Require booking data (step 3 completed)
+          // Guard: Require booking data (step 3 completed) OR order query params (from payment callback)
           beforeEnter: async (to, from, next) => {
+            // Allow access if coming from payment callback with order info
+            const hasOrderParams = to.query.orderNumber && to.query.orderUniqId
+            if (hasOrderParams) {
+              console.log('Allowing access to Step 4 with order params:', to.query.orderNumber)
+              next()
+              return
+            }
+            
+            // Otherwise, check booking flow
             // Dynamic import to avoid circular dependency
             const { useBookingStore } = await import('../stores/booking')
             const bookingStore = useBookingStore()

@@ -94,9 +94,13 @@
             </div>
 
             <!-- Mobile: Vertical scrolling months -->
-            <div class="md:hidden space-y-6">
+            <div ref="mobileScrollContainer" class="md:hidden space-y-6">
                 <!-- All months (with labels, including first month) -->
-                <div v-for="month in allMonths" :key="month.getTime()">
+                <div 
+                    v-for="month in allMonths" 
+                    :key="month.getTime()"
+                    :ref="el => setMonthRef(el, month)"
+                >
                     <div class="text-center text-[18px] leading-8 font-semibold text-gray-500 mb-4">
                         {{ monthLabel(month) }}
                     </div>
@@ -141,7 +145,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, defineComponent, h } from 'vue'
+import { computed, ref, watch, defineComponent, h, nextTick, onMounted } from 'vue'
 
 /* ============================================
    Constants
@@ -180,7 +184,49 @@ const min = computed(() => props.min ?? null)
 const max = computed(() => props.max ?? null)
 
 const today = new Date()
-const leftMonth = ref(new Date(today.getFullYear(), today.getMonth(), 1))
+
+// Store the last selected month to jump back to it when reopening
+const lastSelectedMonth = ref<Date | null>(null)
+
+// Refs for mobile scrolling
+const mobileScrollContainer = ref<HTMLElement | null>(null)
+const monthRefs = new Map<number, HTMLElement>()
+
+function monthStart(d: Date) {
+    return new Date(d.getFullYear(), d.getMonth(), 1)
+}
+
+// Initialize leftMonth: prefer lastSelectedMonth, then start date's month, then end date's month, then today
+function getInitialMonth(): Date {
+    if (lastSelectedMonth.value) {
+        return lastSelectedMonth.value
+    }
+    if (props.start) {
+        return monthStart(props.start)
+    }
+    if (props.end) {
+        return monthStart(props.end)
+    }
+    return new Date(today.getFullYear(), today.getMonth(), 1)
+}
+
+const leftMonth = ref(getInitialMonth())
+
+// Watch for prop changes to update leftMonth when calendar reopens
+watch(() => [props.start, props.end], () => {
+    if (lastSelectedMonth.value) {
+        leftMonth.value = lastSelectedMonth.value
+    } else if (props.start) {
+        leftMonth.value = monthStart(props.start)
+    } else if (props.end) {
+        leftMonth.value = monthStart(props.end)
+    }
+    // Scroll to the month on mobile when props change (calendar reopened)
+    nextTick(() => {
+        scrollToMonthOnMobile()
+    })
+}, { immediate: false })
+
 const rightMonth = computed(() => 
     new Date(leftMonth.value.getFullYear(), leftMonth.value.getMonth() + 1, 1)
 )
@@ -252,6 +298,9 @@ function isMobile(): boolean {
 function onPick(d: Date) {
     if (!inBounds(d)) return
 
+    // Store the month of the selected date
+    lastSelectedMonth.value = monthStart(d)
+
     if (!localStart.value || (localStart.value && localEnd.value)) {
         localStart.value = d
         localEnd.value = null
@@ -282,6 +331,42 @@ function onConfirm() {
 function onClose() {
     emit('close')
 }
+
+/* ============================================
+   Mobile Scrolling Functions
+   ============================================ */
+function setMonthRef(el: any, month: Date) {
+    if (el) {
+        const monthKey = month.getFullYear() * 12 + month.getMonth()
+        monthRefs.set(monthKey, el as HTMLElement)
+    }
+}
+
+function scrollToMonthOnMobile() {
+    if (!mobileScrollContainer.value) return
+    
+    const targetMonth = lastSelectedMonth.value || (props.start ? monthStart(props.start) : (props.end ? monthStart(props.end) : null))
+    if (!targetMonth) return
+    
+    const monthKey = targetMonth.getFullYear() * 12 + targetMonth.getMonth()
+    
+    // Use a small delay to ensure DOM is fully rendered
+    nextTick(() => {
+        setTimeout(() => {
+            const monthElement = monthRefs.get(monthKey)
+            if (monthElement) {
+                monthElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+        }, 100)
+    })
+}
+
+onMounted(() => {
+    // Scroll to the target month when component mounts (mobile only)
+    nextTick(() => {
+        scrollToMonthOnMobile()
+    })
+})
 
 /* ============================================
    Helper Functions for MonthDays

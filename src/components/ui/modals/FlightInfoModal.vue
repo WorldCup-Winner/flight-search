@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { Teleport } from 'vue'
+import { Teleport, watch, onBeforeUnmount } from 'vue'
 import { formatPrice } from '@/utils'
 import type { Sector } from '@/utils/types'
 import FlightSectorDetail from './FlightInfoModalSector.vue'
@@ -109,6 +109,42 @@ const emit = defineEmits<{
   (e: 'close'): void
   (e: 'next-step'): void
 }>()
+
+// Body scroll lock
+let savedScrollY = 0
+
+function lockBodyScroll() {
+  savedScrollY = window.scrollY
+  document.body.style.position = 'fixed'
+  document.body.style.top = `-${savedScrollY}px`
+  document.body.style.width = '100%'
+  document.body.style.overflow = 'hidden'
+}
+
+function unlockBodyScroll() {
+  document.body.style.position = ''
+  document.body.style.top = ''
+  document.body.style.width = ''
+  document.body.style.overflow = ''
+  requestAnimationFrame(() => {
+    window.scrollTo(0, savedScrollY)
+    savedScrollY = 0
+  })
+}
+
+watch(() => props.open, (isOpen) => {
+  if (isOpen) {
+    lockBodyScroll()
+  } else {
+    unlockBodyScroll()
+  }
+})
+
+onBeforeUnmount(() => {
+  if (props.open) {
+    unlockBodyScroll()
+  }
+})
 
 function handleNextStep() {
   emit('next-step')

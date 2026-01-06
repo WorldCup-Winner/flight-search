@@ -36,18 +36,7 @@
 
                     <!-- Description (mobile goes to next line) -->
                     <div class="mt-2 md:mt-0 text-others-gray7 text-xs md:text-base leading-relaxed md:flex-1">
-                        <template v-if="orderData?.FPA50 === '10'">
-                            感謝您的訂購，客服人員將為您開票，並於開票完成後寄送電子機票email給您。
-                        </template>
-                        <template v-else-if="orderData?.FPA50 === '5' && paymentType === 'B1'">
-                            為保留機位及票價，請於付款期限內完成付款，逾期訂單將自動取消並釋出機位。
-                        </template>
-                        <template v-else-if="paymentType === 'A1' || paymentType === 'A5'">
-                            正在確認付款狀態，系統每 30 秒自動更新一次。如已完成付款，請稍候片刻，訂單狀態將自動更新。
-                        </template>
-                        <template v-else-if="paymentType === 'A4'">
-                            付款已處理，正在確認訂單狀態...
-                        </template>
+                        <span v-html="orderData?.FPA50D || ''"></span>
                     </div>
                 </div>
                 <div class="mt-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -58,7 +47,7 @@
                         </div>
                         <div class="space-x-4">
                             <span class="text-others-gray7">訂單編號</span>
-                            <span class="text-others-gray7 text-base md:text-[18px] font-bold tabular-nums">{{ orderData?.FPA01 || 'ORD0026597365' }}</span>
+                            <span class="text-others-gray7 text-base md:text-[18px] font-bold tabular-nums">{{ orderData?.FPA01 }}</span>
                         </div>
                     </div>
 
@@ -418,6 +407,7 @@
 </template>
 <script setup lang="ts">
 import { reactive, computed, ref, onMounted } from "vue";
+import { useRoute } from 'vue-router'
 import { formatPrice, formatFPA55, getPaymentDeadline30MinutesFromNow } from "@/utils";
 
 type Flight = {
@@ -469,17 +459,21 @@ const paymentType = ref<string>('')
 // Use FPA50 code to decide color, use FPA50S for display (fallbacks for safety).
 const orderStatusText = computed(() => {
   const code = orderData.value?.FPA50
-  if (code === '10') return '付款完成'
-  if (code === '5') return orderData.value?.FPA50S || '待付款'
+  if (code === '1') return '訂單成立待付款'
+  if (code === '5') return '訂單成立已付款'
+  if (code === '4') return '逾期未付款'
+  if (code === '9') return '訂單取消'
   return orderData.value?.FPA50S || '處理中'
 })
 
 const orderStatusClass = computed(() => {
   const code = orderData.value?.FPA50
   // Note: must return a CSS class name (Tailwind), not a raw hex string.
-  if (code === '10') return 'text-[#E32636]'
-  if (code === '5') return 'text-[#45B035]'
-  return 'text-[#E32636]'
+  if (code === '1') return 'text-[#FF063C]'  // 訂單成立待付款
+  if (code === '5') return 'text-[#68D93B]'  // 訂單成立已付款
+  if (code === '4') return 'text-[#AE5ADC]'  // 逾期未付款
+  if (code === '9') return 'text-[#E4A6A3]'  // 訂單取消
+  return 'text-[#FF063C]'  // 預設為待付款顏色
 })
 
 // 格式化日期時間
@@ -499,80 +493,15 @@ const formatDateTime = (dateStr: string) => {
   }
 }
 
-const flights = reactive<Flight[]>([
-  {
-    departTime: "2025/09/09 12:10",
-    departAirport: "桃園國際機場",
-    arriveTime: "2025/09/09 16:30",
-    arriveAirport: "成田機場",
-    flight: "泰國獅子航空SL394",
-    cabin: "經濟艙O",
-    status: "處理中",
-  },
-  {
-    departTime: "2025/09/25 17:30",
-    departAirport: "成田機場",
-    arriveTime: "2025/09/25 20:20",
-    arriveAirport: "桃園國際機場",
-    flight: "泰國獅子航空SL395",
-    cabin: "經濟艙O",
-    status: "處理中",
-  },
-]);
+const flights = reactive<Flight[]>([])
 
-const items = reactive<Item[]>([
-  {
-    checked: true,
-    name: "LEE WEIEN - -, MR.",
-    productName: "SL/台北/東京/台北/泰國獅子航空 - TPE/NRT NRT/TPE",
-    fare: 5278,
-    tax: 3485, // adjust to match your real data
-    paid: 0,
-    deadline: "2025/8/31 14:20",
-  },
-  {
-    checked: true,
-    name: "LEE WEIEN - -, MR.",
-    productName: "SL/台北/東京/台北/泰國獅子航空 - TPE/NRT NRT/TPE",
-    fare: 5278,
-    tax: 3316,
-    paid: 0,
-    deadline: "2025/8/31 14:20",
-  },
-  {
-    checked: true,
-    name: "LEE WEIEN - -, MR.",
-    productName: "SL/台北/東京/台北/泰國獅子航空 - TPE/NRT NRT/TPE",
-    fare: 5278,
-    tax: 3316,
-    paid: 0,
-    deadline: "2025/8/31 14:20",
-  },
-]);
+const items = reactive<Item[]>([])
 
-const contacts = reactive<Contact[]>([
-    {
-        name: "王大同",
-        number: "0933555222",
-        mail: "wong@gmail.com"
-    }
-])
+const contacts = reactive<Contact[]>([])
 
-const receipts = reactive<Receipt[]>([
-    {
-        type: "是",
-        name: "中國鋼鐵股份有限公司",
-        number: "12345678",
-        summary: "僅開立「機票款」三個字"
-    }
-])
+const receipts = reactive<Receipt[]>([])
 
-const specialCooperations = reactive<SpecialCooperation[]>([
-    {
-        type: "是",
-        detail: "內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字，內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字內容文字"
-    }
-])
+const specialCooperations = reactive<SpecialCooperation[]>([])
 
 const passengerInfoAllChecked = ref(true)
 
@@ -585,15 +514,25 @@ const total = computed(() =>
 // 定時查詢訂單狀態的 timer
 let pollingTimer: number | null = null
 
+const route = useRoute()
+
 // 載入訂單資料
 onMounted(async () => {
-  // 讀取基本訂單資訊
+  // 1. 嘗試從 Query Params 取得訂單資訊 (來自付款回調)
+  let orderNumber = route.query.orderNumber as string
+  let orderUniqId = route.query.orderUniqId as string
+  
+  // 讀取基本訂單資訊 (Session Storage)
   const orderBasicInfoStr = sessionStorage.getItem('orderBasicInfo')
   let orderBasicInfo: any = null
   
   if (orderBasicInfoStr) {
     try {
       orderBasicInfo = JSON.parse(orderBasicInfoStr)
+      // 如果 Query Params 沒有，則嘗試從 Session Storage 取得
+      if (!orderNumber) orderNumber = orderBasicInfo.orderNumber
+      if (!orderUniqId) orderUniqId = orderBasicInfo.orderUniqId
+      
       paymentType.value = orderBasicInfo.pep04
       console.log('Loaded order basic info:', orderBasicInfo)
     } catch (error) {
@@ -614,17 +553,22 @@ onMounted(async () => {
         console.error('Failed to parse order data:', error)
       }
     }
-  } else if (paymentType.value === 'A1' || paymentType.value === 'A5') {
-    // A1 信用卡 或 A5 外部導向：開始定時查詢訂單狀態
-    if (orderBasicInfo) {
-      console.log(`Starting polling for ${paymentType.value} payment`)
-      await pollOrderStatus(orderBasicInfo.orderNumber, orderBasicInfo.orderUniqId)
-    }
-  } else if (paymentType.value === 'A4') {
-    // A4 IFRAME：從 Step 3 跳轉過來，呼叫 FP02 取得最新狀態
-    if (orderBasicInfo) {
-      console.log('A4 payment completed, fetching order status')
-      await fetchOrderStatus(orderBasicInfo.orderNumber, orderBasicInfo.orderUniqId)
+  } else {
+    // 其他付款方式 (A1, A4, A5) 或 B1 資料遺失：呼叫 FP02 取得最新狀態
+    if (orderNumber && orderUniqId) {
+      console.log('Fetching order status for:', orderNumber)
+      await fetchOrderStatus(orderNumber, orderUniqId)
+      
+      // 如果狀態顯示未付款，且是線上付款方式，可以考慮開啟輪詢 (Optional)
+      if ((paymentType.value === 'A1' || paymentType.value === 'A5') && 
+          orderData.value && 
+          orderData.value.FPA50 !== '5' && 
+          orderData.value.FPA50 !== '10') {
+          console.log('Order not paid yet, starting polling...')
+          await pollOrderStatus(orderNumber, orderUniqId)
+      }
+    } else {
+      console.warn('No order info found')
     }
   }
   

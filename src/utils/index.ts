@@ -2,10 +2,10 @@
 import type { CardRow, FareIconType, FareNoteType } from '@/utils/types'
 
 // Alliance logo base URL
-export const ALLIANCE_LOGO_BASE_URL = 'http://image-test-galilee.com.tw/images/'
+export const ALLIANCE_LOGO_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || 'https://image.galilee.com.tw'
 
 export const getAllianceLogoUrl = (nameZh: string): string => {
-  return `${ALLIANCE_LOGO_BASE_URL}${nameZh}.png`
+  return `${ALLIANCE_LOGO_BASE_URL}/images/${nameZh}.png`
 }
 
 export const minutesToText = (min: number) => {
@@ -34,6 +34,13 @@ export const toDuration = (min?: number) => {
   const h = Math.floor(min / 60)
   const m = min % 60
   return `${h}小時${m}分鐘`
+}
+
+export const toDurationEng = (min?: number) => {
+  if (min == null) return ''
+  const h = Math.floor(min / 60)
+  const m = min % 60
+  return `${h}h${m}m`
 }
 
 export const formatPrice = (n: number) => {

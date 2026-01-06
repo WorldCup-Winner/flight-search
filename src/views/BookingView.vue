@@ -33,8 +33,14 @@ onMounted(() => {
   // If we only call it in StepTwo, refreshing on step 3/4 will lose data
   bookingStore.getBookingData()
   
+  // Allow Step 4 access when coming from payment callback with order query params
+  const isStep4WithOrderParams = route.name === 'booking-step-4' && 
+                                   route.query.orderNumber && 
+                                   route.query.orderUniqId
+  
   // If no booking segments after restoration, redirect to home (user shouldn't be on booking page)
-  if (!bookingStore.segments || bookingStore.segments.length === 0) {
+  // EXCEPT when accessing Step 4 from payment callback
+  if (!isStep4WithOrderParams && (!bookingStore.segments || bookingStore.segments.length === 0)) {
     // No booking data - user shouldn't be here, redirect to home
     router.push({ name: 'home' })
     return

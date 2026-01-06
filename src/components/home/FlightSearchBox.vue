@@ -15,10 +15,12 @@
       />
     </div>
     <div class="mt-24 px-4 md:px-0">
-      <div v-if="flightSearchStore.loading === 'default'">
+      <!-- Show banners when not searching (regardless of loading state) -->
+      <div v-if="!sharedValue?.isSearch">
         <BannerImg />
         <RecommendedTrips />
       </div>
+      <!-- Only show loading when actively searching -->
       <div v-else-if="flightSearchStore.loading === 'loading'">
         <div class="relative">
           <SearchResultLoading v-model="state" :rows="11" :speed="1300" />

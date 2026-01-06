@@ -4,8 +4,6 @@
       class="relative flex drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] h-full overflow-hidden"
       :class="[
         attachLeft ? 'rounded-l-[10px]' : 'rounded-[10px]',
-        'md:bg-primary-gold md:rounded-[10px]',
-        // Mobile roundtrip: gold for outbound, gray11 for return
         currentLeg === 'outbound' ? 'bg-primary-gold' : 'bg-others-gray11'
       ]"
     >

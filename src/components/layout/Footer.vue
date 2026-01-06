@@ -64,7 +64,19 @@
                     </div>
                     
                     <!-- Links -->
-                    <div class="flex flex-col space-y-2 text-sm md:text-base">
+                    <div v-if="footerLinks.length > 0" class="flex flex-col space-y-2 text-sm md:text-base">
+                        <a 
+                            v-for="link in footerLinks" 
+                            :key="link.id"
+                            :href="link.link" 
+                            :target="link.targetWindow === 0 ? '_blank' : '_self'"
+                            class="hover:underline"
+                        >
+                            {{ link.name }}
+                        </a>
+                    </div>
+                    <!-- Fallback: 如果 API 載入失敗，顯示預設連結 -->
+                    <div v-else class="flex flex-col space-y-2 text-sm md:text-base">
                         <a href="https://www.galilee.com.tw/fitsupport#faq" class="hover:underline" target="_blank">機票訂購常見問題Q&A</a>
                         <a href="https://www.galilee.com.tw/virtuoso_luxury_hotel" class="hover:underline" target="_blank">Virtuoso奢華飯店預訂</a>
                         <a href="https://lin.ee/dcxSgYk" class="hover:underline" target="_blank">旅遊顧問線上諮詢</a>
@@ -76,6 +88,23 @@
     </footer>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { getFooterLinks, type FooterLink } from '@/api'
 import Awesome from "@/components/ui/feedback/Awesome.vue"
+
+const footerLinks = ref<FooterLink[]>([])
+
+onMounted(async () => {
+    try {
+        const { data } = await getFooterLinks()
+        if (data.head.code === 0) {
+            // 按 displayOrder 排序
+            footerLinks.value = data.data.sort((a, b) => a.displayOrder - b.displayOrder)
+        }
+    } catch (error) {
+        console.error('Failed to load footer links:', error)
+        // 使用預設連結作為 fallback
+    }
+})
 </script>

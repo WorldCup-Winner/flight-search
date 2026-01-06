@@ -129,7 +129,7 @@
     <!-- Order Number -->
     <div class="mb-4">
       <p class="text-others-gray7 text-sm">
-        訂單編號 <span class="text-others-original font-semibold">{{ orderNumber || 'ORD0026597365' }}</span>
+        訂單編號 <span class="text-others-original font-semibold">{{ orderNumber }}</span>
       </p>
     </div>
 

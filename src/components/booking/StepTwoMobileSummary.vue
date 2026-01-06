@@ -36,7 +36,7 @@
             <!-- Edit button on the right (same as StepTwo, behavior TBD) -->
             <button
               type="button"
-              class="ml-auto inline-flex items-center gap-1 rounded-md border border-others-gray3 bg-white px-2 py-1 text-[12px] font-medium text-others-gray7 transition hover:text-others-original hover:border-others-original"
+              class="ml-auto inline-flex items-center gap-1 rounded-md border border-others-gray3 bg-white px-2 py-1 text-[12px] font-medium text-[#A3A3A3] transition hover:text-others-original hover:border-others-original"
               @click="handleEditSearch"
             >
               <font-awesome-icon icon="pen" class="text-[11px]" />
@@ -58,7 +58,7 @@
                 <span class="text-others-gray7 text-xs">
                   {{ formatDateToChineseWithWeek(segment.sectors[0]?.departureDate) }}&nbsp;&nbsp;
                   飛行時間 {{
-                    toDuration(
+                    toDurationEng(
                       segment.sectors.reduce(
                         (sum: number, sec: any) => sum + (sec.durationMinutes || 0),
                         0
@@ -244,12 +244,11 @@
   <script setup lang="ts">
   import { computed, ref, inject } from 'vue'
   import { useRouter } from 'vue-router'
-  import { formatDateToChinese, formatPrice, toDuration, noteIcon } from '@/utils'
+  import { formatDateToChinese, formatPrice, toDuration, noteIcon, toDurationEng } from '@/utils'
   import { useBookingStore } from '@/stores/booking'
   import BaggageInfoAndFeeRule from '@/components/ui/booking/BaggageInfoAndFeeRule.vue'
   import WakeUp from '@/components/ui/feedback/WakeUp.vue'
   import { resolveAirlineLogo, onAirlineImageError, AirlineDefault } from '@/utils/airlineLogo'
-  import type { SearchParams } from '@/utils/urlParamsSync'
   import { useInactivityTimeout } from '@/composables/useInactivityTimeout'
 
   // Define props to prevent Vue from trying to set HTML attributes
@@ -281,6 +280,8 @@
   const openSearchEditModal = inject<(() => void) | undefined>('openSearchEditModal', undefined)
 
   const segments = computed(() => bookingStore.segments || [])
+
+  console.log(segments)
   const selectedFare = computed<any | null>(() => (bookingStore.selectedFare as any) || null)
 
   // Determine route display type
@@ -299,8 +300,11 @@
 
   const routeDestination = computed(() => {
     if (segments.value.length < 2) return '目的地'
-    // For round-trip, destination is the arrival of the return segment
-    return getLastSegmentArrival(segments.value[1]) || '目的地'
+    // For round-trip, destination is the departure of the return segment (where we're going to)
+    // Segment 0: Shanghai → Beijing (outbound)
+    // Segment 1: Beijing → Shanghai (return)
+    // So destination = departure of segment 1 = Beijing
+    return getSegmentDeparture(segments.value[1]) || '目的地'
   })
   
   const currency = computed(() => {

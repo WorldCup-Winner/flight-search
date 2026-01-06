@@ -171,7 +171,7 @@
             </div>
 
             <!-- Mobile: Vertical scrolling months -->
-            <div class="md:hidden space-y-6">
+            <div ref="mobileScrollContainer" class="md:hidden space-y-6">
                 
                 <!-- Single month mode: only current month -->
                 <template v-if="props.singleMonth">
@@ -187,7 +187,11 @@
                 <!-- Default: multiple months -->
                 <template v-else>
                     <!-- All months (with labels, including first month) -->
-                    <div v-for="month in allMonths" :key="month.getTime()">
+                    <div 
+                        v-for="month in allMonths" 
+                        :key="month.getTime()"
+                        :ref="el => setMonthRef(el, month)"
+                    >
                         <div class="text-center text-[18px] leading-8 font-semibold text-gray-500 mb-4">
                             {{ monthLabel(month) }}
                         </div>
@@ -232,7 +236,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, defineComponent, h } from 'vue'
+import { computed, ref, watch, defineComponent, h, nextTick, onMounted } from 'vue'
 
 /* ============================================
    Constants
@@ -270,6 +274,13 @@ const max = computed(() => props.max ?? null)
 
 const today = new Date()
 
+// Store the last selected month to jump back to it when reopening
+const lastSelectedMonth = ref<Date | null>(null)
+
+// Refs for mobile scrolling
+const mobileScrollContainer = ref<HTMLElement | null>(null)
+const monthRefs = new Map<number, HTMLElement>()
+
 function monthStart(d: Date) {
     return new Date(d.getFullYear(), d.getMonth(), 1)
 }
@@ -284,12 +295,33 @@ function clampMonth(d: Date) {
     return target
 }
 
-// Default to selected month when provided, otherwise today (clamped to min/max if present)
-const currentMonth = ref<Date>(clampMonth(props.modelValue ?? today))
+// Initialize currentMonth: prefer lastSelectedMonth, then selected date's month, then today
+function getInitialMonth(): Date {
+    if (lastSelectedMonth.value) {
+        return clampMonth(lastSelectedMonth.value)
+    }
+    if (props.modelValue) {
+        return clampMonth(props.modelValue)
+    }
+    return clampMonth(today)
+}
+
+const currentMonth = ref<Date>(getInitialMonth())
 
 watch(() => props.modelValue, v => {
     localSelected.value = v ?? null
-    currentMonth.value = clampMonth(v ?? today)
+    // When modelValue changes, use lastSelectedMonth if available, otherwise use the selected date's month
+    if (lastSelectedMonth.value) {
+        currentMonth.value = clampMonth(lastSelectedMonth.value)
+    } else if (v) {
+        currentMonth.value = clampMonth(v)
+    } else {
+        currentMonth.value = clampMonth(today)
+    }
+    // Scroll to the month on mobile when modelValue changes (calendar reopened)
+    nextTick(() => {
+        scrollToMonthOnMobile()
+    })
 })
 
 const leftMonth = computed(() => currentMonth.value)
@@ -426,6 +458,8 @@ function isDisabled(d: Date) {
 function onPick(d: Date) {
     if (isDisabled(d)) return
     localSelected.value = d
+    // Store the month of the selected date
+    lastSelectedMonth.value = monthStart(d)
     emit('update:modelValue', d)
     emit('apply', d)
 }
@@ -433,6 +467,8 @@ function onPick(d: Date) {
 function onPickMobile(d: Date) {
     if (isDisabled(d)) return
     localSelected.value = d
+    // Store the month of the selected date
+    lastSelectedMonth.value = monthStart(d)
     emit('update:modelValue', d)
     // Only emit apply immediately if footer is hidden
     // Footer is showing when: singleMonth is true OR (!compact OR mobileConfirm !== false)
@@ -453,6 +489,42 @@ function onConfirm() {
 function onClose() {
     emit('close')
 }
+
+/* ============================================
+   Mobile Scrolling Functions
+   ============================================ */
+function setMonthRef(el: any, month: Date) {
+    if (el) {
+        const monthKey = month.getFullYear() * 12 + month.getMonth()
+        monthRefs.set(monthKey, el as HTMLElement)
+    }
+}
+
+function scrollToMonthOnMobile() {
+    if (!mobileScrollContainer.value || props.singleMonth) return
+    
+    const targetMonth = lastSelectedMonth.value || (props.modelValue ? monthStart(props.modelValue) : null)
+    if (!targetMonth) return
+    
+    const monthKey = targetMonth.getFullYear() * 12 + targetMonth.getMonth()
+    
+    // Use a small delay to ensure DOM is fully rendered
+    nextTick(() => {
+        setTimeout(() => {
+            const monthElement = monthRefs.get(monthKey)
+            if (monthElement) {
+                monthElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+        }, 100)
+    })
+}
+
+onMounted(() => {
+    // Scroll to the target month when component mounts (mobile only)
+    nextTick(() => {
+        scrollToMonthOnMobile()
+    })
+})
 
 /* ============================================
    Helper Functions for MonthDays

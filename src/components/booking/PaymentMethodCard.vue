@@ -640,40 +640,18 @@ const handleNextStep = async () => {
         break
       }
         
-      case 'A4': { // 內嵌式 IFRAME - 使用 KEY21，在當前頁面顯示 iframe
-        console.log('A4 payment: Showing iframe payment with KEY21')
-        showIframePayment.value = true
-        iframeUrl.value = KEY21
-        iframeKey.value = '' // A4 不需要 KEY，直接使用 KEY21 URL
-        // 儲存資訊供 iframe 完成後使用
-        sessionStorage.setItem('iframePaymentData', JSON.stringify({
-          url: KEY21,
-          key: '',
-          orderNumber,
-          orderUniqId
-        }))
-        // 完成處理，顯示 iframe
-        isProcessing.value = false
-        // 不跳轉到 Step 4，停留在當前頁面顯示 iframe
-        return
+      case 'A4': { // 內嵌式付款 - 使用 KEY21，直接導向付款頁面
+        console.log('A4 payment: Redirecting to payment page with KEY21')
+        window.location.href = KEY21
+        // 不重置 loading，因為會跳轉
+        break
       }
         
-      case 'A5': { // 外部導向 (如 LINE Pay) - 使用 KEY21，在當前頁面顯示 iframe
-        console.log('A5 payment: Showing iframe payment with KEY21')
-        showIframePayment.value = true
-        iframeUrl.value = KEY21
-        iframeKey.value = '' // A5 不需要 KEY，直接使用 KEY21 URL
-        // 儲存資訊供 iframe 完成後使用
-        sessionStorage.setItem('iframePaymentData', JSON.stringify({
-          url: KEY21,
-          key: '',
-          orderNumber,
-          orderUniqId
-        }))
-        // 完成處理，顯示 iframe
-        isProcessing.value = false
-        // 不跳轉到 Step 4，停留在當前頁面顯示 iframe
-        return
+      case 'A5': { // 外部導向付款 (如 LINE Pay) - 使用 KEY21，直接導向付款頁面
+        console.log('A5 payment: Redirecting to payment page with KEY21')
+        window.location.href = KEY21
+        // 不重置 loading，因為會跳轉
+        break
       }
         
       case 'B1': { // 虛擬匯款帳號 - 呼叫 FP02 取得完整資料後進入 Step 4
@@ -718,13 +696,13 @@ const handleNextStep = async () => {
   }
 }
 
-// 處理信用卡付款 (A1) - Post 到新視窗，原視窗跳轉 Step 4
+// 處理信用卡付款 (A1) - Post 到當前視窗
 const handleCreditCardPayment = (bankUrl: string, key: string) => {
   // 建立隱藏表單並自動提交到銀行
   const form = document.createElement('form')
   form.method = 'POST'
   form.action = bankUrl
-  form.target = '_blank' // 在新視窗開啟
+  // form.target = '_blank' // 改為在當前視窗開啟
   
   const keyInput = document.createElement('input')
   keyInput.type = 'hidden'
@@ -735,24 +713,12 @@ const handleCreditCardPayment = (bankUrl: string, key: string) => {
   document.body.appendChild(form)
   form.submit()
   document.body.removeChild(form)
-  
-  // 顯示提示訊息
-  alert('即將跳轉至銀行付款頁面，完成付款後請關閉付款視窗，系統將自動更新訂單狀態')
-  
-  // 原視窗導向 Step 4，並開始定時查詢訂單狀態
-  router.push({ name: 'booking-step-4' })
 }
 
-// 處理外部導向付款 (A5 - LINE Pay 等) - 開新視窗，原視窗跳轉 Step 4
+// 處理外部導向付款 (A5 - LINE Pay 等) - 導向當前視窗
 const handleExternalPayment = (externalUrl: string) => {
-  // 開啟新視窗到外部付款頁面
-  window.open(externalUrl, '_blank', 'width=800,height=600')
-  
-  // 顯示提示訊息
-  // alert('即將開啟外部付款頁面，完成付款後請關閉付款視窗，系統將自動更新訂單狀態')
-  
-  // 原視窗導向 Step 4，並開始定時查詢訂單狀態
-  router.push({ name: 'booking-step-4' })
+  // 導向到外部付款頁面
+  window.location.href = externalUrl
 }
 
 // Handle manual jump to step 4

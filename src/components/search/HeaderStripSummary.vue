@@ -1,10 +1,9 @@
 <template>
-  <div :class="[noMargin ? 'h-full bg-none' : 'mb-4 bg-none']">
+  <div :class="[noMargin ? 'h-full' : 'mb-4']">
     <div 
       :class="[
         'relative flex drop-shadow-[0px_2px_30px_rgba(0,0,0,0.1)] h-full',
         attachRight ? 'rounded-l-[10px]' : attachLeft ? 'rounded-r-[10px]' : 'rounded-[10px]',
-        // Outbound leg shows gold, return leg shows gray11
         currentLeg === 'outbound' ? 'bg-primary-gold' : 'bg-others-gray11',
         isClickable ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''
         ]"

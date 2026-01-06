@@ -9,14 +9,13 @@
                 <div class="mt-4 flex flex-col md:flex-row md:items-start md:gap-4">
                     <!-- Status text -->
                     <div class="flex items-center gap-3">
-                        <span v-if="orderData?.FPA50 === '10'" class="text-green-600 text-sm md:text-[22px] font-bold">付款完成</span>
+                        <span v-if="orderData?.FPA50 === '10'" class="text-green-600 text-sm md:text-[22px] font-bold">{{ orderData?.FPA50S || '付款完成' }}</span>
                         <span v-else-if="orderData?.FPA50 === '5'" class="text-text-error text-sm md:text-[22px] font-bold">{{ orderData?.FPA50S || '訂單成立' }}</span>
                         <span v-else class="text-others-gray1 text-sm md:text-[22px] font-bold">{{ orderData?.FPA50S || '處理中' }}</span>
                     </div>
                     <!-- Description (mobile goes to next line) -->
                     <div class="mt-2 md:mt-0 text-others-gray7 text-xs md:text-base leading-relaxed md:flex-1">
-                        <span v-if="orderData?.FPA50 === '10'">感謝您的訂購，客服人員將為您開票，並於開票完成後寄送電子機票email給您。</span>
-                        <span v-else-if="orderData?.FPA50 === '5'">為保留機位及票價，請於付款期限內完成付款，逾期訂單將自動取消並釋出機位。</span>
+                        <span v-html="orderData?.FPA50D || ''"></span>
                     </div>
                 </div>
                 <div class="mt-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -27,10 +26,10 @@
                         </div>
                         <div class="space-x-4">
                             <span class="text-others-gray7 text-sm md:text-base">訂單編號</span>
-                            <span class="text-others-gray7 text-base md:text-[18px] font-bold tabular-nums">{{ orderData?.FPA01 || 'ORD0026597365' }}</span>
+                            <span class="text-others-gray7 text-base md:text-[18px] font-bold tabular-nums">{{ orderData?.FPA01 }}</span>
                         </div>
                     </div>
-                    <div v-if="orderData?.FPA50 === '5'">
+                    <div v-if="orderData?.FPA53 === 'Y'">
                         <button
                             @click="showPaymentDialog = true"
                             class="w-full md:w-[200px] h-[50px] md:h-[60px] rounded-md border-none bg-others-original text-white hover:bg-others-hover transition"
@@ -468,13 +467,37 @@ const loadOrderData = () => {
   
   if (state && state.orderData) {
     orderData.value = state.orderData
-    // 優先從 state 取得 orderNumber 和 uniqId（直接從 FP04 傳來的值）
-    orderNumber.value = state.orderNumber || state.orderData.FPA01 || ''
-    orderUniqId.value = state.uniqId || state.orderData.FPA02 || ''
+    
+    // 多層 fallback 取得 orderNumber 和 orderUniqId
+    // 1. 優先從 state 取得（直接從 FP04 傳來的值）
+    // 2. 從 orderData (FP02 response) 取得
+    // 3. 從 sessionStorage 的 orderBasicInfo 取得（PayInfo 場景）
+    let foundOrderNumber = state.orderNumber || state.orderData.FPA01 || ''
+    let foundOrderUniqId = state.uniqId || state.orderData.FPA02 || ''
+    
+    // 如果還是沒有，嘗試從 sessionStorage 取得（處理 PayInfo 場景）
+    if (!foundOrderNumber || !foundOrderUniqId) {
+      console.log('Trying to get order info from sessionStorage...')
+      const cachedBasicInfo = sessionStorage.getItem('orderBasicInfo')
+      if (cachedBasicInfo) {
+        try {
+          const basicInfo = JSON.parse(cachedBasicInfo)
+          if (!foundOrderNumber) foundOrderNumber = basicInfo.orderNumber || ''
+          if (!foundOrderUniqId) foundOrderUniqId = basicInfo.orderUniqId || ''
+          console.log('Supplemented from sessionStorage:', { orderNumber: foundOrderNumber, orderUniqId: foundOrderUniqId })
+        } catch (e) {
+          console.warn('Failed to parse orderBasicInfo from sessionStorage', e)
+        }
+      }
+    }
+    
+    orderNumber.value = foundOrderNumber
+    orderUniqId.value = foundOrderUniqId
     
     console.log('Order data loaded:', {
       orderNumber: orderNumber.value,
-      orderUniqId: orderUniqId.value
+      orderUniqId: orderUniqId.value,
+      source: state.orderNumber ? 'state' : (state.orderData.FPA01 ? 'orderData' : 'sessionStorage')
     })
     
     processOrderData()
@@ -537,7 +560,7 @@ const processOrderData = () => {
         arriveAirport: fly.FPD08S || fly.FPD08 || '',
         flight: fly.FPD04 || '',
         cabin: fly.FPD11S || fly.FPD11 || '-',
-        status: fly.FPD15S || '處理中'
+        status: fly.FPD10S || '處理中'
       })
     })
   }
@@ -648,6 +671,18 @@ const handlePaymentClick = () => {
     alert('訂單識別碼遺失，請重新查詢訂單')
     return
   }
+  
+  // 在打開付款對話框前，先將訂單資訊存入 sessionStorage
+  // 這樣在付款完成後的回調流程中就能使用
+  sessionStorage.setItem('orderBasicInfo', JSON.stringify({
+    orderNumber: orderNumber.value,
+    orderUniqId: orderUniqId.value
+  }))
+  
+  console.log('Stored order info for payment:', {
+    orderNumber: orderNumber.value,
+    orderUniqId: orderUniqId.value
+  })
   
   showPaymentDialog.value = true
 }

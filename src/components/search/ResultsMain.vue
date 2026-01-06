@@ -391,8 +391,8 @@ const searchRequest = computed(() => props.searchRequest)
 const lastFetchedSignature = ref<string>('')
 
 watch(
-  () => [props.searchRequest, route.name, props.segmentIndex] as [any, string, number],
-  ([newRequest, newRouteName, segmentIndex]) => {
+  () => [props.searchRequest, route.name, props.segmentIndex, flightSearchStore.loading] as [any, string, number, string],
+  ([newRequest, newRouteName, segmentIndex, loadingState]) => {
     const isSearchRoute = route.name?.toString().startsWith('search-') ?? false
     if (!isSearchRoute || !newRequest) return
     
@@ -403,15 +403,29 @@ watch(
     const currentSignature = `${segmentIndex}-${selectedRefs}-${searchHash}`
     
     // Skip if already fetching the same request (prevents duplicate calls)
-    if (flightSearchStore.loading === 'loading') {
+    if (loadingState === 'loading') {
       if (currentSignature === lastFetchedSignature.value) {
         return // Already fetching this exact request
       }
     }
     
+    // If store was reset (loading = 'default' and data is empty), always fetch
+    // This handles the case where user clicks search button again with same params
+    if (loadingState === 'default' && flightSearchStore.data.length === 0) {
+      lastFetchedSignature.value = currentSignature
+      
+      // Clear data and set loading before fetch to show skeletons immediately
+      flightSearchStore.data = []
+      flightSearchStore.loading = 'loading'
+      
+      flightSearchStore.fetchFlightSearch(newRequest)
+      airlineStore.fetchAirlineAlliance()
+      return
+    }
+    
     // If data already exists and loading is complete, check if signature matches
     // Only skip fetch if signature matches (same search criteria + segment + selectedRefs)
-    if (flightSearchStore.data.length > 0 && flightSearchStore.loading === 'success') {
+    if (flightSearchStore.data.length > 0 && loadingState === 'success') {
       if (lastFetchedSignature.value === '') {
         // First time mounting, data already loaded by FlightSearchBox
         // Update signature without fetching
@@ -1648,7 +1662,7 @@ const canLoadMore = computed(() => showCount.value < filteredFlights.value.lengt
 // fake infinite loader when scrolling near bottom
 const onScroll = () => {
   if (!canLoadMore.value) return
-  const pad = 240
+  const pad = 500
   const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - pad
   if (nearBottom) {
     window.removeEventListener('scroll', onScroll)
